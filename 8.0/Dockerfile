@@ -36,7 +36,8 @@ COPY --from=caddy --link /usr/bin/caddy /usr/bin/caddy
 
 RUN apk add --no-cache icu-data-full curl jq && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
-    mkdir -p /var/www/html
+    mkdir -p /var/www/html && \
+    rm /usr/local/etc/php-fpm.d/zz-docker.conf
 
 USER www-data
 
