@@ -91,8 +91,8 @@ foreach ($supportedVersions as $supportedVersion)
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-arm64,ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
           context: "${PHP_VERSION}"
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+          cache-from: type=gha,scope=php${PHP_VERSION}
+          cache-to: type=gha,mode=max,scope=php${PHP_VERSION}
           push: true
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
@@ -116,8 +116,8 @@ foreach ($supportedVersions as $supportedVersion)
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-amd64,ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
             context: "${PHP_VERSION}"
-            cache-from: type=gha
-            cache-to: type=gha,mode=max
+            cache-from: type=gha,scope=php${PHP_VERSION}
+            cache-to: type=gha,mode=max,scope=php${PHP_VERSION}
             push: true
 
         - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
