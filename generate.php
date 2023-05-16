@@ -91,12 +91,11 @@ foreach ($supportedVersions as $supportedVersion)
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
           context: "${PHP_VERSION}"
-          cache-from: type=gha,scope=php${PHP_VERSION}-arm64
-          cache-to: type=gha,mode=max,scope=php${PHP_VERSION}-arm64
+          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:${PHP_PATCH_VERSION}-arm64
+          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:${PHP_PATCH_VERSION}-arm64,mode=max
           platforms: linux/arm64
           push: true
-
-      - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
+          provenance: false
 
   php${PHP_VERSION_SHORT}-amd64:
       name: ${PHP_VERSION} on AMD64
@@ -117,12 +116,11 @@ foreach ($supportedVersions as $supportedVersion)
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
             context: "${PHP_VERSION}"
-            cache-from: type=gha,scope=php${PHP_VERSION}-amd64
-            cache-to: type=gha,mode=max,scope=php${PHP_VERSION}-amd64
+            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:${PHP_PATCH_VERSION}-amd64
+            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:${PHP_PATCH_VERSION}-amd64,mode=max
             platforms: linux/amd64
             push: true
-
-        - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
+            provenance: false
   
 TPL;
 

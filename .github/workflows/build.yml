@@ -37,12 +37,11 @@ jobs:
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.0.28-arm64
           context: "8.0"
-          cache-from: type=gha,scope=php8.0-arm64
-          cache-to: type=gha,mode=max,scope=php8.0-arm64
+          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0.28-arm64
+          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0.28-arm64,mode=max
           platforms: linux/arm64
           push: true
-
-      - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.0.28-arm64
+          provenance: false
 
   php80-amd64:
       name: 8.0 on AMD64
@@ -63,12 +62,11 @@ jobs:
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.0.28-amd64
             context: "8.0"
-            cache-from: type=gha,scope=php8.0-amd64
-            cache-to: type=gha,mode=max,scope=php8.0-amd64
+            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0.28-amd64
+            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0.28-amd64,mode=max
             platforms: linux/amd64
             push: true
-
-        - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.0.28-amd64
+            provenance: false
   
   php81-arm64:
     name: 8.1 on ARM64
@@ -89,12 +87,11 @@ jobs:
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.1.19-arm64
           context: "8.1"
-          cache-from: type=gha,scope=php8.1-arm64
-          cache-to: type=gha,mode=max,scope=php8.1-arm64
+          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1.19-arm64
+          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1.19-arm64,mode=max
           platforms: linux/arm64
           push: true
-
-      - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.1.19-arm64
+          provenance: false
 
   php81-amd64:
       name: 8.1 on AMD64
@@ -115,12 +112,11 @@ jobs:
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.1.19-amd64
             context: "8.1"
-            cache-from: type=gha,scope=php8.1-amd64
-            cache-to: type=gha,mode=max,scope=php8.1-amd64
+            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1.19-amd64
+            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1.19-amd64,mode=max
             platforms: linux/amd64
             push: true
-
-        - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.1.19-amd64
+            provenance: false
   
   php82-arm64:
     name: 8.2 on ARM64
@@ -141,12 +137,11 @@ jobs:
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.2.6-arm64
           context: "8.2"
-          cache-from: type=gha,scope=php8.2-arm64
-          cache-to: type=gha,mode=max,scope=php8.2-arm64
+          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2.6-arm64
+          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2.6-arm64,mode=max
           platforms: linux/arm64
           push: true
-
-      - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.2.6-arm64
+          provenance: false
 
   php82-amd64:
       name: 8.2 on AMD64
@@ -167,12 +162,11 @@ jobs:
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.2.6-amd64
             context: "8.2"
-            cache-from: type=gha,scope=php8.2-amd64
-            cache-to: type=gha,mode=max,scope=php8.2-amd64
+            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2.6-amd64
+            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2.6-amd64,mode=max
             platforms: linux/amd64
             push: true
-
-        - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.2.6-amd64
+            provenance: false
   
 
   merge-manifest:
