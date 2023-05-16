@@ -14,6 +14,7 @@ on:
       - main
     paths:
       - "Dockerfile.template"
+      - "rootfs/**
 
 env:
   DOCKER_BUILDKIT: 1
