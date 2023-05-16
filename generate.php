@@ -83,13 +83,13 @@ foreach ($supportedVersions as $supportedVersion)
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - run: docker build -t ghcr.io/friendsofshopware/production-docker:${PHP_VERSION}-arm64 -t ghcr.io/friendsofshopware/production-docker:${PHP_PATCH_VERSION}-arm64 -f ${PHP_VERSION}/Dockerfile .
+      - run: docker build -t ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-arm64 -t ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64 -f ${PHP_VERSION}/Dockerfile .
 
-      - run: docker push ghcr.io/friendsofshopware/production-docker:${PHP_VERSION}-arm64
+      - run: docker push ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-arm64
 
-      - run: docker push ghcr.io/friendsofshopware/production-docker:${PHP_PATCH_VERSION}-arm64
+      - run: docker push ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
 
-      - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker:${PHP_PATCH_VERSION}-arm64
+      - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
 
   php${PHP_VERSION_SHORT}-amd64:
       name: ${PHP_VERSION} on AMD64
@@ -103,13 +103,13 @@ foreach ($supportedVersions as $supportedVersion)
         - name: Login into Github Docker Registery
           run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
   
-        - run: docker build -t ghcr.io/friendsofshopware/production-docker:${PHP_VERSION}-amd64 -t ghcr.io/friendsofshopware/production-docker:${PHP_PATCH_VERSION}-amd64 -f ${PHP_VERSION}/Dockerfile .
+        - run: docker build -t ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-amd64 -t ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64 -f ${PHP_VERSION}/Dockerfile .
   
-        - run: docker push ghcr.io/friendsofshopware/production-docker:${PHP_VERSION}-amd64
+        - run: docker push ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-amd64
 
-        - run: docker push ghcr.io/friendsofshopware/production-docker:${PHP_PATCH_VERSION}-amd64
+        - run: docker push ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
 
-        - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker:${PHP_PATCH_VERSION}-amd64
+        - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
   
 TPL;
 
@@ -122,13 +122,13 @@ TPL;
 
     $workflow .= str_replace(array_keys($replaces), array_values($replaces), $workflowTpl);
 
-    $dockerMerges[] = 'docker manifest create ghcr.io/friendsofshopware/production-docker:' . $supportedVersion . ' --amend ghcr.io/friendsofshopware/production-docker:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/friendsofshopware/production-docker:' . $patchVersion['version'] . '-arm64';
-    $dockerMerges[] = 'docker manifest create ghcr.io/friendsofshopware/production-docker:' . $patchVersion['version'] . ' --amend ghcr.io/friendsofshopware/production-docker:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/friendsofshopware/production-docker:' . $patchVersion['version'] . '-arm64';
-    $dockerMerges[] = 'docker manifest push ghcr.io/friendsofshopware/production-docker:' . $supportedVersion;
-    $dockerMerges[] = 'docker manifest push ghcr.io/friendsofshopware/production-docker:' . $patchVersion['version'];
+    $dockerMerges[] = 'docker manifest create ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion . ' --amend ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . '-arm64';
+    $dockerMerges[] = 'docker manifest create ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . ' --amend ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . '-arm64';
+    $dockerMerges[] = 'docker manifest push ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion;
+    $dockerMerges[] = 'docker manifest push ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'];
 
-    $dockerMerges[] = 'cosign sign --yes ghcr.io/friendsofshopware/production-docker:' . $supportedVersion;
-    $dockerMerges[] = 'cosign sign --yes ghcr.io/friendsofshopware/production-docker:' . $patchVersion['version'];
+    $dockerMerges[] = 'cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion;
+    $dockerMerges[] = 'cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'];
 
     $stages[] = 'php' . $phpShort . '-arm64';
     $stages[] = 'php' . $phpShort . '-amd64';
