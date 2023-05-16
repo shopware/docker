@@ -37,8 +37,8 @@ jobs:
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.0.28-arm64
           context: "8.0"
-          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0.28-arm64
-          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0.28-arm64,mode=max
+          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0-arm64
+          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0-arm64,mode=max
           platforms: linux/arm64
           push: true
           provenance: false
@@ -62,8 +62,8 @@ jobs:
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.0.28-amd64
             context: "8.0"
-            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0.28-amd64
-            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0.28-amd64,mode=max
+            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0-amd64
+            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0-amd64,mode=max
             platforms: linux/amd64
             push: true
             provenance: false
@@ -87,8 +87,8 @@ jobs:
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.1.19-arm64
           context: "8.1"
-          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1.19-arm64
-          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1.19-arm64,mode=max
+          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1-arm64
+          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1-arm64,mode=max
           platforms: linux/arm64
           push: true
           provenance: false
@@ -112,8 +112,8 @@ jobs:
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.1.19-amd64
             context: "8.1"
-            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1.19-amd64
-            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1.19-amd64,mode=max
+            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1-amd64
+            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.1-amd64,mode=max
             platforms: linux/amd64
             push: true
             provenance: false
@@ -137,8 +137,8 @@ jobs:
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.2.6-arm64
           context: "8.2"
-          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2.6-arm64
-          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2.6-arm64,mode=max
+          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2-arm64
+          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2-arm64,mode=max
           platforms: linux/arm64
           push: true
           provenance: false
@@ -162,8 +162,8 @@ jobs:
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.2.6-amd64
             context: "8.2"
-            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2.6-amd64
-            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2.6-amd64,mode=max
+            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2-amd64
+            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.2-amd64,mode=max
             platforms: linux/amd64
             push: true
             provenance: false
