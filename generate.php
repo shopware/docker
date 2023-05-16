@@ -84,11 +84,15 @@ foreach ($supportedVersions as $supportedVersion)
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - run: docker build -t ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-arm64 -t ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64 -f ${PHP_VERSION}/Dockerfile .
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
 
-      - run: docker push ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-arm64
-
-      - run: docker push ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
+      - uses: docker/build-push-action@v2
+        with:
+          tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-arm64,ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
+          context: ${PHP_VERSION}/Dockerfile
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
 
@@ -104,11 +108,15 @@ foreach ($supportedVersions as $supportedVersion)
         - name: Login into Github Docker Registery
           run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
   
-        - run: docker build -t ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-amd64 -t ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64 -f ${PHP_VERSION}/Dockerfile .
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v2
   
-        - run: docker push ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-amd64
-
-        - run: docker push ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
+        - uses: docker/build-push-action@v2
+          with:
+            tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-amd64,ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
+            context: ${PHP_VERSION}/Dockerfile
+            cache-from: type=gha
+            cache-to: type=gha,mode=max
 
         - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
   

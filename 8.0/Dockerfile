@@ -2,6 +2,18 @@
 
 FROM php:8.0.28-fpm-alpine
 
+COPY --from=mlocati/php-extension-installer --link /usr/bin/install-php-extensions /usr/bin/
+
+RUN apk add --no-cache icu-data-full curl jq && \
+    install-php-extensions bcmath gd intl mysqli pdo_mysql sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
+    mkdir -p /var/www/html && \
+    rm /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    rm /usr/local/etc/php-fpm.d/www.conf && \
+    rm /usr/local/etc/php-fpm.d/www.conf.default
+
+COPY --from=ghcr.io/shyim/supervisord --link /usr/local/bin/supervisord /usr/bin/supervisord
+COPY --from=caddy --link /usr/bin/caddy /usr/bin/caddy
+
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
     LOCK_DSN=flock \
@@ -31,15 +43,6 @@ ENV APP_ENV=prod \
     PHP_MAX_EXECUTION_TIME=300 \
     PHP_MEMORY_LIMIT=512m \
     PHP_ERROR_REPORTING=E_ALL
-
-COPY --from=ghcr.io/shyim/supervisord --link /usr/local/bin/supervisord /usr/bin/supervisord
-COPY --from=mlocati/php-extension-installer --link /usr/bin/install-php-extensions /usr/bin/
-COPY --from=caddy --link /usr/bin/caddy /usr/bin/caddy
-
-RUN apk add --no-cache icu-data-full curl jq && \
-    install-php-extensions bcmath gd intl mysqli pdo_mysql sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
-    mkdir -p /var/www/html && \
-    rm /usr/local/etc/php-fpm.d/zz-docker.conf
 
 USER www-data
 
