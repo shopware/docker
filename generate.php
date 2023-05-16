@@ -89,10 +89,10 @@ foreach ($supportedVersions as $supportedVersion)
 
       - uses: docker/build-push-action@v4
         with:
-          tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-arm64,ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
+          tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
           context: "${PHP_VERSION}"
-          cache-from: type=gha,scope=php${PHP_VERSION}
-          cache-to: type=gha,mode=max,scope=php${PHP_VERSION}
+          cache-from: type=gha,scope=php${PHP_VERSION}-arm64
+          cache-to: type=gha,mode=max,scope=php${PHP_VERSION}-arm64
           platforms: linux/arm64
           push: true
 
@@ -115,10 +115,10 @@ foreach ($supportedVersions as $supportedVersion)
   
         - uses: docker/build-push-action@v4
           with:
-            tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-amd64,ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
+            tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
             context: "${PHP_VERSION}"
-            cache-from: type=gha,scope=php${PHP_VERSION}
-            cache-to: type=gha,mode=max,scope=php${PHP_VERSION}
+            cache-from: type=gha,scope=php${PHP_VERSION}-amd64
+            cache-to: type=gha,mode=max,scope=php${PHP_VERSION}-amd64
             platforms: linux/amd64
             push: true
 

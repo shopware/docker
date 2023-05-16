@@ -2,7 +2,7 @@
 
 FROM php:8.0.28-fpm-alpine
 
-COPY --from=mlocati/php-extension-installer --link /usr/bin/install-php-extensions /usr/bin/
+ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
 RUN apk add --no-cache icu-data-full curl jq && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
@@ -12,7 +12,7 @@ RUN apk add --no-cache icu-data-full curl jq && \
     rm /usr/local/etc/php-fpm.d/www.conf.default
 
 COPY --from=ghcr.io/shyim/supervisord --link /usr/local/bin/supervisord /usr/bin/supervisord
-COPY --from=caddy --link /usr/bin/caddy /usr/bin/caddy
+COPY --from=public.ecr.aws/docker/library/caddy --link /usr/bin/caddy /usr/bin/caddy
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
