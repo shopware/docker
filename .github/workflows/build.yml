@@ -33,10 +33,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - uses: docker/build-push-action@v2
+      - uses: docker/build-push-action@v4
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.0-arm64,ghcr.io/friendsofshopware/production-docker-base:8.0.28-arm64
-          context: 8.0/Dockerfile
+          context: 8.0
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -57,10 +57,10 @@ jobs:
         - name: Set up Docker Buildx
           uses: docker/setup-buildx-action@v2
   
-        - uses: docker/build-push-action@v2
+        - uses: docker/build-push-action@v4
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.0-amd64,ghcr.io/friendsofshopware/production-docker-base:8.0.28-amd64
-            context: 8.0/Dockerfile
+            context: 8.0
             cache-from: type=gha
             cache-to: type=gha,mode=max
 
@@ -81,10 +81,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - uses: docker/build-push-action@v2
+      - uses: docker/build-push-action@v4
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.1-arm64,ghcr.io/friendsofshopware/production-docker-base:8.1.19-arm64
-          context: 8.1/Dockerfile
+          context: 8.1
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -105,10 +105,10 @@ jobs:
         - name: Set up Docker Buildx
           uses: docker/setup-buildx-action@v2
   
-        - uses: docker/build-push-action@v2
+        - uses: docker/build-push-action@v4
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.1-amd64,ghcr.io/friendsofshopware/production-docker-base:8.1.19-amd64
-            context: 8.1/Dockerfile
+            context: 8.1
             cache-from: type=gha
             cache-to: type=gha,mode=max
 
@@ -129,10 +129,10 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - uses: docker/build-push-action@v2
+      - uses: docker/build-push-action@v4
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:8.2-arm64,ghcr.io/friendsofshopware/production-docker-base:8.2.6-arm64
-          context: 8.2/Dockerfile
+          context: 8.2
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -153,10 +153,10 @@ jobs:
         - name: Set up Docker Buildx
           uses: docker/setup-buildx-action@v2
   
-        - uses: docker/build-push-action@v2
+        - uses: docker/build-push-action@v4
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:8.2-amd64,ghcr.io/friendsofshopware/production-docker-base:8.2.6-amd64
-            context: 8.2/Dockerfile
+            context: 8.2
             cache-from: type=gha
             cache-to: type=gha,mode=max
 

@@ -87,10 +87,10 @@ foreach ($supportedVersions as $supportedVersion)
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v2
 
-      - uses: docker/build-push-action@v2
+      - uses: docker/build-push-action@v4
         with:
           tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-arm64,ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
-          context: ${PHP_VERSION}/Dockerfile
+          context: ${PHP_VERSION}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
@@ -111,10 +111,10 @@ foreach ($supportedVersions as $supportedVersion)
         - name: Set up Docker Buildx
           uses: docker/setup-buildx-action@v2
   
-        - uses: docker/build-push-action@v2
+        - uses: docker/build-push-action@v4
           with:
             tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_VERSION}-amd64,ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
-            context: ${PHP_VERSION}/Dockerfile
+            context: ${PHP_VERSION}
             cache-from: type=gha
             cache-to: type=gha,mode=max
 
