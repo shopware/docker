@@ -13,7 +13,7 @@ on:
     branches:
       - main
     paths:
-      - "Docker.template"
+      - "Dockerfile.template"
 
 env:
   DOCKER_BUILDKIT: 1
