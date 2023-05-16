@@ -38,6 +38,7 @@ else
   php bin/console user:create "$INSTALL_ADMIN_USERNAME" --admin --password="$INSTALL_ADMIN_PASSWORD" -n
   php bin/console sales-channel:create:storefront --name=Storefront --url="$APP_URL"
   php bin/console theme:change --all Storefront
+  php bin/console system:config:set core.frw.completedAt '2019-10-07T10:46:23+00:00'
   php bin/console plugin:refresh
 
   install_all_plugins
