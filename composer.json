@@ -1,0 +1,6 @@
+{
+    "name": "frosh/production-docker",
+    "type": "metapackage",
+    "license": "MIT",
+    "description": "Docker image for Shopware 6 production"
+}
