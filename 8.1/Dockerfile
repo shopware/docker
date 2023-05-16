@@ -3,6 +3,7 @@
 FROM php:8.1.19-fpm-alpine
 
 ENV APP_ENV=prod \
+    APP_URL_CHECK_DISABLED=1 \
     LOCK_DSN=flock \
     MAILER_DSN=null://localhost \
     DATABASE_PORT=3306 \
@@ -13,6 +14,7 @@ ENV APP_ENV=prod \
     COMPOSER_HOME=/tmp/composer \
     SHOPWARE_HTTP_CACHE_ENABLED=1 \
     SHOPWARE_HTTP_DEFAULT_TTL=7200 \
+    SHOPWARE_CACHE_ID=docker \
     BLUE_GREEN_DEPLOYMENT=0 \
     INSTALL_LOCALE=en-GB \
     INSTALL_CURRENCY=EUR \
