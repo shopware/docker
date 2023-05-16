@@ -93,6 +93,7 @@ foreach ($supportedVersions as $supportedVersion)
           context: "${PHP_VERSION}"
           cache-from: type=gha,scope=php${PHP_VERSION}
           cache-to: type=gha,mode=max,scope=php${PHP_VERSION}
+          platforms: linux/arm64
           push: true
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
@@ -118,6 +119,7 @@ foreach ($supportedVersions as $supportedVersion)
             context: "${PHP_VERSION}"
             cache-from: type=gha,scope=php${PHP_VERSION}
             cache-to: type=gha,mode=max,scope=php${PHP_VERSION}
+            platforms: linux/amd64
             push: true
 
         - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64

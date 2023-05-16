@@ -39,6 +39,7 @@ jobs:
           context: "8.0"
           cache-from: type=gha,scope=php8.0
           cache-to: type=gha,mode=max,scope=php8.0
+          platforms: linux/arm64
           push: true
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.0.28-arm64
@@ -64,6 +65,7 @@ jobs:
             context: "8.0"
             cache-from: type=gha,scope=php8.0
             cache-to: type=gha,mode=max,scope=php8.0
+            platforms: linux/amd64
             push: true
 
         - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.0.28-amd64
@@ -89,6 +91,7 @@ jobs:
           context: "8.1"
           cache-from: type=gha,scope=php8.1
           cache-to: type=gha,mode=max,scope=php8.1
+          platforms: linux/arm64
           push: true
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.1.19-arm64
@@ -114,6 +117,7 @@ jobs:
             context: "8.1"
             cache-from: type=gha,scope=php8.1
             cache-to: type=gha,mode=max,scope=php8.1
+            platforms: linux/amd64
             push: true
 
         - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.1.19-amd64
@@ -139,6 +143,7 @@ jobs:
           context: "8.2"
           cache-from: type=gha,scope=php8.2
           cache-to: type=gha,mode=max,scope=php8.2
+          platforms: linux/arm64
           push: true
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.2.6-arm64
@@ -164,6 +169,7 @@ jobs:
             context: "8.2"
             cache-from: type=gha,scope=php8.2
             cache-to: type=gha,mode=max,scope=php8.2
+            platforms: linux/amd64
             push: true
 
         - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.2.6-amd64
