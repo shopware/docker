@@ -1,10 +1,11 @@
 #syntax=docker/dockerfile:1.4
 
-FROM php:8.0.28-fpm-alpine
+FROM public.ecr.aws/docker/library/php:8.0.28-fpm-alpine
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
 RUN apk add --no-cache icu-data-full curl jq && \
+    chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
     mkdir -p /var/www/html && \
     rm /usr/local/etc/php-fpm.d/zz-docker.conf && \
