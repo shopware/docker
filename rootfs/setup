@@ -10,7 +10,7 @@ do
 done
 
 update_all_plugins() {
-  list_with_updates=$(php bin/console plugin:list --json | jq 'map(select(.value.upgradeVersion != null)) | .[].name' -r)
+  list_with_updates=$(php bin/console plugin:list --json | jq 'map(select(.upgradeVersion != null)) | .[].name' -r)
 
   for plugin in $list_with_updates; do
     php bin/console plugin:update $plugin
@@ -18,7 +18,7 @@ update_all_plugins() {
 }
 
 install_all_plugins() {
-  list_with_updates=$(php bin/console plugin:list --json | jq 'map(select(.value.installedAt == null)) | .[].name' -r)
+  list_with_updates=$(php bin/console plugin:list --json | jq 'map(select(.installedAt == null)) | .[].name' -r)
 
   for plugin in $list_with_updates; do
     php bin/console plugin:install --activate $plugin
