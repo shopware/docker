@@ -1,6 +1,6 @@
 #syntax=docker/dockerfile:1.4
 
-FROM public.ecr.aws/docker/library/php:8.1.19-fpm-alpine
+FROM public.ecr.aws/docker/library/php:8.1.22-fpm-alpine
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
