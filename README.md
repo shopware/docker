@@ -11,13 +11,13 @@ Create a Dockerfile in your project like:
 
 # pin versions
 FROM ghcr.io/friendsofshopware/production-docker-base:8.2 as base-image
-FROM ghcr.io/friendsofshopware/shopware-cli:0.1.71-php-8.2 as shopware-cli
+FROM ghcr.io/friendsofshopware/shopware-cli:0.2.4-php-8.2 as shopware-cli
 
-# build shopware
+# build
 
 FROM shopware-cli as build
 
-ADD . /src
+COPY --link . /src
 WORKDIR /src
 
 RUN --mount=type=secret,id=composer_auth,dst=/src/auth.json \
@@ -25,18 +25,18 @@ RUN --mount=type=secret,id=composer_auth,dst=/src/auth.json \
     --mount=type=cache,target=/root/.npm \
     /usr/local/bin/entrypoint.sh shopware-cli project ci /src
 
-# final image
+# build final image
 
 FROM base-image
 
-COPY --from=build --chown=www-data --link /src /var/www/html
+COPY --from=build --chown=www-data /src /var/www/html
 ```
 
 or better run `composer req frosh/production-docker` to install the Symfony Recipe.
 
 In the stage `build` we are using shopware-cli to build the Shopware files:
 
-- Composer install
+- Composer installs
 - Build Administration and Storefront with Extensions if needed
 - Strip some files of vendor to make the layer small
 - Merge administration snippets into one file
@@ -234,3 +234,25 @@ In a very basic setup when all files are stored locally you need 5 volumes:
 
 It is recommanded to use an external storage provider when possible to store the files. With an external storage provider you won't need any mounts. Refer to [official Shopware docs for setup](https://developer.shopware.com/docs/guides/hosting/infrastructure/filesystem).
 
+## Known issues
+
+<details>
+  <summary>Assets are stored locally, but asset-manifest.json tries to write to external location</summary>
+
+Override the filesystem of asset-manifest.json to temporary filesystem:
+
+```yaml
+# config/packages/prod/asset-overwrite.yaml
+services:
+    Shopware\Core\Framework\Plugin\Util\AssetService:
+        arguments:
+            - '@shopware.filesystem.asset'
+            - '@shopware.filesystem.temp'
+            - '@kernel'
+            - '@Shopware\Core\Framework\Plugin\KernelPluginLoader\KernelPluginLoader'
+            - '@Shopware\Core\Framework\Adapter\Cache\CacheInvalidator'
+            - '@Shopware\Core\Framework\App\Lifecycle\AppLoader'
+            - '@parameter_bag'
+```
+    
+</details>
