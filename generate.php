@@ -1,21 +1,13 @@
 <?php
 
+require __DIR__ . '/functions.php';
+
 $supportedVersions = ['8.0', '8.1', '8.2'];
 $index = [];
 $tpl = file_get_contents('Dockerfile.template');
 $versionRegex ='/^(?<version>\d\.\d\.\d{1,})/m';
 
-$caddyResponse = json_decode(file_get_contents('https://hub.docker.com/v2/repositories/library/caddy/tags/?page_size=50&page=1&name=latest'), true);
-$caddyDigest = null;
-foreach ($caddyResponse['results'] as $image) {
-  if ($image['name'] === 'latest') {
-    $caddyDigest = $image['digest'];
-    break;
-  }
-}
-if (empty($caddyDigest)) {
-  die('Could not find caddy digest');
-}
+$caddyDigest = get_digest_of_image('library/caddy', 'latest');
 
 $workflow = <<<YML
 name: Build
@@ -53,7 +45,6 @@ foreach ($supportedVersions as $supportedVersion)
 
     $curVersion = null;
     $patchVersion = null;
-    $phpDigest = null;
 
     foreach ($apiResponse['results'] as $entry) {
         if (strpos($entry['name'], 'RC') !== false) {
@@ -61,16 +52,13 @@ foreach ($supportedVersions as $supportedVersion)
         }
 
         preg_match($versionRegex, $entry['name'], $patchVersion);
-
-        if (count($patchVersion) > 0) {
-            $phpDigest = $entry['digest'];
-            break;
-        }
     }
 
     if ($patchVersion === null) {
         throw new \RuntimeException('There is no version found for PHP ' . $supportedVersion);
     }
+
+    $phpDigest = get_digest_of_image('library/php', $patchVersion['version'] . '-fpm-alpine');
 
     $folder = $supportedVersion . '/';
     if (!file_exists($folder)) {
