@@ -5,6 +5,18 @@ $index = [];
 $tpl = file_get_contents('Dockerfile.template');
 $versionRegex ='/^(?<version>\d\.\d\.\d{1,})/m';
 
+$caddyResponse = json_decode(file_get_contents('https://hub.docker.com/v2/repositories/library/caddy/tags/?page_size=50&page=1&name=latest'), true);
+$caddyDigest = null;
+foreach ($caddyResponse['results'] as $image) {
+  if ($image['name'] === 'latest') {
+    $caddyDigest = $image['digest'];
+    break;
+  }
+}
+if (empty($caddyDigest)) {
+  die('Could not find caddy digest');
+}
+
 $workflow = <<<YML
 name: Build
 on:
@@ -41,6 +53,7 @@ foreach ($supportedVersions as $supportedVersion)
 
     $curVersion = null;
     $patchVersion = null;
+    $phpDigest = null;
 
     foreach ($apiResponse['results'] as $entry) {
         if (strpos($entry['name'], 'RC') !== false) {
@@ -50,6 +63,7 @@ foreach ($supportedVersions as $supportedVersion)
         preg_match($versionRegex, $entry['name'], $patchVersion);
 
         if (count($patchVersion) > 0) {
+            $phpDigest = $entry['digest'];
             break;
         }
     }
@@ -63,7 +77,16 @@ foreach ($supportedVersions as $supportedVersion)
         mkdir($folder, 0777, true);
     }
 
-    file_put_contents($folder . 'Dockerfile', str_replace('${PHP_VERSION}', $patchVersion['version'], $tpl));
+    $phpShort = str_replace('.', '', $supportedVersion);
+    $replaces = [
+      '${PHP_VERSION_SHORT}' => $phpShort,
+      '${PHP_VERSION}' => $supportedVersion,
+      '${PHP_PATCH_VERSION}' => $patchVersion['version'],
+      '${PHP_DIGEST}' => $phpDigest,
+      '${CADDY_DIGEST}' => $caddyDigest,
+    ];
+
+    file_put_contents($folder . 'Dockerfile', str_replace(array_keys($replaces), array_values($replaces), $tpl));
 
     exec('rm -rf ' . $folder . '/rootfs');
     exec('cp -R rootfs ' . $folder . '/rootfs');
@@ -123,13 +146,6 @@ foreach ($supportedVersions as $supportedVersion)
             provenance: false
   
 TPL;
-
-    $phpShort = str_replace('.', '', $supportedVersion);
-    $replaces = [
-      '${PHP_VERSION_SHORT}' => $phpShort,
-      '${PHP_VERSION}' => $supportedVersion,
-      '${PHP_PATCH_VERSION}' => $patchVersion['version'],
-    ];
 
     $workflow .= str_replace(array_keys($replaces), array_values($replaces), $workflowTpl);
 

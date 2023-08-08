@@ -1,10 +1,11 @@
 #syntax=docker/dockerfile:1.4
 
-FROM docker.io/library/php:${PHP_VERSION}-fpm-alpine
+FROM docker.io/library/php:${PHP_PATCH_VERSION}-fpm-alpine@${PHP_DIGEST}
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
 RUN apk add --no-cache icu-data-full curl jq && \
+    apk upgrade --no-cache && \
     chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
     mkdir -p /var/www/html && \
@@ -13,7 +14,7 @@ RUN apk add --no-cache icu-data-full curl jq && \
     rm /usr/local/etc/php-fpm.d/www.conf.default
 
 COPY --from=ghcr.io/shyim/supervisord --link /usr/local/bin/supervisord /usr/bin/supervisord
-COPY --from=public.ecr.aws/docker/library/caddy --link /usr/bin/caddy /usr/bin/caddy
+COPY --from=docker.io/library/caddy:latest@${CADDY_DIGEST} --link /usr/bin/caddy /usr/bin/caddy
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
