@@ -18,6 +18,7 @@ COPY --from=docker.io/library/caddy:latest@sha256:89213bb94f8a60ebf0554ffe4a45c1
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
+    SHOPWARE_SKIP_WEBINSTALLER=1 \
     LOCK_DSN=flock \
     MAILER_DSN=null://localhost \
     DATABASE_PORT=3306 \
