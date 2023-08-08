@@ -234,6 +234,14 @@ In a very basic setup when all files are stored locally you need 5 volumes:
 
 It is recommanded to use an external storage provider when possible to store the files. With an external storage provider you won't need any mounts. Refer to [official Shopware docs for setup](https://developer.shopware.com/docs/guides/hosting/infrastructure/filesystem).
 
+## FAQ
+
+<details>
+  <summary>Use Redis for sessions</summary>
+
+   You can set `PHP_SESSION_HANDLER` to `redis` and `PHP_SESSION_SAVE_PATH` to any redis path like `tcp://redis:6379`
+</details>
+
 ## Known issues
 
 <details>
