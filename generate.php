@@ -103,6 +103,9 @@ foreach ($supportedVersions as $supportedVersion)
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
+
+      - name: Login into Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
   
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin

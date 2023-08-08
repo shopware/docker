@@ -9,9 +9,9 @@ RUN apk add --no-cache icu-data-full curl jq && \
     chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
     mkdir -p /var/www/html && \
-    rm /usr/local/etc/php-fpm.d/zz-docker.conf && \
-    rm /usr/local/etc/php-fpm.d/www.conf && \
-    rm /usr/local/etc/php-fpm.d/www.conf.default
+    rm -f /usr/local/etc/php-fpm.d/zz-docker.conf && \
+    rm -f /usr/local/etc/php-fpm.d/www.conf && \
+    rm -f /usr/local/etc/php-fpm.d/www.conf.default
 
 COPY --from=ghcr.io/shyim/supervisord --link /usr/local/bin/supervisord /usr/bin/supervisord
 COPY --from=docker.io/library/caddy:latest@sha256:89213bb94f8a60ebf0554ffe4a45c1af65321140246d34a689e641dae233b063 --link /usr/bin/caddy /usr/bin/caddy
