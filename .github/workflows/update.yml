@@ -1,0 +1,30 @@
+name: Generate Images
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '0 1 * * *'
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+jobs:
+  update:
+    name: Generate Builds
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Generate files
+        run: |
+          php generate.php
+
+      - name: Create Pull Request
+        uses: peter-evans/create-pull-request@v4
+        with:
+          token: ${{ secrets.GH_BOT_TOKEN }}
+          commit-message: 'New docker updates'
+          delete-branch: true
+          assignees: shyim
+          reviewers: shyim
