@@ -190,11 +190,19 @@ jobs:
       - php82-amd64
 
     steps:
+      - name: Login into Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
+
+      - name: Install Regclient
+        run: |
+          wget https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
+          chmod +x regctl-linux-amd64
 
       - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.0 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.29-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.29-arm64
 
@@ -208,6 +216,10 @@ jobs:
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.0.29
 
+      - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.0 friendsofshopware/production-docker-base:8.0
+
+      - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.0.29 friendsofshopware/production-docker-base:8.0.29
+
       - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.1 --amend ghcr.io/friendsofshopware/production-docker-base:8.1.22-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.1.22-arm64
 
       - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.1.22 --amend ghcr.io/friendsofshopware/production-docker-base:8.1.22-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.1.22-arm64
@@ -220,6 +232,10 @@ jobs:
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.1.22
 
+      - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.1 friendsofshopware/production-docker-base:8.1
+
+      - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.1.22 friendsofshopware/production-docker-base:8.1.22
+
       - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.2 --amend ghcr.io/friendsofshopware/production-docker-base:8.2.8-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.2.8-arm64
 
       - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.2.8 --amend ghcr.io/friendsofshopware/production-docker-base:8.2.8-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.2.8-arm64
@@ -231,4 +247,8 @@ jobs:
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.2
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.2.8
+
+      - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.2 friendsofshopware/production-docker-base:8.2
+
+      - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.2.8 friendsofshopware/production-docker-base:8.2.8
 

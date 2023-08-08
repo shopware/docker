@@ -160,6 +160,9 @@ TPL;
     $dockerMerges[] = 'cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion;
     $dockerMerges[] = 'cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'];
 
+    $dockerMerges[] = './regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion . ' friendsofshopware/production-docker-base:' . $supportedVersion;
+    $dockerMerges[] = './regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . ' friendsofshopware/production-docker-base:' . $patchVersion['version'];
+
     $stages[] = 'php' . $phpShort . '-arm64';
     $stages[] = 'php' . $phpShort . '-amd64';
 }
@@ -178,11 +181,19 @@ foreach ($stages as $stage) {
 
 $workflow .= '
     steps:
+      - name: Login into Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Install Cosign
         uses: sigstore/cosign-installer@v3
+
+      - name: Install Regclient
+        run: |
+          wget https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
+          chmod +x regctl-linux-amd64
 
 ';
 
