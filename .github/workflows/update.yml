@@ -4,11 +4,6 @@ on:
   schedule:
     - cron: '0 1 * * *'
 
-permissions:
-  contents: write
-  pull-requests: write
-  actions: write
-
 jobs:
   update:
     name: Generate Builds
@@ -23,7 +18,7 @@ jobs:
       - name: Create Pull Request
         uses: peter-evans/create-pull-request@v5
         with:
-          token: ${{ secrets.GITHUB_TOKEN }}
+          token: ${{ secrets.GH_BOT_TOKEN }}
           commit-message: 'New docker updates'
           delete-branch: true
           assignees: shyim
