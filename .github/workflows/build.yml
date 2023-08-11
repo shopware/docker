@@ -38,7 +38,7 @@ jobs:
 
       - uses: docker/build-push-action@v4
         with:
-          tags: ghcr.io/friendsofshopware/production-docker-base:8.0.27-arm64
+          tags: ghcr.io/friendsofshopware/production-docker-base:8.0.28-arm64
           context: "8.0"
           cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0-arm64
           cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0-arm64,mode=max
@@ -63,7 +63,7 @@ jobs:
   
         - uses: docker/build-push-action@v4
           with:
-            tags: ghcr.io/friendsofshopware/production-docker-base:8.0.27-amd64
+            tags: ghcr.io/friendsofshopware/production-docker-base:8.0.28-amd64
             context: "8.0"
             cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0-amd64
             cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:8.0-amd64,mode=max
@@ -204,21 +204,21 @@ jobs:
           wget https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
           chmod +x regctl-linux-amd64
 
-      - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.0 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.27-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.27-arm64
+      - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.0 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.28-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.28-arm64
 
-      - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.0.27 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.27-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.27-arm64
+      - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.0.28 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.28-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.0.28-arm64
 
       - run: docker manifest push ghcr.io/friendsofshopware/production-docker-base:8.0
 
-      - run: docker manifest push ghcr.io/friendsofshopware/production-docker-base:8.0.27
+      - run: docker manifest push ghcr.io/friendsofshopware/production-docker-base:8.0.28
 
       - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.0
 
-      - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.0.27
+      - run: cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:8.0.28
 
       - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.0 friendsofshopware/production-docker-base:8.0
 
-      - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.0.27 friendsofshopware/production-docker-base:8.0.27
+      - run: ./regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:8.0.28 friendsofshopware/production-docker-base:8.0.28
 
       - run: docker manifest create ghcr.io/friendsofshopware/production-docker-base:8.1 --amend ghcr.io/friendsofshopware/production-docker-base:8.1.21-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:8.1.21-arm64
 
