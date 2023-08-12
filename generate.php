@@ -18,6 +18,7 @@ on:
       - main
     paths:
       - "Dockerfile.template"
+      - ".github/workflows/build.yml"
       - "rootfs/**"
 
 env:
