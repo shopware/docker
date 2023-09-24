@@ -7,17 +7,20 @@ permissions:
 
 jobs:
   scan:
-    name: Image Scan
+    name: 'Image Scan (PHP: ${{ matrix.php-verison}})'
     runs-on: ubuntu-latest
     strategy:
       matrix:
         php-version:
-          - 8.0
-          - 8.1
-          - 8.2
+          - '8.0'
+          - '8.1'
+          - '8.2'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+
+      - name: Pull image
+        run: docker pull friendsofshopware/production-docker-base:${{ matrix.php-verison}}
 
       - name: Scan for vulnerabilities
         id: scan
