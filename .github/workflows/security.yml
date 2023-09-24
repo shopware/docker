@@ -7,7 +7,7 @@ permissions:
 
 jobs:
   scan:
-    name: 'Image Scan (PHP: ${{ matrix.php-verison}})'
+    name: 'Image Scan (PHP: ${{ matrix.php-version }})'
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -20,14 +20,14 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Pull image
-        run: docker pull friendsofshopware/production-docker-base:${{ matrix.php-verison}}
+        run: docker pull friendsofshopware/production-docker-base:${{ matrix.php-version }}
 
       - name: Scan for vulnerabilities
         id: scan
         uses: crazy-max/ghaction-container-scan@v3
         with:
-          image: friendsofshopware/production-docker-base:${{ matrix.php-verison}}
-          dockerfile: ./${{ matrix.php-verison}}/Dockerfile
+          image: friendsofshopware/production-docker-base:${{ matrix.php-version }}
+          dockerfile: ./${{ matrix.php-version }}/Dockerfile
 
       - name: Upload SARIF file
         if: ${{ steps.scan.outputs.sarif != '' }}
