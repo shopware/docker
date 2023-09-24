@@ -1,0 +1,31 @@
+name: Lint Dockerfile
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - "Dockerfile.template"
+  push:
+    paths:
+      - "Dockerfile.template"
+
+jobs:
+  lint:
+    name: 'Lint Dockerfile (PHP: ${{ matrix.php-version }})'
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version:
+          - '8.0'
+          - '8.1'
+          - '8.2'
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Lint Dockerfile
+        id: hadolint
+        uses: hadolint/hadolint-action@master
+        with:
+          dockerfile: ./${{ matrix.php-version }}/Dockerfile
+          ignore: DL3018
