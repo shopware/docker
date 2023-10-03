@@ -39,7 +39,7 @@ else
   php bin/console sales-channel:create:storefront --name=Storefront --url="$APP_URL"
   php bin/console theme:change --all Storefront
   php bin/console system:config:set core.frw.completedAt '2019-10-07T10:46:23+00:00'
-  php bin/console system:config:set core.metrics.shareUsageData false --json
+  php bin/console system:config:set core.usageData.shareUsageData false --json
   php bin/console plugin:refresh
 
   install_all_plugins
