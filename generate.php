@@ -2,10 +2,12 @@
 
 require __DIR__ . '/functions.php';
 
-$supportedVersions = ['8.0', '8.1', '8.2'];
+$supportedVersions = ['8.0', '8.1', '8.2', '8.3'];
+$rcVersions = ['8.3.0RC3'];
+
 $index = [];
 $tpl = file_get_contents('Dockerfile.template');
-$versionRegex ='/^(?<version>\d\.\d\.\d{1,})/m';
+$versionRegex ='/^(?<version>\d\.\d\.\d{1,}(RC\d)?)/m';
 
 $caddyDigest = get_digest_of_image('library/caddy', 'latest');
 
@@ -46,9 +48,12 @@ foreach ($supportedVersions as $supportedVersion)
 
     $curVersion = null;
     $patchVersion = null;
+    $rcVersion = null;
 
     foreach ($apiResponse['results'] as $entry) {
-        if (strpos($entry['name'], 'RC') !== false) {
+        preg_match($versionRegex, $entry['name'], $rcVersion);
+
+        if (strpos($entry['name'], 'RC') !== false && !in_array($rcVersion['version'], $rcVersions)) {
             continue;
         }
 
