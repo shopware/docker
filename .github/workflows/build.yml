@@ -5,7 +5,7 @@ on:
     branches:
       - main
     paths:
-      - "Dockerfile.template"
+      - "**/Dockerfile"
       - ".github/workflows/build.yml"
       - "rootfs/**"
 
