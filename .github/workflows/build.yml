@@ -272,9 +272,9 @@ jobs:
 
       - run: cosign sign --yes ghcr.io/shopware/docker-base:8.0.28
 
-#      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.0 shopware/docker-base:8.0
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.0 shopware/docker-base:8.0
 
-#      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.0.28 shopware/docker-base:8.0.28
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.0.28 shopware/docker-base:8.0.28
 
       - run: docker manifest create ghcr.io/shopware/docker-base:8.1 --amend ghcr.io/shopware/docker-base:8.1.23-amd64 --amend ghcr.io/shopware/docker-base:8.1.23-arm64
 
@@ -288,9 +288,9 @@ jobs:
 
       - run: cosign sign --yes ghcr.io/shopware/docker-base:8.1.23
 
-#      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.1 shopware/docker-base:8.1
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.1 shopware/docker-base:8.1
 
-#      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.1.23 shopware/docker-base:8.1.23
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.1.23 shopware/docker-base:8.1.23
 
       - run: docker manifest create ghcr.io/shopware/docker-base:8.2 --amend ghcr.io/shopware/docker-base:8.2.11-amd64 --amend ghcr.io/shopware/docker-base:8.2.11-arm64
 
@@ -304,9 +304,9 @@ jobs:
 
       - run: cosign sign --yes ghcr.io/shopware/docker-base:8.2.11
 
-#      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.2 shopware/docker-base:8.2
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.2 shopware/docker-base:8.2
 
-#      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.2.11 shopware/docker-base:8.2.11
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.2.11 shopware/docker-base:8.2.11
 
       - run: docker manifest create ghcr.io/shopware/docker-base:8.3 --amend ghcr.io/shopware/docker-base:8.3.0RC3-amd64 --amend ghcr.io/shopware/docker-base:8.3.0RC3-arm64
 
@@ -320,7 +320,7 @@ jobs:
 
       - run: cosign sign --yes ghcr.io/shopware/docker-base:8.3.0RC3
 
-#      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3 shopware/docker-base:8.3
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3 shopware/docker-base:8.3
 
-#      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3.0RC3 shopware/docker-base:8.3.0RC3
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3.0RC3 shopware/docker-base:8.3.0RC3
 
