@@ -109,10 +109,10 @@ foreach ($supportedVersions as $supportedVersion)
 
       - uses: docker/build-push-action@v4
         with:
-          tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-arm64
+          tags: ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-arm64
           context: "${PHP_VERSION}"
-          cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:${PHP_VERSION}-arm64
-          cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:${PHP_VERSION}-arm64,mode=max
+          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-arm64
+          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-arm64,mode=max
           platforms: linux/arm64
           push: true
           provenance: false
@@ -134,10 +134,10 @@ foreach ($supportedVersions as $supportedVersion)
   
         - uses: docker/build-push-action@v4
           with:
-            tags: ghcr.io/friendsofshopware/production-docker-base:${PHP_PATCH_VERSION}-amd64
+            tags: ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-amd64
             context: "${PHP_VERSION}"
-            cache-from: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:${PHP_VERSION}-amd64
-            cache-to: type=registry,ref=ghcr.io/friendsofshopware/production-docker-cache:${PHP_VERSION}-amd64,mode=max
+            cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-amd64
+            cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-amd64,mode=max
             platforms: linux/amd64
             push: true
             provenance: false
@@ -146,16 +146,16 @@ TPL;
 
     $workflow .= str_replace(array_keys($replaces), array_values($replaces), $workflowTpl);
 
-    $dockerMerges[] = 'docker manifest create ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion . ' --amend ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . '-arm64';
-    $dockerMerges[] = 'docker manifest create ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . ' --amend ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . '-arm64';
-    $dockerMerges[] = 'docker manifest push ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion;
-    $dockerMerges[] = 'docker manifest push ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'];
+    $dockerMerges[] = 'docker manifest create ghcr.io/shopware/docker-base:' . $supportedVersion . ' --amend ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-arm64';
+    $dockerMerges[] = 'docker manifest create ghcr.io/shopware/docker-base:' . $patchVersion['version'] . ' --amend ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-arm64';
+    $dockerMerges[] = 'docker manifest push ghcr.io/shopware/docker-base:' . $supportedVersion;
+    $dockerMerges[] = 'docker manifest push ghcr.io/shopware/docker-base:' . $patchVersion['version'];
 
-    $dockerMerges[] = 'cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion;
-    $dockerMerges[] = 'cosign sign --yes ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'];
+    $dockerMerges[] = 'cosign sign --yes ghcr.io/shopware/docker-base:' . $supportedVersion;
+    $dockerMerges[] = 'cosign sign --yes ghcr.io/shopware/docker-base:' . $patchVersion['version'];
 
-    $dockerMerges[] = './regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:' . $supportedVersion . ' friendsofshopware/production-docker-base:' . $supportedVersion;
-    $dockerMerges[] = './regctl-linux-amd64 image copy ghcr.io/friendsofshopware/production-docker-base:' . $patchVersion['version'] . ' friendsofshopware/production-docker-base:' . $patchVersion['version'];
+    $dockerMerges[] = './regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:' . $supportedVersion . ' shopware/docker-base:' . $supportedVersion;
+    $dockerMerges[] = './regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:' . $patchVersion['version'] . ' shopware/docker-base:' . $patchVersion['version'];
 
     $stages[] = 'php' . $phpShort . '-arm64';
     $stages[] = 'php' . $phpShort . '-amd64';
@@ -165,7 +165,7 @@ $workflow .= '
 
   merge-manifest:
     name: Merge Manifest
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     needs:
 ';
 

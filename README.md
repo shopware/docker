@@ -10,8 +10,8 @@ Create a Dockerfile in your project like:
 #syntax=docker/dockerfile:1.4
 
 # pin versions
-FROM ghcr.io/friendsofshopware/production-docker-base:8.2 as base-image
-FROM ghcr.io/friendsofshopware/shopware-cli:0.2.4-php-8.2 as shopware-cli
+FROM ghcr.io/shopware/docker-base:8.2 as base-image
+FROM ghcr.io/friendsofshopware/shopware-cli:latest-php-8.2 as shopware-cli
 
 # build
 
@@ -32,7 +32,7 @@ FROM base-image
 COPY --from=build --chown=www-data /src /var/www/html
 ```
 
-or better run `composer req frosh/production-docker` to install the Symfony Recipe.
+or better run `composer req shopware/docker` to install the Symfony Recipe.
 
 In the stage `build` we are using shopware-cli to build the Shopware files:
 
