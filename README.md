@@ -156,8 +156,8 @@ services:
             - thumbnail:/var/www/html/public/thumbnail
             - sitemap:/var/www/html/public/sitemap
         depends_on:
-        init:
-            condition: service_completed_successfully
+            init:
+                condition: service_completed_successfully
         env_file: .app.env
         entrypoint: [ "php", "bin/console", "messenger:consume", "async", "--time-limit=300", "--memory-limit=512M" ]
         deploy:
