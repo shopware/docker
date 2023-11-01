@@ -3,7 +3,7 @@
 require __DIR__ . '/functions.php';
 
 $supportedVersions = ['8.0', '8.1', '8.2', '8.3'];
-$rcVersions = ['8.3.0RC3'];
+$rcVersions = ['8.3.0RC5'];
 
 $index = [];
 $tpl = file_get_contents('Dockerfile.template');
