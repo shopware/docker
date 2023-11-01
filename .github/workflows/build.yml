@@ -198,7 +198,7 @@ jobs:
 
       - uses: docker/build-push-action@v4
         with:
-          tags: ghcr.io/shopware/docker-base:8.3.0RC3-arm64
+          tags: ghcr.io/shopware/docker-base:8.3.0RC5-arm64
           context: "8.3"
           cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-arm64
           cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-arm64,mode=max
@@ -223,7 +223,7 @@ jobs:
   
         - uses: docker/build-push-action@v4
           with:
-            tags: ghcr.io/shopware/docker-base:8.3.0RC3-amd64
+            tags: ghcr.io/shopware/docker-base:8.3.0RC5-amd64
             context: "8.3"
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-amd64,mode=max
@@ -308,19 +308,19 @@ jobs:
 
       - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.2.11 shopware/docker-base:8.2.11
 
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.3 --amend ghcr.io/shopware/docker-base:8.3.0RC3-amd64 --amend ghcr.io/shopware/docker-base:8.3.0RC3-arm64
+      - run: docker manifest create ghcr.io/shopware/docker-base:8.3 --amend ghcr.io/shopware/docker-base:8.3.0RC5-amd64 --amend ghcr.io/shopware/docker-base:8.3.0RC5-arm64
 
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.3.0RC3 --amend ghcr.io/shopware/docker-base:8.3.0RC3-amd64 --amend ghcr.io/shopware/docker-base:8.3.0RC3-arm64
+      - run: docker manifest create ghcr.io/shopware/docker-base:8.3.0RC5 --amend ghcr.io/shopware/docker-base:8.3.0RC5-amd64 --amend ghcr.io/shopware/docker-base:8.3.0RC5-arm64
 
       - run: docker manifest push ghcr.io/shopware/docker-base:8.3
 
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.3.0RC3
+      - run: docker manifest push ghcr.io/shopware/docker-base:8.3.0RC5
 
       - run: cosign sign --yes ghcr.io/shopware/docker-base:8.3
 
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.3.0RC3
+      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.3.0RC5
 
       - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3 shopware/docker-base:8.3
 
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3.0RC3 shopware/docker-base:8.3.0RC3
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3.0RC5 shopware/docker-base:8.3.0RC5
 
