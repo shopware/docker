@@ -18,6 +18,7 @@ on:
   push:
     branches:
       - main
+      - hydro-build
     paths:
       - "Dockerfile.template"
       - ".github/workflows/build.yml"
@@ -89,36 +90,8 @@ foreach ($supportedVersions as $supportedVersion)
 
     $workflowTpl = <<<'TPL'
 
-  php${PHP_VERSION_SHORT}-arm64:
-    name: ${PHP_VERSION} on ARM64
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-  
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - uses: docker/build-push-action@v4
-        with:
-          tags: ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-arm64
-          context: "${PHP_VERSION}"
-          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-arm64
-          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-arm64,mode=max
-          platforms: linux/arm64
-          push: true
-          provenance: false
-
-  php${PHP_VERSION_SHORT}-amd64:
-      name: ${PHP_VERSION} on AMD64
+  php${PHP_VERSION_SHORT}:
+      name: ${PHP_VERSION}
       runs-on: ubuntu-22.04
       steps:
         - uses: actions/checkout@v3
@@ -129,70 +102,30 @@ foreach ($supportedVersions as $supportedVersion)
         - name: Login into Github Docker Registery
           run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
   
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v2
-  
-        - uses: docker/build-push-action@v4
+        - name: Log in to Docker Hub
+          uses: docker/login-action@v3
           with:
-            tags: ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-amd64
+            username: ${{ secrets.DOCKER_HUB_USERNAME }}
+            password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+
+        - name: Set up Docker Buildx
+          uses: docker/setup-buildx-action@v3
+          with:
+            version: "lab:latest"
+            driver: cloud
+            endpoint: "shopware/default"
+  
+        - uses: docker/build-push-action@v5
+          with:
+            tags: ghcr.io/shopware/docker-base-hydro:${PHP_PATCH_VERSION}
             context: "${PHP_VERSION}"
-            cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-amd64
-            cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-amd64,mode=max
-            platforms: linux/amd64
+            platforms: linux/amd64,linux/arm64
             push: true
             provenance: false
   
 TPL;
 
     $workflow .= str_replace(array_keys($replaces), array_values($replaces), $workflowTpl);
-
-    $dockerMerges[] = 'docker manifest create ghcr.io/shopware/docker-base:' . $supportedVersion . ' --amend ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-arm64';
-    $dockerMerges[] = 'docker manifest create ghcr.io/shopware/docker-base:' . $patchVersion['version'] . ' --amend ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-amd64 --amend ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-arm64';
-    $dockerMerges[] = 'docker manifest push ghcr.io/shopware/docker-base:' . $supportedVersion;
-    $dockerMerges[] = 'docker manifest push ghcr.io/shopware/docker-base:' . $patchVersion['version'];
-
-    $dockerMerges[] = 'cosign sign --yes ghcr.io/shopware/docker-base:' . $supportedVersion;
-    $dockerMerges[] = 'cosign sign --yes ghcr.io/shopware/docker-base:' . $patchVersion['version'];
-
-    $dockerMerges[] = './regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:' . $supportedVersion . ' shopware/docker-base:' . $supportedVersion;
-    $dockerMerges[] = './regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:' . $patchVersion['version'] . ' shopware/docker-base:' . $patchVersion['version'];
-
-    $stages[] = 'php' . $phpShort . '-arm64';
-    $stages[] = 'php' . $phpShort . '-amd64';
-}
-
-$workflow .= '
-
-  merge-manifest:
-    name: Merge Manifest
-    runs-on: ubuntu-latest
-    needs:
-';
-
-foreach ($stages as $stage) {
-  $workflow .= '      - ' . $stage . "\n";
-}
-
-$workflow .= '
-    steps:
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Install Regclient
-        run: |
-          wget https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
-          chmod +x regctl-linux-amd64
-
-';
-
-foreach ($dockerMerges as $merge) {
-  $workflow .= "      - run: " . $merge . "\n\n";
 }
 
 file_put_contents('.github/workflows/build.yml', $workflow);
