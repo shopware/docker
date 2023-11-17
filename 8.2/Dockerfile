@@ -15,7 +15,7 @@ RUN apk add --no-cache icu-data-full curl jq && \
     rm -f /usr/local/etc/php-fpm.d/www.conf.default
 
 COPY --from=ghcr.io/shyim/supervisord:latest --link /usr/local/bin/supervisord /usr/bin/supervisord
-COPY --from=docker.io/library/caddy:latest@sha256:325f81ca0328db0737503a53f43717fce79ea0c574e83f8e586c8d350cadf34b --link /usr/bin/caddy /usr/bin/caddy
+COPY --from=docker.io/library/caddy:latest@sha256:8ad203c3e138030bb889c2bec51de287a978e9b0c85fb0f884f359ecd4067c4b --link /usr/bin/caddy /usr/bin/caddy
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
