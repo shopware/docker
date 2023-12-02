@@ -91,7 +91,7 @@ foreach ($supportedVersions as $supportedVersion)
 
   php${PHP_VERSION_SHORT}-arm64:
     name: ${PHP_VERSION} on ARM64
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    runs-on: hcloud-arm64-small
     steps:
       - uses: actions/checkout@v3
 
