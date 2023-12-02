@@ -21,7 +21,7 @@ permissions:
 jobs:
   php80-arm64:
     name: 8.0 on ARM64
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    runs-on: hcloud-arm64-small
     steps:
       - uses: actions/checkout@v3
 
@@ -74,7 +74,7 @@ jobs:
   
   php81-arm64:
     name: 8.1 on ARM64
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    runs-on: hcloud-arm64-small
     steps:
       - uses: actions/checkout@v3
 
@@ -127,7 +127,7 @@ jobs:
   
   php82-arm64:
     name: 8.2 on ARM64
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    runs-on: hcloud-arm64-small
     steps:
       - uses: actions/checkout@v3
 
@@ -180,7 +180,7 @@ jobs:
   
   php83-arm64:
     name: 8.3 on ARM64
-    runs-on: buildjet-2vcpu-ubuntu-2204-arm
+    runs-on: hcloud-arm64-small
     steps:
       - uses: actions/checkout@v3
 
