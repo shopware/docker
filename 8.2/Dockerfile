@@ -1,6 +1,6 @@
 #syntax=docker/dockerfile:1.4
 
-FROM docker.io/library/php:8.2.12-fpm-alpine@sha256:9a1f2a7dba5605e05926ad8d3e837609c17acc7210f9a495a753ebc01bd8fa66
+FROM docker.io/library/php:8.2.13-fpm-alpine@sha256:0eeb1e24231711e5e0b9a6e746cfd7fdc0a39682404cfccbebf8ff846f819bad
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
@@ -15,7 +15,7 @@ RUN apk add --no-cache icu-data-full curl jq && \
     rm -f /usr/local/etc/php-fpm.d/www.conf.default
 
 COPY --from=ghcr.io/shyim/supervisord:latest --link /usr/local/bin/supervisord /usr/bin/supervisord
-COPY --from=docker.io/library/caddy:latest@sha256:9eb928f0a3142d0a38e6d457f7696c08c13e070d49d6499cc5b0afe644ecb281 --link /usr/bin/caddy /usr/bin/caddy
+COPY --from=docker.io/library/caddy:latest@sha256:e523a9bc9e19fb96a082b4d83ebae2ce6267f56f2b7b4ac462135ebc51f68e58 --link /usr/bin/caddy /usr/bin/caddy
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
