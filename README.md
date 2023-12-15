@@ -103,12 +103,13 @@ services:
     init-perm:
         image: alpine
         volumes:
+            - jwt:/var/www/html/config/jwt
             - files:/var/www/html/files
             - theme:/var/www/html/public/theme
             - media:/var/www/html/public/media
             - thumbnail:/var/www/html/public/thumbnail
             - sitemap:/var/www/html/public/sitemap
-        command: chown 82:82 /var/www/html/files /var/www/html/public/theme /var/www/html/public/media /var/www/html/public/thumbnail /var/www/html/public/sitemap
+        command: chown 82:82 /var/www/html/files /var/www/html/public/theme /var/www/html/public/media /var/www/html/public/thumbnail /var/www/html/public/sitemap /var/www/html/config/jwt
 
     init:
         image: local
@@ -117,6 +118,7 @@ services:
         env_file: .app.env
         entrypoint: /setup
         volumes:
+            - jwt:/var/www/html/config/jwt
             - files:/var/www/html/files
             - theme:/var/www/html/public/theme
             - media:/var/www/html/public/media
@@ -132,6 +134,7 @@ services:
         build:
             context: .
         volumes:
+            - jwt:/var/www/html/config/jwt
             - files:/var/www/html/files
             - theme:/var/www/html/public/theme
             - media:/var/www/html/public/media
@@ -150,6 +153,7 @@ services:
         build:
             context: .
         volumes:
+            - jwt:/var/www/html/config/jwt
             - files:/var/www/html/files
             - theme:/var/www/html/public/theme
             - media:/var/www/html/public/media
@@ -165,6 +169,7 @@ services:
 
 volumes:
     mysql-data:
+    jwt:
     files:
     theme:
     media:
