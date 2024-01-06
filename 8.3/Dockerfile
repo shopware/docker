@@ -1,6 +1,6 @@
 #syntax=docker/dockerfile:1.4
 
-FROM docker.io/library/php:8.3.0-fpm-alpine@sha256:1ddc15c27a04d02521a9ec6137211bad3d7380286136b79c7a25f59f61a774a7
+FROM docker.io/library/php:8.3.1-fpm-alpine@sha256:3b8c170dfa6e6c06a074656837af4ca9b5e8dc748f5ced0785a46f018f2b1dc8
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
