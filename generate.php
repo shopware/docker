@@ -9,7 +9,7 @@ $index = [];
 $tpl = file_get_contents('Dockerfile.template');
 $versionRegex ='/^(?<version>\d\.\d\.\d{1,}(RC\d)?)/m';
 
-$caddyDigest = get_digest_of_image('library/caddy', 'latest');
+$supervisord = get_digest_of_image('shyim/supervisord', 'latest');
 
 $workflow = <<<YML
 name: Build
@@ -77,7 +77,7 @@ foreach ($supportedVersions as $supportedVersion)
       '${PHP_VERSION}' => $supportedVersion,
       '${PHP_PATCH_VERSION}' => $patchVersion['version'],
       '${PHP_DIGEST}' => $phpDigest,
-      '${CADDY_DIGEST}' => $caddyDigest,
+      '${SUPERVISORD_DIGEST}' => $supervisord,
     ];
 
     file_put_contents($folder . 'Dockerfile', str_replace(array_keys($replaces), array_values($replaces), $tpl));

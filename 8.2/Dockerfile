@@ -4,7 +4,7 @@ FROM docker.io/library/php:8.2.14-fpm-alpine@sha256:27d888ffb761d4ceb967067bb238
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN apk add --no-cache icu-data-full curl jq && \
+RUN apk add --no-cache icu-data-full curl jq caddy && \
     apk upgrade --no-cache && \
     chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
@@ -14,8 +14,7 @@ RUN apk add --no-cache icu-data-full curl jq && \
     rm -f /usr/local/etc/php-fpm.d/www.conf && \
     rm -f /usr/local/etc/php-fpm.d/www.conf.default
 
-COPY --from=ghcr.io/shyim/supervisord:latest --link /usr/local/bin/supervisord /usr/bin/supervisord
-COPY --from=docker.io/library/caddy:latest@sha256:bcf45332e3ebd42456f5fe63be2175ebfee971d85c2cd1bd837dd0beb422fa1c --link /usr/bin/caddy /usr/bin/caddy
+COPY --from=shyim/supervisord:latest@sha256:8671c375d4890f6592dcab242758427f47303b47b96fe31d86c949a496a9cda2 --link /usr/local/bin/supervisord /usr/bin/supervisord
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
