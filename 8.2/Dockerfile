@@ -12,7 +12,8 @@ RUN apk add --no-cache icu-data-full curl jq caddy && \
     mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini" && \
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf && \
     rm -f /usr/local/etc/php-fpm.d/www.conf && \
-    rm -f /usr/local/etc/php-fpm.d/www.conf.default
+    rm -f /usr/local/etc/php-fpm.d/www.conf.default && \
+    ln -s /usr/sbin/caddy /usr/bin/caddy
 
 COPY --from=shyim/supervisord:latest@sha256:8671c375d4890f6592dcab242758427f47303b47b96fe31d86c949a496a9cda2 --link /usr/local/bin/supervisord /usr/bin/supervisord
 
