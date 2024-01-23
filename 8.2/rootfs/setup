@@ -2,12 +2,23 @@
 
 set -e
 
-until nc -z -v -w30 $DATABASE_HOST $DATABASE_PORT
-do
-  echo "Waiting for database connection..."
-  # wait for 5 seconds before check again
-  sleep 5
-done
+try=0
+
+if [[ $MYSQL_WAIT_SECONDS != 0 ]]; then
+  until nc -z -v -w30 $DATABASE_HOST $DATABASE_PORT
+  do
+    echo "Waiting for database connection..."
+    # wait for 5 seconds before check again
+    sleep 1
+
+    try=$((try+1))
+
+    if [[ $try -gt $MYSQL_WAIT_SECONDS ]]; then
+      echo "Error: We have been waiting for database connection too long already; failing."
+      exit 1
+    fi
+  done
+fi
 
 update_all_plugins() {
   list_with_updates=$(php bin/console plugin:list --json | jq 'map(select(.upgradeVersion != null)) | .[].name' -r)
