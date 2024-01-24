@@ -46,12 +46,16 @@ install_all_plugins() {
 }
 
 if php bin/console system:config:get shopware.installed; then
-  console system:update:finish
+  if [[ ${SHOPWARE_SKIP_ASSET_COPY-""} ]]; then
+      console system:update:finish --skip-assets
+  else
+      console system:update:finish
+  fi
+
   console plugin:refresh
 
   update_all_plugins
   install_all_plugins
-  console theme:compile
 else
   # Shopware is not installed
   console system:install --create-database "--shop-locale=$INSTALL_LOCALE" "--shop-currency=$INSTALL_CURRENCY" --force
