@@ -43,7 +43,7 @@ install_all_plugins() {
 
 if console system:is-installed; then
   if [[ ${SHOPWARE_SKIP_ASSET_COPY-""} ]]; then
-      console system:update:finish --skip-assets
+      console system:update:finish --skip-asset-build
   else
       console system:update:finish
   fi
