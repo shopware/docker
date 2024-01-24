@@ -24,7 +24,7 @@ if [[ $MYSQL_WAIT_SECONDS != 0 ]]; then
 fi
 
 console() {
-  console "$@"
+  php -derror_reporting=E_ALL bin/console "$@"
 }
 
 update_all_plugins() {

@@ -6,7 +6,7 @@ set -x
 shopware_version=$(jq '.packages[] | select(.name == "shopware/core") | .version' -r < composer.lock)
 # if shopware version starts with 6.6 echo 6.6
 if [[ $shopware_version == v6.6.* ]]; then
-  source /setup_6.6.x.sh
+  source /setup_6.6.x
 else
-  source /setup_6.5.x.sh
+  source /setup_6.5.x
 fi
