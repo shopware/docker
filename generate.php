@@ -134,6 +134,7 @@ foreach ($supportedVersions as $supportedVersion)
           with:
             tags: ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-amd64
             context: .
+            file: ${PHP_VERSION}/Dockerfile
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-amd64,mode=max
             platforms: linux/amd64
