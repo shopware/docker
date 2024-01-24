@@ -2,8 +2,8 @@
 
 require __DIR__ . '/functions.php';
 
-$supportedVersions = ['8.0', '8.1', '8.2', '8.3'];
-$rcVersions = ['8.3.0RC5'];
+$supportedVersions = ['8.1', '8.2', '8.3'];
+$rcVersions = [];
 
 $index = [];
 $tpl = file_get_contents('Dockerfile.template');
@@ -82,9 +82,6 @@ foreach ($supportedVersions as $supportedVersion)
 
     file_put_contents($folder . 'Dockerfile', str_replace(array_keys($replaces), array_values($replaces), $tpl));
 
-    exec('rm -rf ' . $folder . '/rootfs');
-    exec('cp -R rootfs ' . $folder . '/rootfs');
-
     $index[$supportedVersion] = $patchVersion['version'];
 
     $workflowTpl = <<<'TPL'
@@ -110,7 +107,7 @@ foreach ($supportedVersions as $supportedVersion)
       - uses: docker/build-push-action@v4
         with:
           tags: ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-arm64
-          context: "${PHP_VERSION}"
+          context: .
           cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-arm64
           cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-arm64,mode=max
           platforms: linux/arm64
@@ -135,7 +132,7 @@ foreach ($supportedVersions as $supportedVersion)
         - uses: docker/build-push-action@v4
           with:
             tags: ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-amd64
-            context: "${PHP_VERSION}"
+            context: .
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${PHP_VERSION}-amd64,mode=max
             platforms: linux/amd64
