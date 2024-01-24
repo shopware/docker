@@ -30,11 +30,7 @@ console() {
 }
 
 update_all_plugins() {
-  list_with_updates=$(php bin/console plugin:list --json | jq 'map(select(.upgradeVersion != null)) | .[].name' -r)
-
-  for plugin in $list_with_updates; do
-    console plugin:update $plugin
-  done
+  plugin:update:all
 }
 
 install_all_plugins() {
