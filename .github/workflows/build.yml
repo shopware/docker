@@ -67,6 +67,7 @@ jobs:
           with:
             tags: ghcr.io/shopware/docker-base:8.1.26-amd64
             context: .
+            file: 8.1/Dockerfile
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-amd64,mode=max
             platforms: linux/amd64
@@ -121,6 +122,7 @@ jobs:
           with:
             tags: ghcr.io/shopware/docker-base:8.2.14-amd64
             context: .
+            file: 8.2/Dockerfile
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-amd64,mode=max
             platforms: linux/amd64
@@ -175,6 +177,7 @@ jobs:
           with:
             tags: ghcr.io/shopware/docker-base:8.3.1-amd64
             context: .
+            file: 8.3/Dockerfile
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-amd64,mode=max
             platforms: linux/amd64
