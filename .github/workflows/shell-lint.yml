@@ -1,0 +1,19 @@
+name: Shellcheck
+on:
+  pull_request:
+    paths:
+      - "rootfs/setup*"
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Shell Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Run ShellCheck
+        uses: ludeeus/action-shellcheck@master

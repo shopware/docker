@@ -3,12 +3,14 @@
 set -e
 set -x
 
-database_host=$(trurl $DATABASE_URL --get '{host}')
-database_port=$(trurl $DATABASE_URL --get '{port}')
+database_host=$(trurl "$DATABASE_URL" --get '{host}')
+database_port=$(trurl "$DATABASE_URL" --get '{port}')
+
+MYSQL_WAIT_SECONDS=${MYSQL_WAIT_SECONDS:-20}
 
 try=0
-if [[ $MYSQL_WAIT_SECONDS != 0 ]]; then
-  until nc -z -v -w30 $database_host ${database_port:-3306}
+if [ "$MYSQL_WAIT_SECONDS" != 0 ]; then
+  until nc -z -v -w30 "$database_host" "${database_port:-3306}"
   do
     echo "Waiting for database connection..."
     # wait for 5 seconds before check again
@@ -16,7 +18,7 @@ if [[ $MYSQL_WAIT_SECONDS != 0 ]]; then
 
     try=$((try+1))
 
-    if [[ $try -gt $MYSQL_WAIT_SECONDS ]]; then
+    if [ $try = "$MYSQL_WAIT_SECONDS" ]; then
       echo "Error: We have been waiting for database connection too long already; failing."
       exit 1
     fi
