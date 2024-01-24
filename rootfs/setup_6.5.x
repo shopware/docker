@@ -51,7 +51,6 @@ if php bin/console system:config:get shopware.installed; then
 
   update_all_plugins
   install_all_plugins
-  php -derror_reporting=E_ALL bin/console theme:compile
 else
   # Shopware is not installed
   php -derror_reporting=E_ALL bin/console system:install --create-database "--shop-locale=$INSTALL_LOCALE" "--shop-currency=$INSTALL_CURRENCY" --force
