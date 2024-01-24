@@ -40,3 +40,9 @@ jobs:
 
       - name: Check if shopware is running
         run: curl --fail localhost:8000/admin
+
+      # output logs if failed
+      - name: Output logs
+        working-directory: example-repo
+        run: docker compose logs
+        if: ${{ failure() }}
