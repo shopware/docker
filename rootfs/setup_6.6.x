@@ -30,11 +30,7 @@ console() {
 }
 
 update_all_plugins() {
-  list_with_updates=$(php bin/console plugin:list --json | jq 'map(select(.upgradeVersion != null)) | .[].name' -r)
-
-  for plugin in $list_with_updates; do
-    console plugin:update $plugin
-  done
+  console plugin:update:all
 }
 
 install_all_plugins() {
@@ -45,7 +41,7 @@ install_all_plugins() {
   done
 }
 
-if php bin/console system:config:get shopware.installed; then
+if console system:is-installed; then
   if [[ ${SHOPWARE_SKIP_ASSET_COPY-""} ]]; then
       console system:update:finish --skip-assets
   else
