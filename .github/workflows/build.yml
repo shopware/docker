@@ -19,59 +19,6 @@ permissions:
   packages: write
 
 jobs:
-  php80-arm64:
-    name: 8.0 on ARM64
-    runs-on: hcloud-arm64-small
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-  
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - uses: docker/build-push-action@v4
-        with:
-          tags: ghcr.io/shopware/docker-base:8.0.28-arm64
-          context: "8.0"
-          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.0-arm64
-          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.0-arm64,mode=max
-          platforms: linux/arm64
-          push: true
-          provenance: false
-
-  php80-amd64:
-      name: 8.0 on AMD64
-      runs-on: ubuntu-22.04
-      steps:
-        - uses: actions/checkout@v3
-
-        - name: Install Cosign
-          uses: sigstore/cosign-installer@v3
-  
-        - name: Login into Github Docker Registery
-          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v2
-  
-        - uses: docker/build-push-action@v4
-          with:
-            tags: ghcr.io/shopware/docker-base:8.0.28-amd64
-            context: "8.0"
-            cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.0-amd64
-            cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.0-amd64,mode=max
-            platforms: linux/amd64
-            push: true
-            provenance: false
-  
   php81-arm64:
     name: 8.1 on ARM64
     runs-on: hcloud-arm64-small
@@ -93,7 +40,7 @@ jobs:
       - uses: docker/build-push-action@v4
         with:
           tags: ghcr.io/shopware/docker-base:8.1.26-arm64
-          context: "8.1"
+          context: .
           cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-arm64
           cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-arm64,mode=max
           platforms: linux/arm64
@@ -118,7 +65,7 @@ jobs:
         - uses: docker/build-push-action@v4
           with:
             tags: ghcr.io/shopware/docker-base:8.1.26-amd64
-            context: "8.1"
+            context: .
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-amd64,mode=max
             platforms: linux/amd64
@@ -146,7 +93,7 @@ jobs:
       - uses: docker/build-push-action@v4
         with:
           tags: ghcr.io/shopware/docker-base:8.2.14-arm64
-          context: "8.2"
+          context: .
           cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-arm64
           cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-arm64,mode=max
           platforms: linux/arm64
@@ -171,7 +118,7 @@ jobs:
         - uses: docker/build-push-action@v4
           with:
             tags: ghcr.io/shopware/docker-base:8.2.14-amd64
-            context: "8.2"
+            context: .
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-amd64,mode=max
             platforms: linux/amd64
@@ -199,7 +146,7 @@ jobs:
       - uses: docker/build-push-action@v4
         with:
           tags: ghcr.io/shopware/docker-base:8.3.1-arm64
-          context: "8.3"
+          context: .
           cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-arm64
           cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-arm64,mode=max
           platforms: linux/arm64
@@ -224,7 +171,7 @@ jobs:
         - uses: docker/build-push-action@v4
           with:
             tags: ghcr.io/shopware/docker-base:8.3.1-amd64
-            context: "8.3"
+            context: .
             cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-amd64
             cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-amd64,mode=max
             platforms: linux/amd64
@@ -236,8 +183,6 @@ jobs:
     name: Merge Manifest
     runs-on: ubuntu-latest
     needs:
-      - php80-arm64
-      - php80-amd64
       - php81-arm64
       - php81-amd64
       - php82-arm64
@@ -259,22 +204,6 @@ jobs:
         run: |
           wget https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
           chmod +x regctl-linux-amd64
-
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.0 --amend ghcr.io/shopware/docker-base:8.0.28-amd64 --amend ghcr.io/shopware/docker-base:8.0.28-arm64
-
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.0.28 --amend ghcr.io/shopware/docker-base:8.0.28-amd64 --amend ghcr.io/shopware/docker-base:8.0.28-arm64
-
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.0
-
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.0.28
-
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.0
-
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.0.28
-
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.0 shopware/docker-base:8.0
-
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.0.28 shopware/docker-base:8.0.28
 
       - run: docker manifest create ghcr.io/shopware/docker-base:8.1 --amend ghcr.io/shopware/docker-base:8.1.26-amd64 --amend ghcr.io/shopware/docker-base:8.1.26-arm64
 

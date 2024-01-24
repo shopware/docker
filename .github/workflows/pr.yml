@@ -27,7 +27,7 @@ jobs:
           tags: |
             shopware/docker-base:8.3
             docker.io/shopware/docker-base:8.3
-          context: 8.3/
+          context: .
           file: 8.3/Dockerfile
           cache-from: type=gha
           cache-to: type=gha,mode=max
