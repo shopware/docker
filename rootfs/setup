@@ -3,10 +3,13 @@
 set -e
 set -x
 
-shopware_version=$(jq '.packages[] | select(.name == "shopware/core") | .version' -r < composer.lock)
+shopware_version=$(jq '.packages[] | select (.name == "shopware/core") | .version' -r < composer.lock)
 # if shopware version starts with 6.6 echo 6.6
+# shellcheck disable=SC2081,SC3010
 if [[ $shopware_version == v6.6.* ]]; then
-  source /setup_6.6.x
+  # shellcheck source=/dev/null
+  . /setup_6.6.x
 else
-  source /setup_6.5.x
+  # shellcheck source=/dev/null
+  . /setup_6.5.x
 fi
