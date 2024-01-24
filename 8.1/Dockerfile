@@ -4,7 +4,7 @@ FROM docker.io/library/php:8.1.26-fpm-alpine@sha256:b480cfc032ee8fc1e0fcc0925301
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN apk add --no-cache icu-data-full curl jq caddy && \
+RUN apk add --no-cache icu-data-full curl jq trurl caddy && \
     apk upgrade --no-cache && \
     chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
