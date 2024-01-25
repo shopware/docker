@@ -3,8 +3,11 @@
 log
 
 route {
+	@default {
+		not path /theme/* /media/* /thumbnail/* /bundles/* /sitemap/*
+	}
 	root * /var/www/html/public
-	php_fastcgi unix//tmp/php-fpm.sock {
+	php_fastcgi @default unix//tmp/php-fpm.sock {
 		trusted_proxies private_ranges
 	}
 	encode gzip
