@@ -44,6 +44,10 @@ foreach ($supportedVersions as $supportedVersion)
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
         'supervisordDigest' => $supervisord,
+        'fpm-image' => 'ghcr.io/shopware/docker-base:' . $supportedVersion . '-fpm',
+        'fpm-patch-image' => 'ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-fpm',
+        'fpm-hub-image' => 'shopware/docker-base:' . $supportedVersion . '-fpm',
+        'fpm-patch-hub-image' => 'shopware/docker-base:' . $patchVersion['version'] . '-fpm',
     ];
 }
 
