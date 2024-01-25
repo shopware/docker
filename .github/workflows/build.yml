@@ -2,12 +2,7 @@ name: Build
 on:
   workflow_dispatch:
   push:
-    branches:
-      - main
-    paths:
-      - "Dockerfile.template"
-      - ".github/workflows/build.yml"
-      - "rootfs/**"
+  pull_request:
 
 env:
   DOCKER_BUILDKIT: 1
@@ -19,183 +14,83 @@ permissions:
   packages: write
 
 jobs:
-  php81-arm64:
-    name: 8.1 on ARM64
-    runs-on: hcloud-arm64-small
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-  
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - uses: docker/build-push-action@v4
-        with:
-          tags: ghcr.io/shopware/docker-base:8.1.26-arm64
-          context: .
-          file: 8.1/Dockerfile
-          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-arm64
-          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-arm64,mode=max
-          platforms: linux/arm64
-          push: true
-          provenance: false
-
-  php81-amd64:
-      name: 8.1 on AMD64
-      runs-on: ubuntu-22.04
-      steps:
-        - uses: actions/checkout@v3
-
-        - name: Install Cosign
-          uses: sigstore/cosign-installer@v3
-  
-        - name: Login into Github Docker Registery
-          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v2
-  
-        - uses: docker/build-push-action@v4
-          with:
-            tags: ghcr.io/shopware/docker-base:8.1.26-amd64
-            context: .
-            file: 8.1/Dockerfile
-            cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-amd64
-            cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.1-amd64,mode=max
-            platforms: linux/amd64
-            push: true
-            provenance: false
-  
-  php82-arm64:
-    name: 8.2 on ARM64
-    runs-on: hcloud-arm64-small
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-  
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - uses: docker/build-push-action@v4
-        with:
-          tags: ghcr.io/shopware/docker-base:8.2.14-arm64
-          context: .
-          file: 8.2/Dockerfile
-          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-arm64
-          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-arm64,mode=max
-          platforms: linux/arm64
-          push: true
-          provenance: false
-
-  php82-amd64:
-      name: 8.2 on AMD64
-      runs-on: ubuntu-22.04
-      steps:
-        - uses: actions/checkout@v3
-
-        - name: Install Cosign
-          uses: sigstore/cosign-installer@v3
-  
-        - name: Login into Github Docker Registery
-          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v2
-  
-        - uses: docker/build-push-action@v4
-          with:
-            tags: ghcr.io/shopware/docker-base:8.2.14-amd64
-            context: .
-            file: 8.2/Dockerfile
-            cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-amd64
-            cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.2-amd64,mode=max
-            platforms: linux/amd64
-            push: true
-            provenance: false
-  
-  php83-arm64:
-    name: 8.3 on ARM64
-    runs-on: hcloud-arm64-small
-    steps:
-      - uses: actions/checkout@v3
-
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
-
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-  
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - uses: docker/build-push-action@v4
-        with:
-          tags: ghcr.io/shopware/docker-base:8.3.1-arm64
-          context: .
-          file: 8.3/Dockerfile
-          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-arm64
-          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-arm64,mode=max
-          platforms: linux/arm64
-          push: true
-          provenance: false
-
-  php83-amd64:
-      name: 8.3 on AMD64
-      runs-on: ubuntu-22.04
-      steps:
-        - uses: actions/checkout@v3
-
-        - name: Install Cosign
-          uses: sigstore/cosign-installer@v3
-  
-        - name: Login into Github Docker Registery
-          run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-  
-        - name: Set up Docker Buildx
-          uses: docker/setup-buildx-action@v2
-  
-        - uses: docker/build-push-action@v4
-          with:
-            tags: ghcr.io/shopware/docker-base:8.3.1-amd64
-            context: .
-            file: 8.3/Dockerfile
-            cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-amd64
-            cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:8.3-amd64,mode=max
-            platforms: linux/amd64
-            push: true
-            provenance: false
-  
-
-  merge-manifest:
-    name: Merge Manifest
+  generate-matrix:
     runs-on: ubuntu-latest
-    needs:
-      - php81-arm64
-      - php81-amd64
-      - php82-arm64
-      - php82-amd64
-      - php83-arm64
-      - php83-amd64
+    outputs:
+      matrix: ${{ steps.generate-matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
+      - name: Generate Matrix
+        id: generate-matrix
+        run: |
+          MATRIX=$(php matrix.php)
+          echo "matrix<<EOF" >> $GITHUB_OUTPUT
+          echo "$MATRIX" >> $GITHUB_OUTPUT
+          echo 'EOF' >> $GITHUB_OUTPUT
+
+  build-fpm-amd64:
+    name: PHP FPM ${{ matrix.php }} on amd64
+    runs-on: ubuntu-latest
+    needs: [generate-matrix]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v5
+        with:
+          tags: ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm-amd64
+          context: fpm
+          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.phpPatch }}-fpm-amd64
+          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.phpPatch }}-fpm-amd64,mode=max
+          platforms: linux/amd64
+          build-args: |
+            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
+            PHP_DIGEST=${{ matrix.phpPatchDigest }}
+          push: true
+          provenance: false
+
+  build-fpm-arm64:
+    name: PHP FPM ${{ matrix.php }} on arm64
+    runs-on: hcloud-arm64-small
+    needs: [generate-matrix]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - uses: docker/build-push-action@v5
+        with:
+          tags: ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm-arm64
+          context: fpm
+          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.phpPatch }}-fpm-arm64
+          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.phpPatch }}-fpm-arm64,mode=max
+          platforms: linux/arm64
+          build-args: |
+            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
+            PHP_DIGEST=${{ matrix.phpPatchDigest }}
+          push: true
+          provenance: false
+
+  fpm-merge:
+    name: Generate Docker Manifest for PHP ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    needs: [generate-matrix, build-fpm-amd64, build-fpm-arm64]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - name: Login into Docker Hub
         run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
@@ -211,51 +106,56 @@ jobs:
           wget https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
           chmod +x regctl-linux-amd64
 
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.1 --amend ghcr.io/shopware/docker-base:8.1.26-amd64 --amend ghcr.io/shopware/docker-base:8.1.26-arm64
+      - run: docker manifest create ghcr.io/shopware/docker-base:${{ matrix.php }}-fpm --amend ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm-amd64 --amend ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm-arm64
 
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.1.26 --amend ghcr.io/shopware/docker-base:8.1.26-amd64 --amend ghcr.io/shopware/docker-base:8.1.26-arm64
+      - run: docker manifest create ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm --amend ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm-amd64 --amend ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm-arm64
 
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.1
+      - run: docker manifest push ghcr.io/shopware/docker-base:${{ matrix.php }}-fpm
 
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.1.26
+      - run: docker manifest push ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm
 
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.1
+      - run: cosign sign --yes ghcr.io/shopware/docker-base:${{ matrix.php }}-fpm
 
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.1.26
+      - run: cosign sign --yes ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm
 
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.1 shopware/docker-base:8.1
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:${{ matrix.php }}-fpm shopware/docker-base:${{ matrix.php }}-fpm
 
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.1.26 shopware/docker-base:8.1.26
+      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-fpm shopware/docker-base:${{ matrix.phpPatch }}-fpm
+  
+  caddy:
+    name: Build Caddy ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    needs: [generate-matrix, fpm-merge]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.2 --amend ghcr.io/shopware/docker-base:8.2.14-amd64 --amend ghcr.io/shopware/docker-base:8.2.14-arm64
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.2.14 --amend ghcr.io/shopware/docker-base:8.2.14-amd64 --amend ghcr.io/shopware/docker-base:8.2.14-arm64
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
 
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.2
-
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.2.14
-
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.2
-
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.2.14
-
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.2 shopware/docker-base:8.2
-
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.2.14 shopware/docker-base:8.2.14
-
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.3 --amend ghcr.io/shopware/docker-base:8.3.1-amd64 --amend ghcr.io/shopware/docker-base:8.3.1-arm64
-
-      - run: docker manifest create ghcr.io/shopware/docker-base:8.3.1 --amend ghcr.io/shopware/docker-base:8.3.1-amd64 --amend ghcr.io/shopware/docker-base:8.3.1-arm64
-
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.3
-
-      - run: docker manifest push ghcr.io/shopware/docker-base:8.3.1
-
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.3
-
-      - run: cosign sign --yes ghcr.io/shopware/docker-base:8.3.1
-
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3 shopware/docker-base:8.3
-
-      - run: ./regctl-linux-amd64 image copy ghcr.io/shopware/docker-base:8.3.1 shopware/docker-base:8.3.1
+      - uses: docker/build-push-action@v5
+        with:
+          tags: |
+            ghcr.io/shopware/docker-base:${{ matrix.php }}-caddy
+            ghcr.io/shopware/docker-base:${{ matrix.php }}
+            ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}-caddy
+            ghcr.io/shopware/docker-base:${{ matrix.phpPatch }}
+            shopware/docker-base:${{ matrix.php }}-caddy
+            shopware/docker-base:${{ matrix.php }}
+            shopware/docker-base:${{ matrix.phpPatch }}-caddy
+            shopware/docker-base:${{ matrix.phpPatch }}
+          context: caddy
+          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-caddy
+          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-caddy,mode=max
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
+            PHP_DIGEST=${{ matrix.phpPatchDigest }}
+            SUPERVISORD_DIGEST=${{ matrix.supervisordDigest }}
+          push: false
+          provenance: false
 

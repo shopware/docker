@@ -12,9 +12,9 @@ if console system:is-installed; then
   run_hooks pre_update
 
   if [ "${SHOPWARE_SKIP_ASSET_COPY-""}" ]; then
-      console system:update:finish --skip-asset-build
+    console system:update:finish --skip-asset-build
   else
-      console system:update:finish
+    console system:update:finish
   fi
 
   if [ "${SHOPWARE_SKIP_ASSET_COPY-""}" ]; then

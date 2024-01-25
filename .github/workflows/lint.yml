@@ -10,21 +10,20 @@ on:
 
 jobs:
   lint:
-    name: 'Lint Dockerfile (PHP: ${{ matrix.php-version }})'
+    name: Lint Dockerfiles
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        php-version:
-          - '8.1'
-          - '8.2'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Lint Dockerfile
-        id: hadolint
+      - name: Lint FPM
         uses: hadolint/hadolint-action@master
         with:
-          dockerfile: ./${{ matrix.php-version }}/Dockerfile
+          dockerfile: ./fpm/Dockerfile
+          ignore: DL3018
+
+      - name: Lint Caddy
+        uses: hadolint/hadolint-action@master
+        with:
+          dockerfile: ./caddy/Dockerfile
           ignore: DL3018

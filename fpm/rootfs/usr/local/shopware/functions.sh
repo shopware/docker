@@ -48,9 +48,9 @@ run_hooks() {
   hook=$1
   if [ -d "/usr/local/shopware/$hook.d" ]; then
     for file in "/usr/local/shopware/$hook.d"/*.sh; do
-      echo "Running $file for $hook"
-      # shellcheck source=/dev/null
-      . "$file"
-    done
+  echo "Running $file for $hook"
+  # shellcheck source=../../../../../../../../../dev/null
+  . "$file"
+done
   fi
 }
