@@ -18,6 +18,8 @@ jobs:
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{ steps.generate-matrix.outputs.matrix }}
+    environment:
+      GH_JOB_ID: ${{ github.job }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -49,8 +51,8 @@ jobs:
         with:
           tags: ${{ matrix.fpm-image }}-amd64
           context: fpm
-          cache-from: type=registry,ref=${{ matrix.fpm-image-cache }}-amd64
-          cache-to: type=registry,ref=${{ matrix.fpm-image-cache }}-amd64,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           platforms: linux/amd64
           build-args: |
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
@@ -77,8 +79,8 @@ jobs:
         with:
           tags: ${{ matrix.fpm-image }}-arm64
           context: fpm
-          cache-from: type=registry,ref=${{ matrix.fpm-image-cache }}-arm64
-          cache-to: type=registry,ref=${{ matrix.fpm-image-cache }}-arm64,mode=max
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
           platforms: linux/arm64
           build-args: |
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}

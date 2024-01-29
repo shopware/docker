@@ -39,15 +39,17 @@ foreach ($supportedVersions as $supportedVersion)
 
     $phpDigest = get_digest_of_image('library/php', $patchVersion['version'] . '-fpm-alpine');
 
+    $imagePrefix = $_ENV['GH_JOB_ID'] ? ($_ENV['GH_JOB_ID'] . '_') : '';
+
     $data[] = [
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
         'supervisordDigest' => $supervisord,
-        'fpm-image' => 'ghcr.io/shopware/docker-base:' . $supportedVersion . '-fpm',
-        'fpm-patch-image' => 'ghcr.io/shopware/docker-base:' . $patchVersion['version'] . '-fpm',
-        'fpm-hub-image' => 'shopware/docker-base:' . $supportedVersion . '-fpm',
-        'fpm-patch-hub-image' => 'shopware/docker-base:' . $patchVersion['version'] . '-fpm',
+        'fpm-image' => 'ghcr.io/shopware/docker-base:' . $imagePrefix . $supportedVersion . '-fpm',
+        'fpm-patch-image' => 'ghcr.io/shopware/docker-base:' . $imagePrefix . $patchVersion['version'] . '-fpm',
+        'fpm-hub-image' => 'shopware/docker-base:' . $imagePrefix . $supportedVersion . '-fpm',
+        'fpm-patch-hub-image' => 'shopware/docker-base:' . $imagePrefix . $patchVersion['version'] . '-fpm',
     ];
 }
 
