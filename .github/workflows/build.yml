@@ -109,11 +109,15 @@ jobs:
 
       - run: docker manifest create ${{ matrix.fpm-image }} --amend ${{ matrix.fpm-image }}-amd64 --amend ${{ matrix.fpm-image }}-arm64
 
-      - run: docker tag ${{ matrix.fpm-image }} ${{ matrix.fpm-patch-image }}
-
       - run: docker manifest push ${{ matrix.fpm-image }}
 
       - run: cosign sign --yes ${{ matrix.fpm-image }}
+
+      - run: docker manifest create ${{ matrix.fpm-patch-image }} --amend ${{ matrix.fpm-image }}-amd64 --amend ${{ matrix.fpm-image }}-arm64
+
+      - run: docker manifest push ${{ matrix.fpm-patch-image }}
+
+      - run: cosign sign --yes ${{ matrix.fpm-patch-image }}
 
       - if: github.ref == 'refs/heads/main'
         run: ./regctl-linux-amd64 image copy ${{ matrix.fpm-image }} ${{ matrix.fpm-hub-image }}
