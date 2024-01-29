@@ -56,7 +56,6 @@ USER www-data
 
 COPY --link rootfs /
 
-EXPOSE 8000
 WORKDIR /var/www/html
 
 ENTRYPOINT [ "/usr/local/sbin/php-fpm" ]
