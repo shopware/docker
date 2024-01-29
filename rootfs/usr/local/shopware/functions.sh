@@ -3,8 +3,8 @@
 set -e
 
 wait_for_mysql() {
-	database_host=$(trurl "$DATABASE_URL" --get '{host}')
-	database_port=$(trurl "$DATABASE_URL" --get '{port}')
+	database_host=${DATABASE_HOST:-"$(trurl "$DATABASE_URL" --get '{host}')"}
+	database_port=${DATABASE_PORT:-"$(trurl "$DATABASE_URL" --get '{port}')"}
 	MYSQL_WAIT_SECONDS=${MYSQL_WAIT_SECONDS:-20}
 
 	try=0
