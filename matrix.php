@@ -39,7 +39,7 @@ foreach ($supportedVersions as $supportedVersion)
 
     $phpDigest = get_digest_of_image('library/php', $patchVersion['version'] . '-fpm-alpine');
 
-    $imagePrefix = $_ENV['GH_JOB_ID'] ? ($_ENV['GH_JOB_ID'] . '_') : '';
+    $imagePrefix = $_SERVER['GITHUB_RUN_ID'] ? ($_SERVER['GITHUB_RUN_ID'] . '-') : '';
 
     $data[] = [
         'php' => $supportedVersion,
