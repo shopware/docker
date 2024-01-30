@@ -154,7 +154,7 @@ jobs:
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
             SUPERVISORD_DIGEST=${{ matrix.supervisordDigest }}
-          push: false
+          push: true
           provenance: false
 
   check:
