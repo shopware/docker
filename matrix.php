@@ -47,7 +47,7 @@ foreach ($supportedVersions as $supportedVersion)
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion,
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-caddy',
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'],
-        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $$patchVersion['version'] . '-caddy',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-caddy',
     ];
 
     if ($_SERVER['GITHUB_REF'] === 'refs/heads/main') {
