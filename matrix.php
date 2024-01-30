@@ -41,15 +41,33 @@ foreach ($supportedVersions as $supportedVersion)
 
     $imagePrefix = $_SERVER['GITHUB_RUN_ID'] ? ($_SERVER['GITHUB_RUN_ID'] . '-') : '';
 
+    $caddyImages = [
+        'ghcr.io/shopware/docker-base:' . $imagePrefix . $supportedVersion,
+        'ghcr.io/shopware/docker-base:' . $imagePrefix . $supportedVersion . '-caddy',
+        'ghcr.io/shopware/docker-base:' . $imagePrefix . $patchVersion['version'],
+        'ghcr.io/shopware/docker-base:' . $imagePrefix . $$patchVersion['version'] . '-caddy',
+    ];
+
+    if (!$imagePrefix) {
+        $caddyImages = array_merge($caddyImages, [
+            'shopware/docker-base:' . $imagePrefix . $supportedVersion,
+            'shopware/docker-base:' . $imagePrefix . $supportedVersion . '-caddy',
+            'shopware/docker-base:' . $imagePrefix . $patchVersion['version'],
+            'shopware/docker-base:' . $imagePrefix . $patchVersion['version'] . '-caddy',
+        ]);
+    }
+
     $data[] = [
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
         'supervisordDigest' => $supervisord,
+        'base-image' => 'ghcr.io/shopware/docker-base:' . $imagePrefix . $supportedVersion,
         'fpm-image' => 'ghcr.io/shopware/docker-base:' . $imagePrefix . $supportedVersion . '-fpm',
         'fpm-patch-image' => 'ghcr.io/shopware/docker-base:' . $imagePrefix . $patchVersion['version'] . '-fpm',
         'fpm-hub-image' => 'shopware/docker-base:' . $imagePrefix . $supportedVersion . '-fpm',
         'fpm-patch-hub-image' => 'shopware/docker-base:' . $imagePrefix . $patchVersion['version'] . '-fpm',
+        'caddy-tags' => implode("\n", $caddyImages),
     ];
 }
 
