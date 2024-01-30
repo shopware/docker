@@ -166,13 +166,9 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - name: Checkout
-        uses: actions/checkout@v4
-
       - name: Checkout example repo
         uses: actions/checkout@v4
         with:
-          path: example-repo
           repository: shopwareLabs/example-docker-repository
 
       - name: Build
@@ -191,7 +187,6 @@ jobs:
       - name: Run image
         env:
           DOCKER_BUILDKIT: 0
-        working-directory: example-repo
         run: docker compose up -d --wait
 
       - name: Check if shopware is running
