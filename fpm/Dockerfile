@@ -1,10 +1,13 @@
 #syntax=docker/dockerfile:1.4
 
-FROM docker.io/library/php:8.1.26-fpm-alpine@sha256:b480cfc032ee8fc1e0fcc0925301830ce798d55b4ed8c241f9727ee5e0389b9e
+ARG PHP_PATCH_VERSION
+ARG PHP_DIGEST
+
+FROM docker.io/library/php:${PHP_PATCH_VERSION}-fpm-alpine@${PHP_DIGEST}
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN apk add --no-cache icu-data-full curl jq trurl caddy && \
+RUN apk add --no-cache icu-data-full curl jq trurl && \
     apk upgrade --no-cache && \
     chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
@@ -12,10 +15,7 @@ RUN apk add --no-cache icu-data-full curl jq trurl caddy && \
     mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini" && \
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf && \
     rm -f /usr/local/etc/php-fpm.d/www.conf && \
-    rm -f /usr/local/etc/php-fpm.d/www.conf.default && \
-    ln -s /usr/sbin/caddy /usr/bin/caddy
-
-COPY --from=shyim/supervisord:latest@sha256:8671c375d4890f6592dcab242758427f47303b47b96fe31d86c949a496a9cda2 --link /usr/local/bin/supervisord /usr/bin/supervisord
+    rm -f /usr/local/etc/php-fpm.d/www.conf.default
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
@@ -49,13 +49,13 @@ ENV APP_ENV=prod \
     PHP_MAX_EXECUTION_TIME=300 \
     PHP_MEMORY_LIMIT=512m \
     PHP_ERROR_REPORTING=E_ALL \
+    FPM_LISTEN=9000 \
     MYSQL_WAIT_SECONDS=20
 
 USER www-data
 
 COPY --link rootfs /
 
-EXPOSE 8000
 WORKDIR /var/www/html
 
-ENTRYPOINT [ "/usr/bin/supervisord", "-c", "/etc/supervisord.conf" ]
+ENTRYPOINT [ "/usr/local/sbin/php-fpm" ]
