@@ -204,6 +204,9 @@ When this container exits, you can start your actual app / worker containers. Se
 | COMPOSER_HOME                        | /tmp/composer    | Caching for the Plugin Manager                                                           |
 | SHOPWARE_HTTP_CACHE_ENABLED          | 1                | Is HTTP Cache enabled?                                                                   |
 | SHOPWARE_HTTP_DEFAULT_TTL            | 7200             | Default TTL for Http Cache                                                               |
+| MESSENGER_TRANSPORT_DSN              | (empty)          | DSN for default async queue (example: `amqp://guest:guest@localhost:5672/%2f/default`    |
+| MESSENGER_TRANSPORT_LOW_PRIORITY_DSN | (empty)          | DSN for low priority  queue (example: `amqp://guest:guest@localhost:5672/%2f/low_prio`   |
+| MESSENGER_TRANSPORT_FAILURE_DSN      | (empty)          | DSN for failed messages queue (example: `amqp://guest:guest@localhost:5672/%2f/failure`  |
 | INSTALL_LOCALE                       | en-GB            | Default locale for the Shop                                                              |
 | INSTALL_CURRENCY                     | EUR              | Default currency for the Shop                                                            |
 | INSTALL_ADMIN_USERNAME               | admin            | Default admin username                                                                   |
