@@ -89,8 +89,6 @@ jobs:
         with:
           tags: ${{ matrix.fpm-image }}-arm64
           context: fpm
-          cache-from: type=gha,scope=fpm-${{ matrix.php }}-arm64
-          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}-arm64
           platforms: linux/arm64
           build-args: |
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
