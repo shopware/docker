@@ -63,10 +63,19 @@ jobs:
 
   build-fpm-arm64:
     name: PHP FPM ${{ matrix.php }} on arm64
-    runs-on: hcloud-arm64-small
+    runs-on: shopware-arm64
+    container: ghcr.io/catthehacker/ubuntu:act-22.04
+    env:
+      DOCKER_HOST: localhost:2375
+    services:
+      docker:
+        image: docker:23-dind-rootless
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
+      - name: wait for docker to be available
+        run: while ! docker info 2>&1 >/dev/null; do sleep 1; done
+
       - name: Checkout
         uses: actions/checkout@v4
 
