@@ -69,7 +69,7 @@ jobs:
       DOCKER_HOST: localhost:2375
     services:
       docker:
-        image: docker:23-dind-rootless
+        image: docker:23-dind
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
