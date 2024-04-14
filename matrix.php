@@ -1,5 +1,8 @@
 <?php
 
+$_SERVER['GITHUB_REF'] ??= 'refs/heads/main';
+$_SERVER['GITHUB_RUN_ID'] ??= '1';
+
 function get_digest_of_image(string $imageName, string $tag): string {
     $response = json_decode(file_get_contents('https://hub.docker.com/v2/repositories/' . $imageName . '/tags/?page_size=50&page=1&name=' . urlencode($tag)), true);
     $digest = null;
@@ -17,7 +20,7 @@ function get_digest_of_image(string $imageName, string $tag): string {
     return $digest;
 }
 
-$supportedVersions = ['8.1', '8.2', '8.3'];
+$supportedVersions = ['8.3'];
 $rcVersions = [];
 
 $data = [];
@@ -45,7 +48,9 @@ foreach ($supportedVersions as $supportedVersion)
             continue;
         }
 
-        preg_match($versionRegex, $entry['name'], $patchVersion);
+        if (preg_match($versionRegex, $entry['name'], $patchVersion)) {
+            break;
+        }
     }
 
     if ($patchVersion === null) {
