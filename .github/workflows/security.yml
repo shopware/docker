@@ -16,21 +16,21 @@ jobs:
       fail-fast: false
       matrix:
         php-version:
-          - '8.0'
           - '8.1'
           - '8.2'
+          - '8.3'
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Pull image
-        run: docker pull friendsofshopware/production-docker-base:${{ matrix.php-version }}
+        run: docker pull shopware/docker-base:${{ matrix.php-version }}
 
       - name: Scan for vulnerabilities
         id: scan
         uses: crazy-max/ghaction-container-scan@v3
         with:
-          image: friendsofshopware/production-docker-base:${{ matrix.php-version }}
+          image: shopware/docker-base:${{ matrix.php-version }}
           dockerfile: ./${{ matrix.php-version }}/Dockerfile
 
       - name: Upload SARIF file
