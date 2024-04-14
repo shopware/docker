@@ -20,7 +20,7 @@ function get_digest_of_image(string $imageName, string $tag): string {
     return $digest;
 }
 
-$supportedVersions = ['8.3'];
+$supportedVersions = ['8.1', '8.2', '8.3'];
 $rcVersions = [];
 
 $data = [];
