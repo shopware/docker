@@ -17,6 +17,7 @@ permissions:
   contents: write
   id-token: write
   packages: write
+  pull-requests: write
 
 jobs:
   generate-matrix:
@@ -137,7 +138,7 @@ jobs:
 
       - if: github.ref == 'refs/heads/main'
         run: ./regctl-linux-amd64 image copy ${{ matrix.fpm-patch-image }} ${{ matrix.fpm-patch-hub-image }}
-  
+
   caddy:
     name: Build Caddy ${{ matrix.php }}
     runs-on: ubuntu-latest
@@ -170,6 +171,18 @@ jobs:
             SUPERVISORD_DIGEST=${{ matrix.supervisordDigest }}
           push: true
           provenance: false
+
+      - name: Docker Scout
+        id: docker-scout
+        if: ${{ github.event_name == 'pull_request' }}
+        uses: docker/scout-action@v1
+        with:
+          command: compare
+          to: ${{ matrix.scan-to }}
+          image: ${{ matrix.scan-tag }}
+          organization: shopware
+          ignore-unchanged: true
+          github-token: ${{ secrets.GITHUB_TOKEN }}
 
   check:
     name: Test Image

@@ -6,8 +6,9 @@ FROM ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-fpm
 
 USER root
 
-RUN apk add --no-cache caddy && \
-    ln -s /usr/sbin/caddy /usr/bin/caddy
+RUN wget -O /etc/apk/keys/wolfi-signing.rsa.pub https://packages.wolfi.dev/os/wolfi-signing.rsa.pub && \
+    apk add --no-cache --repository https://packages.wolfi.dev/os caddy && \
+    ln -s /usr/bin/caddy /usr/sbin/caddy
 
 COPY --from=shyim/supervisord:latest --link /usr/local/bin/supervisord /usr/bin/supervisord
 

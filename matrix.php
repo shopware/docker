@@ -90,6 +90,8 @@ foreach ($supportedVersions as $supportedVersion)
         'fpm-hub-image' => 'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm',
         'fpm-patch-hub-image' => 'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm',
         'caddy-tags' => implode("\n", $caddyImages),
+        'scan-tag' => $caddyImages[0],
+        'scan-to' => 'ghcr.io/shopware/docker-base:'.$supportedVersion,
     ];
 }
 
