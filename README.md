@@ -211,6 +211,8 @@ When this container exits, you can start your actual app / worker containers. Se
 | INSTALL_CURRENCY                     | EUR              | Default currency for the Shop                                                            |
 | INSTALL_ADMIN_USERNAME               | admin            | Default admin username                                                                   |
 | INSTALL_ADMIN_PASSWORD               | shopware         | Default admin password                                                                   |
+| PHP_SESSION_COOKIE_LIFETIME          | 0                | [See PHP FPM documentation](https://www.php.net/manual/en/session.configuration.php)     |
+| PHP_SESSION_GC_MAXLIFETIME           | 1440             | [See PHP FPM documentation](https://www.php.net/manual/en/session.configuration.php)     |
 | PHP_SESSION_HANDLER                  | files            | Set to `redis` for redis session                                                         |
 | PHP_SESSION_SAVE_PATH                | (empty)          | Set to `tcp://redis:6379` for redis session                                              |
 | PHP_MAX_UPLOAD_SIZE                  | 128m             | See PHP documentation                                                                    |
