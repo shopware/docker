@@ -31,3 +31,5 @@ else
 
   run_hooks post_install
 fi
+
+run_hooks post_setup
