@@ -1,6 +1,9 @@
 # Shopware 6 Production Docker
 
-This repository contains a base image with Alpine + PHP + Caddy to build your own docker image with your code.
+This repository contains a base image with Alpine + PHP + Caddy, which you can use to build your docker image with your code.
+
+> [!NOTE]
+> This docker image expects that you install all extensions using Composer. Otherwise, you will get `The class X is not found` errors. See [docs for more information](https://developer.shopware.com/docs/guides/hosting/installation-updates/extension-managment.html)
 
 ## Getting Started
 
