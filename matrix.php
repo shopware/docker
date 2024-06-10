@@ -21,6 +21,7 @@ function get_digest_of_image(string $imageName, string $tag): string {
 }
 
 $supportedVersions = ['8.1', '8.2', '8.3'];
+$disallowedVersions = ['8.2.20', '8.3.8'];
 $rcVersions = [];
 
 $data = [];
@@ -28,6 +29,7 @@ $data = [];
 $versionRegex ='/^(?<version>\d\.\d\.\d{1,}(RC\d)?)/m';
 
 $supervisord = get_digest_of_image('shyim/supervisord', 'latest');
+
 
 foreach ($supportedVersions as $supportedVersion)
 {
@@ -49,6 +51,10 @@ foreach ($supportedVersions as $supportedVersion)
         }
 
         if (preg_match($versionRegex, $entry['name'], $patchVersion)) {
+            if (in_array($patchVersion['version'], $disallowedVersions, true)) {
+                continue;
+            }
+
             break;
         }
     }
