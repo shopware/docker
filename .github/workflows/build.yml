@@ -221,6 +221,5 @@ jobs:
 
       # output logs if failed
       - name: Output logs
-        working-directory: example-repo
         run: docker compose logs
         if: ${{ failure() }}
