@@ -76,6 +76,9 @@ jobs:
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
+      - name: debug slepp
+        run: sleep 10m
+        
       - name: wait for docker to be available
         run: while ! docker info 2>&1 >/dev/null; do sleep 1; done
 
