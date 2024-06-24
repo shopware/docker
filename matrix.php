@@ -33,32 +33,43 @@ $supervisord = get_digest_of_image('shyim/supervisord', 'latest');
 
 foreach ($supportedVersions as $supportedVersion)
 {
-    $apiResponse = json_decode(file_get_contents('https://hub.docker.com/v2/repositories/library/php/tags/?page_size=50&page=1&name=' . $supportedVersion. '.'), true);
-
-    if (!is_array($apiResponse)) {
-        throw new \RuntimeException("invalid api response");
-    }
 
     $curVersion = null;
     $patchVersion = null;
     $rcVersion = null;
 
-    foreach ($apiResponse['results'] as $entry) {
-        preg_match($versionRegex, $entry['name'], $rcVersion);
+    $page = 0;
 
-        if (strpos($entry['name'], 'RC') !== false && !in_array($rcVersion['version'], $rcVersions)) {
-            continue;
+    do {
+        $apiResponse = json_decode(file_get_contents('https://hub.docker.com/v2/repositories/library/php/tags/?page_size=50&page=' . $page . '&name=' . $supportedVersion. '.'), true);
+
+        if (!is_array($apiResponse)) {
+            throw new \RuntimeException("invalid api response");
         }
 
-        if (preg_match($versionRegex, $entry['name'], $patchVersion)) {
-            if (in_array($patchVersion['version'], $disallowedVersions, true)) {
+        foreach ($apiResponse['results'] as $entry) {
+            preg_match($versionRegex, $entry['name'], $rcVersion);
+    
+            if (strpos($entry['name'], 'RC') !== false && !in_array($rcVersion['version'], $rcVersions)) {
                 continue;
             }
+    
+            if (preg_match($versionRegex, $entry['name'], $patchVersion)) {
+                if (in_array($patchVersion['version'], $disallowedVersions, true)) {
+                    $patchVersion = null;
+                    continue;
+                }
+    
+                break;
+            }
+        }
 
+        if ($patchVersion !== null) {
             break;
         }
-    }
 
+    } while($page++ < 5);
+    
     if ($patchVersion === null) {
         throw new \RuntimeException('There is no version found for PHP ' . $supportedVersion);
     }
