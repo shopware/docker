@@ -166,6 +166,23 @@ services:
         deploy:
             replicas: 3
 
+    scheduler:
+        image: local
+        restart: unless-stopped
+        build:
+            context: .
+        volumes:
+            - files:/var/www/html/files
+            - theme:/var/www/html/public/theme
+            - media:/var/www/html/public/media
+            - thumbnail:/var/www/html/public/thumbnail
+            - sitemap:/var/www/html/public/sitemap
+        depends_on:
+            init:
+                condition: service_completed_successfully
+        env_file: .app.env
+        entrypoint: [ "php", "bin/console", "scheduled-task:run" ]
+
 volumes:
     mysql-data:
     files:
