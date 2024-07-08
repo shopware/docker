@@ -162,7 +162,7 @@ services:
             init:
                 condition: service_completed_successfully
         env_file: .app.env
-        entrypoint: [ "php", "bin/console", "messenger:consume", "async", "--time-limit=300", "--memory-limit=512M" ]
+        entrypoint: [ "php", "bin/console", "messenger:consume", "async", "low_priority", "--time-limit=300", "--memory-limit=512M" ]
         deploy:
             replicas: 3
 
