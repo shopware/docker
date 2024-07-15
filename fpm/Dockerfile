@@ -7,7 +7,7 @@ FROM docker.io/library/php:${PHP_PATCH_VERSION}-fpm-alpine@${PHP_DIGEST}
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN apk add --no-cache icu-data-full curl jq trurl && \
+RUN apk add --no-cache icu-data-full curl jq trurl git && \
     apk upgrade --no-cache && \
     chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ffi redis opcache apcu amqp && \
