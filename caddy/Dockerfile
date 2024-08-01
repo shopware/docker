@@ -8,9 +8,8 @@ USER root
 
 RUN wget -O /etc/apk/keys/wolfi-signing.rsa.pub https://packages.wolfi.dev/os/wolfi-signing.rsa.pub && \
     apk add --no-cache --repository https://packages.wolfi.dev/os caddy && \
-    ln -s /usr/bin/caddy /usr/sbin/caddy
-
-COPY --from=shyim/supervisord:latest --link /usr/local/bin/supervisord /usr/bin/supervisord
+    ln -s /usr/bin/caddy /usr/sbin/caddy && \
+    apk add --no-cache supervisor
 
 USER www-data
 
