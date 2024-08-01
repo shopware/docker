@@ -1,8 +1,25 @@
 #!/usr/bin/env sh
 
 set -e
-set -x
 
+if [[ -e /var/www/html/vendor/bin/shopware-deployment-helper ]]; then
+    cd /var/www/html
+    exec /var/www/html/vendor/bin/shopware-deployment-helper run
+fi
+
+echo "### DEPRECATION ###"
+echo ""
+echo "### The setup scripts are deprecated and will be removed November 2024 ###"
+echo "### Please install the Shopware Deployment Helper using composer require shopware/deployment-helper to get rid of this message ###"
+echo "### For more information see https://developer.shopware.com/docs/guides/hosting/installation-updates/deployments/deployment-helper.html ###"
+echo ""
+echo "### DEPRECATION ###"
+echo ""
+echo "Sleeping 30 seconds to make the deprecation visible."
+
+sleep 30
+
+set -x
 
 shopware_version=$(jq '.packages[] | select (.name == "shopware/core") | .version' -r < composer.lock)
 # shellcheck disable=SC2081,SC3010
