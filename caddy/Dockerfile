@@ -1,8 +1,8 @@
 #syntax=docker/dockerfile:1.4
 
-ARG PHP_PATCH_VERSION
+ARG FPM_IMAGE=ghcr.io/shopware/docker-base:8.3.1-fpm
 
-FROM ghcr.io/shopware/docker-base:${PHP_PATCH_VERSION}-fpm
+FROM ${FPM_IMAGE}
 
 USER root
 

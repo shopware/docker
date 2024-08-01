@@ -166,9 +166,7 @@ jobs:
           cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-caddy,mode=max
           platforms: linux/amd64,linux/arm64
           build-args: |
-            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
-            PHP_DIGEST=${{ matrix.phpPatchDigest }}
-            SUPERVISORD_DIGEST=${{ matrix.supervisordDigest }}
+            FPM_IMAGE=${{ matrix.fpm-image }}
           push: true
           provenance: false
 
@@ -199,17 +197,12 @@ jobs:
           repository: shopwareLabs/example-docker-repository
 
       - name: Build
-        id: build
-        uses: docker/build-push-action@v6
-        with:
-          push: false
-          load: true
-          build-args: |
-            BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.run_id }}-8.3-caddy
-          context: .
-          file: Dockerfile
-          cache-from: type=gha
-          cache-to: type=gha,mode=max
+        run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.run_id }}-8.3-caddy
+        env:
+          DOCKER_BUILDKIT: 0
+
+      - name: Sleep
+        run: sleep 10
 
       - name: Run image
         env:
