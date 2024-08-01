@@ -2,6 +2,8 @@
 
 log
 
+{$CADDY_EXTRA_CONFIG}
+
 route {
 	@default {
 		not path /theme/* /media/* /thumbnail/* /bundles/* /sitemap/*
@@ -12,4 +14,6 @@ route {
 	}
 	encode gzip
 	file_server
+
+	{$CADDY_SERVER_EXTRA_DIRECTIVES}
 }
