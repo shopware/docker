@@ -227,6 +227,7 @@ When this container exits, you can start your actual app / worker containers. Se
 | MESSENGER_TRANSPORT_DSN              | (empty)          | DSN for default async queue (example: `amqp://guest:guest@localhost:5672/%2f/default`    |
 | MESSENGER_TRANSPORT_LOW_PRIORITY_DSN | (empty)          | DSN for low priority  queue (example: `amqp://guest:guest@localhost:5672/%2f/low_prio`   |
 | MESSENGER_TRANSPORT_FAILURE_DSN      | (empty)          | DSN for failed messages queue (example: `amqp://guest:guest@localhost:5672/%2f/failure`  |
+| COMPOSER_PLUGIN_LOADER               | 1                | [When enabled, disables dynamic plugin loading all plugins needs to be installed with Composer](https://developer.shopware.com/docs/guides/hosting/installation-updates/cluster-setup.html#composer-plugin-loader)
 | INSTALL_LOCALE                       | en-GB            | Default locale for the Shop                                                              |
 | INSTALL_CURRENCY                     | EUR              | Default currency for the Shop                                                            |
 | INSTALL_ADMIN_USERNAME               | admin            | Default admin username                                                                   |
