@@ -209,6 +209,22 @@ jobs:
           DOCKER_BUILDKIT: 0
         run: docker compose up -d --wait
 
+      - name: Wait for Webserver reachable
+        run: |
+          attempt_counter=0
+          max_attempts=5
+
+          until $(curl --output /dev/null --silent --head --fail localhost:8000/admin); do
+              if [ ${attempt_counter} -eq ${max_attempts} ];then
+                echo "Max attempts reached"
+                exit 1
+              fi
+
+              printf '.'
+              attempt_counter=$(($attempt_counter+1))
+              sleep 5
+          done
+
       - name: Check if shopware is running
         run: curl --fail localhost:8000/admin
 

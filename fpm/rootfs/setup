@@ -4,7 +4,7 @@ set -e
 
 if [[ -e /var/www/html/vendor/bin/shopware-deployment-helper ]]; then
     cd /var/www/html
-    exec /var/www/html/vendor/bin/shopware-deployment-helper run
+    exec ./vendor/bin/shopware-deployment-helper run
 fi
 
 echo "### DEPRECATION ###"
