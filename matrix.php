@@ -28,8 +28,6 @@ $data = [];
 
 $versionRegex ='/^(?<version>\d\.\d\.\d{1,}(RC\d)?)/m';
 
-$supervisord = get_digest_of_image('shyim/supervisord', 'latest');
-
 
 foreach ($supportedVersions as $supportedVersion)
 {
@@ -100,7 +98,6 @@ foreach ($supportedVersions as $supportedVersion)
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
-        'supervisordDigest' => $supervisord,
         'base-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion,
         'fpm-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'fpm-patch-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-fpm',

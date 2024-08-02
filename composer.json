@@ -1,6 +1,9 @@
 {
-    "name": "shopware/docker",
-    "type": "metapackage",
-    "license": "MIT",
-    "description": "Docker image for Shopware 6 production"
+  "name": "shopware/docker",
+  "type": "metapackage",
+  "license": "MIT",
+  "description": "Docker image for Shopware 6 production",
+  "require": {
+    "shopware/deployment-helper": "*"
+  }
 }
