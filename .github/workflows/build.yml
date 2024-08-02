@@ -201,9 +201,6 @@ jobs:
         env:
           DOCKER_BUILDKIT: 0
 
-      - name: Sleep
-        run: sleep 10
-
       - name: Run image
         env:
           DOCKER_BUILDKIT: 0
