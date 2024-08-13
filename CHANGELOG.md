@@ -1,5 +1,9 @@
 # Changelog
 
+## 2024-08-13
+
+Added zstd php extension to Docker image
+
 ## 2024-08-05
 
 Added environment variable `COMPOSER_ROOT_VERSION` set to `1.0.0` to not require Git to find the fallback version number when not defined.
