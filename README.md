@@ -90,6 +90,9 @@ jobs:
 <details>
   <summary>Example docker-compose</summary>
 
+> [!CAUTION]
+> The config below does not share var/log or var/cache. For Caching you should consider to uses Redis and logs should be forwarded to stderr so they are inside the container logs. 
+
 ```yaml
 version: "3.8"
 services:
