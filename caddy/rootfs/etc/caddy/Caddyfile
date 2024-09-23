@@ -12,7 +12,7 @@ route {
 	php_fastcgi @default unix//tmp/php-fpm.sock {
 		trusted_proxies private_ranges
 	}
-	encode gzip
+	encode gzip zstd
 	file_server
 
 	{$CADDY_SERVER_EXTRA_DIRECTIVES}
