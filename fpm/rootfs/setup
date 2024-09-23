@@ -2,8 +2,9 @@
 
 set -e
 
+cd /var/www/html
+
 if [[ -e /var/www/html/vendor/bin/shopware-deployment-helper ]]; then
-    cd /var/www/html
     exec ./vendor/bin/shopware-deployment-helper run
 fi
 
