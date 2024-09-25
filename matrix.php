@@ -129,7 +129,7 @@ foreach ($supportedVersions as $supportedVersion)
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
         'fpm-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
-        'fpm-tags' => implode(" ", $fpmImages),
+        'fpm-tags' => implode("\n", $fpmImages),
         'fpm-tags-otel' => implode("\n", $fpmImagesOtel),
         'caddy-tags' => implode("\n", $caddyImages),
         'caddy-tags-otel' => implode("\n", $caddyImagesOtel),
