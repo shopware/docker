@@ -133,18 +133,6 @@ jobs:
           push: true
           provenance: false
 
-      - name: Docker Scout
-        id: docker-scout
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: docker/scout-action@v1
-        with:
-          command: compare
-          to: ${{ matrix.scan-to }}
-          image: ${{ matrix.scan-tag }}
-          organization: shopware
-          ignore-unchanged: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-
   caddy-otel:
     name: Build Caddy ${{ matrix.php }} with OpenTelemetry
     runs-on: ubuntu-latest
