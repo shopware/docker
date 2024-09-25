@@ -85,12 +85,22 @@ foreach ($supportedVersions as $supportedVersion)
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-caddy',
     ];
 
+    $caddyImagesOtel = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-caddy-otel',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-caddy-otel',
+    ];
+
     if ($_SERVER['GITHUB_REF'] === 'refs/heads/main') {
         $caddyImages = array_merge($caddyImages, [
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion,
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-caddy',
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'],
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-caddy',
+        ]);
+
+        $caddyImagesOtel = array_merge($caddyImagesOtel, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-caddy-otel',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-caddy-otel',
         ]);
     }
 
@@ -104,6 +114,7 @@ foreach ($supportedVersions as $supportedVersion)
         'fpm-hub-image' => 'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm',
         'fpm-patch-hub-image' => 'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm',
         'caddy-tags' => implode("\n", $caddyImages),
+        'caddy-tags-otel' => implode("\n", $caddyImagesOtel),
         'scan-tag' => $caddyImages[0],
         'scan-to' => 'ghcr.io/shopware/docker-base:'.$supportedVersion,
     ];
