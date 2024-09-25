@@ -90,6 +90,16 @@ foreach ($supportedVersions as $supportedVersion)
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-caddy-otel',
     ];
 
+    $fpmImages = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-fpm'
+    ];
+
+    $fpmImagesOtel = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm-otel',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-fpm-otel'
+    ];
+
     if ($_SERVER['GITHUB_REF'] === 'refs/heads/main') {
         $caddyImages = array_merge($caddyImages, [
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion,
@@ -102,17 +112,25 @@ foreach ($supportedVersions as $supportedVersion)
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-caddy-otel',
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-caddy-otel',
         ]);
+
+        $fpmImages = array_merge($fpmImages, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm'
+        ]);
+
+        $fpmImagesOtel = array_merge($fpmImages, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm-otel',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm-otel'
+        ]);
     }
 
     $data[] = [
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
-        'base-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion,
         'fpm-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
-        'fpm-patch-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-fpm',
-        'fpm-hub-image' => 'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm',
-        'fpm-patch-hub-image' => 'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm',
+        'fpm-tags' => implode(" ", $fpmImages),
+        'fpm-tags-otel' => implode("\n", $fpmImagesOtel),
         'caddy-tags' => implode("\n", $caddyImages),
         'caddy-tags-otel' => implode("\n", $caddyImagesOtel),
         'scan-tag' => $caddyImages[0],
