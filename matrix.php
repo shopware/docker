@@ -47,17 +47,17 @@ foreach ($supportedVersions as $supportedVersion)
 
         foreach ($apiResponse['results'] as $entry) {
             preg_match($versionRegex, $entry['name'], $rcVersion);
-    
+
             if (strpos($entry['name'], 'RC') !== false && !in_array($rcVersion['version'], $rcVersions)) {
                 continue;
             }
-    
+
             if (preg_match($versionRegex, $entry['name'], $patchVersion)) {
                 if (in_array($patchVersion['version'], $disallowedVersions, true)) {
                     $patchVersion = null;
                     continue;
                 }
-    
+
                 break;
             }
         }
@@ -67,7 +67,7 @@ foreach ($supportedVersions as $supportedVersion)
         }
 
     } while($page++ < 5);
-    
+
     if ($patchVersion === null) {
         throw new \RuntimeException('There is no version found for PHP ' . $supportedVersion);
     }
@@ -118,7 +118,7 @@ foreach ($supportedVersions as $supportedVersion)
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm'
         ]);
 
-        $fpmImagesOtel = array_merge($fpmImages, [
+        $fpmImagesOtel = array_merge($fpmImagesOtel, [
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm-otel',
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm-otel'
         ]);
