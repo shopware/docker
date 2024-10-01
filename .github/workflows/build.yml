@@ -12,7 +12,6 @@ env:
   DOCKER_BUILDKIT: 1
   COSIGN_EXPERIMENTAL: 1
 
-
 permissions:
   contents: write
   id-token: write
@@ -36,119 +35,82 @@ jobs:
           echo "$MATRIX" >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
 
-  build-fpm-amd64:
-    name: PHP FPM ${{ matrix.php }} on amd64
-    runs-on: ubuntu-latest
-    needs: [generate-matrix]
-    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - uses: docker/build-push-action@v6
-        with:
-          tags: ${{ matrix.fpm-image }}-amd64
-          context: fpm
-          cache-from: type=gha,scope=fpm-${{ matrix.php }}-amd64
-          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}-amd64
-          platforms: linux/amd64
-          build-args: |
-            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
-            PHP_DIGEST=${{ matrix.phpPatchDigest }}
-          push: true
-          provenance: false
-
-  build-fpm-arm64:
-    name: PHP FPM ${{ matrix.php }} on arm64
+  fpm:
+    name: PHP FPM ${{ matrix.php }}
     runs-on: shopware-arm64
-    container: ghcr.io/catthehacker/ubuntu:act-22.04
-    env:
-      DOCKER_HOST: localhost:2375
-    services:
-      docker:
-        image: docker:23-dind
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
-      - name: wait for docker to be available
-        run: while ! docker info 2>&1 >/dev/null; do sleep 1; done
-
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - uses: docker/build-push-action@v6
-        with:
-          tags: ${{ matrix.fpm-image }}-arm64
-          context: fpm
-          platforms: linux/arm64
-          cache-from: type=gha,scope=fpm-${{ matrix.php }}-arm64
-          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}-arm64
-          build-args: |
-            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
-            PHP_DIGEST=${{ matrix.phpPatchDigest }}
-          push: true
-          provenance: false
-
-  fpm-merge:
-    name: Generate Docker Manifest for PHP ${{ matrix.php }}
-    runs-on: ubuntu-latest
-    needs: [generate-matrix, build-fpm-amd64, build-fpm-arm64]
-    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-    steps:
       - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
         run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-      - name: Install Cosign
-        uses: sigstore/cosign-installer@v3
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          tags: |
+            ${{ matrix.fpm-tags }}
+          context: fpm
+          cache-from: type=gha,scope=fpm-${{ matrix.php }}
+          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}
+          platforms: linux/arm64,linux/amd64
+          build-args: |
+            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
+            PHP_DIGEST=${{ matrix.phpPatchDigest }}
+          push: true
+          provenance: false
 
-      - name: Install Regclient
-        run: |
-          wget https://github.com/regclient/regclient/releases/latest/download/regctl-linux-amd64
-          chmod +x regctl-linux-amd64
+  fpm-otel:
+    name: PHP FPM ${{ matrix.php }} with OpenTelemetry
+    runs-on: shopware-arm64
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
+    needs: [generate-matrix, fpm]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
 
-      - run: docker manifest create ${{ matrix.fpm-image }} --amend ${{ matrix.fpm-image }}-amd64 --amend ${{ matrix.fpm-image }}-arm64
+      - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
-      - run: docker manifest push ${{ matrix.fpm-image }}
-
-      - run: cosign sign --yes ${{ matrix.fpm-image }}
-
-      - run: docker manifest create ${{ matrix.fpm-patch-image }} --amend ${{ matrix.fpm-image }}-amd64 --amend ${{ matrix.fpm-image }}-arm64
-
-      - run: docker manifest push ${{ matrix.fpm-patch-image }}
-
-      - run: cosign sign --yes ${{ matrix.fpm-patch-image }}
-
-      - if: github.ref == 'refs/heads/main'
-        run: ./regctl-linux-amd64 image copy ${{ matrix.fpm-image }} ${{ matrix.fpm-hub-image }}
-
-      - if: github.ref == 'refs/heads/main'
-        run: ./regctl-linux-amd64 image copy ${{ matrix.fpm-patch-image }} ${{ matrix.fpm-patch-hub-image }}
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+    
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          tags: |
+            ${{ matrix.fpm-tags-otel }}
+          context: fpm-otel
+          platforms: linux/amd64,linux/arm64
+          cache-from: type=gha,scope=fpm-otel-${{ matrix.php }}
+          cache-to: type=gha,mode=max,scope=fpm-otel-${{ matrix.php }}
+          build-args: |
+            FPM_IMAGE=${{ matrix.fpm-image }}
+          push: true
+          provenance: false
 
   caddy:
-    name: Build Caddy ${{ matrix.php }}
+    name: Build Caddy with ${{ matrix.php }}
     runs-on: ubuntu-latest
-    needs: [generate-matrix, fpm-merge]
+    needs: [generate-matrix, fpm]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
       - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
         run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
       - name: Login into Github Docker Registery
@@ -157,7 +119,8 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
-      - uses: docker/build-push-action@v6
+      - name: Build and Push
+        uses: docker/build-push-action@v6
         with:
           tags: |
             ${{ matrix.caddy-tags }}
@@ -170,17 +133,35 @@ jobs:
           push: true
           provenance: false
 
-      - name: Docker Scout
-        id: docker-scout
-        if: ${{ github.event_name == 'pull_request' }}
-        uses: docker/scout-action@v1
+  caddy-otel:
+    name: Build Caddy ${{ matrix.php }} with OpenTelemetry
+    runs-on: ubuntu-latest
+    needs: [fpm-otel, generate-matrix]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login into Docker Hub
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
         with:
-          command: compare
-          to: ${{ matrix.scan-to }}
-          image: ${{ matrix.scan-tag }}
-          organization: shopware
-          ignore-unchanged: true
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tags: |
+            ${{ matrix.caddy-tags-otel }}
+          context: caddy
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            FPM_IMAGE=${{ matrix.fpm-image }}-otel
+          push: true
+          provenance: false
 
   check:
     name: Test Image
