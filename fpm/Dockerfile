@@ -10,7 +10,7 @@ ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/do
 RUN apk add --no-cache icu-data-full curl jq trurl && \
     apk upgrade --no-cache && \
     chmod +x /usr/local/bin/install-php-extensions && \
-    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ffi redis-6.0.2 opcache apcu amqp zstd && \
+    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ffi opcache redis-6.0.2 apcu-5.1.24 amqp-2.1.2 zstd-0.13.3  && \
     mkdir -p /var/www/html && \
     mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini" && \
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf && \
