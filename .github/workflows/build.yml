@@ -140,7 +140,7 @@ jobs:
   caddy-otel:
     name: Build Caddy ${{ matrix.php }} with OpenTelemetry
     runs-on: ubuntu-latest
-    needs: [fpm-otel, generate-matrix]
+    needs: [generate-matrix, fpm-otel]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - name: Checkout
@@ -203,7 +203,7 @@ jobs:
   nginx-otel:
     name: Build Nginx with ${{ matrix.php }} with OpenTelemetry
     runs-on: ubuntu-latest
-    needs: [generate-matrix, fpm]
+    needs: [generate-matrix, fpm-otel]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - name: Checkout
@@ -236,7 +236,7 @@ jobs:
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
     runs-on: ubuntu-latest
-    needs: [caddy]
+    needs: [caddy, nginx]
     strategy:
       matrix:
         webserver:
@@ -284,10 +284,13 @@ jobs:
               sleep 5
           done
 
-      - name: Check if shopware is running
+      - name: Check if shopware admin is running
         run: curl --fail localhost:8000/admin
+
+      - name: Check if shopware is running
+        run: curl --fail localhost:8000
 
       # output logs if failed
       - name: Output logs
         run: docker compose logs
-        if: ${{ failure() }}
+        if: ${{ always() }}
