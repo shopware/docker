@@ -90,6 +90,16 @@ foreach ($supportedVersions as $supportedVersion)
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-caddy-otel',
     ];
 
+    $nginxImages = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-nginx',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-nginx',
+    ];
+    
+    $nginxImagesOtel = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-nginx-otel',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-nginx-otel',
+    ];
+
     $fpmImages = [
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-fpm'
@@ -113,6 +123,16 @@ foreach ($supportedVersions as $supportedVersion)
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-caddy-otel',
         ]);
 
+        $nginxImages = array_merge($nginxImages, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-nginx',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-nginx',
+        ]);
+
+        $nginxImagesOtel = array_merge($nginxImagesOtel, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-nginx-otel',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-nginx-otel',
+        ]);
+
         $fpmImages = array_merge($fpmImages, [
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm',
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm'
@@ -133,6 +153,8 @@ foreach ($supportedVersions as $supportedVersion)
         'fpm-tags-otel' => implode("\n", $fpmImagesOtel),
         'caddy-tags' => implode("\n", $caddyImages),
         'caddy-tags-otel' => implode("\n", $caddyImagesOtel),
+        'nginx-tags' => implode("\n", $nginxImages),
+        'nginx-tags-otel' => implode("\n", $nginxImagesOtel),
         'scan-tag' => $caddyImages[0],
         'scan-to' => 'ghcr.io/shopware/docker-base:'.$supportedVersion,
     ];

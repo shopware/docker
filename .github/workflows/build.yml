@@ -167,10 +167,81 @@ jobs:
           push: true
           provenance: false
 
+  nginx:
+    name: Build Nginx with ${{ matrix.php }}
+    runs-on: ubuntu-latest
+    needs: [generate-matrix, fpm]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          tags: |
+            ${{ matrix.nginx-tags }}
+          context: nginx
+          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-nginx
+          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-nginx,mode=max
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            FPM_IMAGE=${{ matrix.fpm-image }}
+          push: true
+          provenance: false
+
+  nginx-otel:
+    name: Build Nginx with ${{ matrix.php }} with OpenTelemetry
+    runs-on: ubuntu-latest
+    needs: [generate-matrix, fpm]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          tags: |
+            ${{ matrix.nginx-tags-otel }}
+          context: nginx
+          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-nginx-otel
+          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-nginx-otel,mode=max
+          platforms: linux/amd64,linux/arm64
+          build-args: |
+            FPM_IMAGE=${{ matrix.fpm-image }}-otel
+          push: true
+          provenance: false
+
   check:
-    name: Test Image
+    name: Test Image with Webserver ${{ matrix.webserver }}
     runs-on: ubuntu-latest
     needs: [caddy]
+    strategy:
+      matrix:
+        webserver:
+          - caddy
+          - nginx
     steps:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -188,7 +259,7 @@ jobs:
 
       - name: Build PR
         if: github.ref != 'refs/heads/main'
-        run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.run_id }}-8.3-caddy
+        run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.run_id }}-8.3-${{ matrix.webserver}}
         env:
           DOCKER_BUILDKIT: 0
 
