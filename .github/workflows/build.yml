@@ -106,7 +106,9 @@ jobs:
 
   caddy:
     name: Build Caddy with ${{ matrix.php }}
-    runs-on: ubuntu-latest
+    runs-on: shopware-arm64
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
     needs: [generate-matrix, fpm]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -119,9 +121,6 @@ jobs:
 
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Build and Push
         uses: docker/build-push-action@v6
@@ -139,7 +138,9 @@ jobs:
 
   caddy-otel:
     name: Build Caddy ${{ matrix.php }} with OpenTelemetry
-    runs-on: ubuntu-latest
+    runs-on: shopware-arm64
+    container:
+      image: ghcr.io/catthehacker/ubuntu:act-22.04
     needs: [generate-matrix, fpm-otel]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -147,13 +148,11 @@ jobs:
         uses: actions/checkout@v4
 
       - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
         run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
 
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
 
       - name: Build and Push
         uses: docker/build-push-action@v6
