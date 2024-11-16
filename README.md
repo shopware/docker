@@ -1,6 +1,9 @@
 # Shopware 6 Production Docker
 
-This repository contains a base image with Alpine + PHP + Caddy, which you can use to build your docker image with your code.
+This repository contains a base image with Alpine + PHP + (Caddy or Nginx), which you can use to build your docker image with your code.
+
+> [!WARNING]
+> Due to DoS possibility with `Transfer-Encoding` we recommand using Nginx Image instead of Caddy. [See this issue for more information](https://github.com/shopware/docker/issues/107)
 
 > [!NOTE]
 > This docker image expects that you install all extensions using Composer. Otherwise, you will get `The class X is not found` errors. See [docs for more information](https://developer.shopware.com/docs/guides/hosting/installation-updates/extension-managment.html)
@@ -13,7 +16,7 @@ Create a Dockerfile in your project like:
 #syntax=docker/dockerfile:1.4
 
 # pin versions
-FROM ghcr.io/shopware/docker-base:8.2 as base-image
+FROM ghcr.io/shopware/docker-base:8.2-nginx as base-image
 FROM ghcr.io/friendsofshopware/shopware-cli:latest-php-8.2 as shopware-cli
 
 # build
