@@ -20,7 +20,7 @@ function get_digest_of_image(string $imageName, string $tag): string {
     return $digest;
 }
 
-$supportedVersions = ['8.1', '8.2', '8.3'];
+$supportedVersions = ['8.1', '8.2', '8.3', '8.4'];
 $disallowedVersions = ['8.2.20', '8.3.8'];
 $rcVersions = [];
 
@@ -144,6 +144,11 @@ foreach ($supportedVersions as $supportedVersion)
         ]);
     }
 
+    $redisModule = 'redis';
+    if (version_compare($patchVersion['version'], '8.4', '<')) {
+        $redisModule = 'redis-6.0.2';
+    }
+
     $data[] = [
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
@@ -157,6 +162,7 @@ foreach ($supportedVersions as $supportedVersion)
         'nginx-tags-otel' => implode("\n", $nginxImagesOtel),
         'scan-tag' => $caddyImages[0],
         'scan-to' => 'ghcr.io/shopware/docker-base:'.$supportedVersion,
+        'redisPHPModule' => $redisModule,
     ];
 }
 
