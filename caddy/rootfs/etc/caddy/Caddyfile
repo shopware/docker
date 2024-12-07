@@ -11,6 +11,8 @@ route {
 	root * /var/www/html/public
 	php_fastcgi @default unix//tmp/php-fpm.sock {
 		trusted_proxies private_ranges
+		request_buffers 4k
+		response_buffers 4k
 	}
 	encode gzip zstd
 	file_server
