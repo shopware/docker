@@ -8,32 +8,13 @@ if [[ -e /var/www/html/vendor/bin/shopware-deployment-helper ]]; then
     exec ./vendor/bin/shopware-deployment-helper run
 fi
 
-echo "### DEPRECATION ###"
+echo "### ERROR ###"
 echo ""
-echo "### The setup scripts are deprecated and will be removed November 2024 ###"
-echo "### Please install the Shopware Deployment Helper using composer require shopware/deployment-helper to get rid of this message ###"
+echo "### The setup scripts are removed ###"
+echo "### Please install the Shopware Deployment Helper using composer require shopware/deployment-helper to continue ###"
 echo "### For more information see https://developer.shopware.com/docs/guides/hosting/installation-updates/deployments/deployment-helper.html ###"
 echo ""
-echo "### DEPRECATION ###"
+echo "### ERROR ###"
 echo ""
-echo "Sleeping 30 seconds to make the deprecation visible."
 
-sleep 30
-
-set -x
-
-shopware_version=$(jq '.packages[] | select (.name == "shopware/core") | .version' -r < composer.lock)
-# shellcheck disable=SC2081,SC3010
-if [[ $shopware_version != v6* ]]; then
-  shopware_version="v$(jq '.packages[] | select (.name == "shopware/core") | .extra."branch-alias"."dev-trunk"' -r < composer.lock)"
-fi
-
-# if shopware version starts with 6.6 echo 6.6
-# shellcheck disable=SC2081,SC3010
-if [[ $shopware_version == v6.6.* ]]; then
-  # shellcheck source-path=./fpm/rootfs source=./usr/local/shopware/setup_6.6.x
-  . /usr/local/shopware/setup_6.6.x
-else
-  # shellcheck source-path=./fpm/rootfs source=./usr/local/shopware/setup_6.5.x
-  . /usr/local/shopware/setup_6.5.x
-fi
+exit 1
