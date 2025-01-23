@@ -149,12 +149,22 @@ foreach ($supportedVersions as $supportedVersion)
         $redisModule = 'redis-6.0.2';
     }
 
+    $manifestMergeScript = '';
+
+    foreach($fpmImages as $fpmImage) {
+        $manifestMergeScript .= 'docker manifest create ' . $fpmImage . ' ' . $fpmImage . '-amd64 ' . $fpmImage . '-arm64' . "\n";
+        $manifestMergeScript .= 'docker manifest push ' . $fpmImage . "\n";
+    }
+
     $data[] = [
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
         'fpm-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'fpm-tags' => implode("\n", $fpmImages),
+        'fpm-merge' => $manifestMergeScript,
+        'fpm-tags-amd64' => implode("\n", array_map(fn($tag) => $tag . '-amd64', $fpmImages)),
+        'fpm-tags-arm64' => implode("\n", array_map(fn($tag) => $tag . '-arm64', $fpmImages)),
         'fpm-tags-otel' => implode("\n", $fpmImagesOtel),
         'caddy-tags' => implode("\n", $caddyImages),
         'caddy-tags-otel' => implode("\n", $caddyImagesOtel),
