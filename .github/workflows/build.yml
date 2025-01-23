@@ -62,10 +62,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           tags: |
-            ${{ matrix.fpm-tags }}
+            ${{ matrix.fpm-tags-amd64 }}
           context: fpm
-          cache-from: type=gha,scope=fpm-${{ matrix.php }}
-          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}
+          cache-from: type=gha,scope=fpm-${{ matrix.php }}-amd64
+          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}-amd64
           platforms: linux/amd64
           build-args: |
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
@@ -97,10 +97,10 @@ jobs:
         uses: docker/build-push-action@v6
         with:
           tags: |
-            ${{ matrix.fpm-tags }}
+            ${{ matrix.fpm-tags-arm64 }}
           context: fpm
-          cache-from: type=gha,scope=fpm-${{ matrix.php }}
-          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}
+          cache-from: type=gha,scope=fpm-${{ matrix.php }}-arm64
+          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}-arm64
           platforms: linux/arm64
           build-args: |
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
@@ -124,8 +124,7 @@ jobs:
 
       - name: Merge manifest
         run: |
-
-
+          ${{ matrix.fpm-merge }}
 
   fpm-otel:
     name: PHP FPM ${{ matrix.php }} with OpenTelemetry
