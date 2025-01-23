@@ -24,7 +24,7 @@ permissions:
 
 jobs:
   generate-matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     outputs:
       matrix: ${{ steps.generate-matrix.outputs.matrix }}
     steps:
@@ -112,7 +112,7 @@ jobs:
   fpm:
     name: PHP FPM ${{ matrix.php }} merge manifest
     runs-on: ubuntu-24.04
-    needs: [fpm-amd64, fpm-arm64]
+    needs: [generate-matrix, fpm-amd64, fpm-arm64]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
       - name: Login into Docker Hub
