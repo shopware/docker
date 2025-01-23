@@ -40,7 +40,7 @@ jobs:
           echo 'EOF' >> $GITHUB_OUTPUT
 
   fpm-amd64:
-    name: PHP FPM ${{ matrix.php }}
+    name: PHP FPM ${{ matrix.php }} (amd64)
     runs-on: ubuntu-24.04
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
@@ -75,7 +75,7 @@ jobs:
           provenance: false
 
   fpm-arm64:
-    name: PHP FPM ${{ matrix.php }}
+    name: PHP FPM ${{ matrix.php }} (arm64)
     runs-on: ubuntu-24.04-arm
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
@@ -110,7 +110,7 @@ jobs:
           provenance: false
 
   fpm:
-    name: FPM merge maniefst
+    name: PHP FPM ${{ matrix.php }} merge manifest
     runs-on: ubuntu-24.04
     needs: [fpm-amd64, fpm-arm64]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
