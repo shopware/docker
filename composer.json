@@ -4,7 +4,7 @@
   "license": "MIT",
   "description": "Docker image for Shopware 6 production",
   "require": {
-    "shopware/core": ">=6.6.1.0",
+    "shopware/core": ">=6.7.0.0",
     "shopware/deployment-helper": "*"
   }
 }
