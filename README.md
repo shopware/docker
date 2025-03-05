@@ -2,9 +2,6 @@
 
 This repository contains a base image with Alpine + PHP + (Caddy or Nginx), which you can use to build your docker image with your code.
 
-> [!WARNING]
-> Due to DoS possibility with `Transfer-Encoding` we recommand using Nginx Image instead of Caddy. [See this issue for more information](https://github.com/shopware/docker/issues/107)
-
 > [!NOTE]
 > This docker image expects that you install all extensions using Composer. Otherwise, you will get `The class X is not found` errors. See [docs for more information](https://developer.shopware.com/docs/guides/hosting/installation-updates/extension-managment.html)
 
