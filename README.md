@@ -249,6 +249,8 @@ When this container exits, you can start your actual app / worker containers. Se
 | FPM_PM_MIN_SPARE_SERVERS             | 1                | [See PHP FPM documentation](https://www.php.net/manual/en/install.fpm.configuration.php) |
 | FPM_PM_MAX_SPARE_SERVERS             | 3                | [See PHP FPM documentation](https://www.php.net/manual/en/install.fpm.configuration.php) |
 
+There are even more environment variables, that affect a running container as our [deployment helper](https://github.com/shopware/deployment-helper) is used.
+Read more about its configuration, usage and possible configuration in the [Deployment Helper section of our documentation](https://developer.shopware.com/docs/guides/hosting/installation-updates/deployments/deployment-helper.html).
 
 ## Volumes
 
