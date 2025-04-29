@@ -9,10 +9,10 @@ route {
 		not path /theme/* /media/* /thumbnail/* /bundles/*
 	}
 	root * /var/www/html/public
+	encode gzip zstd
 	php_fastcgi @default unix//tmp/php-fpm.sock {
 		trusted_proxies private_ranges
 	}
-	encode gzip zstd
 	file_server
 
 	{$CADDY_SERVER_EXTRA_DIRECTIVES}
