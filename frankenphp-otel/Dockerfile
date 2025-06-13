@@ -20,6 +20,7 @@ RUN <<EOF
     cd /root
     rm -rf /tmp/grpc
     apt-get remove -y git libgrpc-dev
+    apt-get autoremove -y
     install-php-extensions opentelemetry
     rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
     echo "extension=grpc.so" > /usr/local/etc/php/conf.d/grpc.ini
