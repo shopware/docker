@@ -105,6 +105,11 @@ foreach ($supportedVersions as $supportedVersion)
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-frankenphp'
     ];
 
+    $frankenphpImagesOtel = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-frankenphp-otel',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-frankenphp-otel'
+    ];
+
     $fpmImages = [
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-fpm'
@@ -152,6 +157,11 @@ foreach ($supportedVersions as $supportedVersion)
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-frankenphp',
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-frankenphp'
         ]);
+
+        $frankenphpImagesOtel = array_merge($frankenphpImagesOtel, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-frankenphp-otel',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-frankenphp-otel'
+        ]);
     }
 
     $redisModule = 'redis';
@@ -176,9 +186,11 @@ foreach ($supportedVersions as $supportedVersion)
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
+        'frankenphp-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-frankenphp',
         'frankenphp-merge' => $manifestMergeScriptFrankenphp,
         'frankenphp-tags-amd64' => implode("\n", array_map(fn($tag) => $tag . '-amd64', $frankenphpImages)),
         'frankenphp-tags-arm64' => implode("\n", array_map(fn($tag) => $tag . '-arm64', $frankenphpImages)),
+        'frankenphp-tags-otel' => implode("\n", $frankenphpImagesOtel),
         'fpm-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'fpm-tags' => implode("\n", $fpmImages),
         'fpm-merge' => $manifestMergeScript,
