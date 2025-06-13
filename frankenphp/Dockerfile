@@ -1,7 +1,7 @@
 #syntax=docker/dockerfile:1.4
 #check=skip=SecretsUsedInArgOrEnv
 ARG PHP_VERSION=8.4
-FROM dunglas/frankenphp:builder-php${PHP_VERSION} AS builder
+FROM dunglas/frankenphp:builder-php${PHP_VERSION}-alpine AS builder
 COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
 
 RUN CGO_ENABLED=1 \
@@ -19,16 +19,14 @@ RUN CGO_ENABLED=1 \
         --with github.com/lolPants/caddy-requestid
 
 ARG PHP_VERSION=8.4
-FROM dunglas/frankenphp:php${PHP_VERSION}
+FROM dunglas/frankenphp:php${PHP_VERSION}-alpine
 
 RUN <<EOF
     set -e
-    apt-get update
-    apt-get upgrade -y
+    apk upgrade --no-cache
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ffi opcache redis apcu amqp zstd
     mkdir -p /var/www/html
     chown -R www-data:www-data /data/caddy && chown -R www-data:www-data /config/caddy
-    rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
 EOF
 
 ENV APP_ENV=prod \
