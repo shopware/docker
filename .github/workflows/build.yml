@@ -42,7 +42,7 @@ jobs:
   frankenphp-amd64:
     name: FrankenPHP (amd64)
     runs-on: ubuntu-24.04
-    if: matrix.php != '8.1'
+
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -60,6 +60,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and Push
+        if: matrix.php != '8.1'
         uses: docker/build-push-action@v6
         with:
           tags: |
@@ -76,7 +77,7 @@ jobs:
   frankenphp-arm64:
     name: FrankenPHP (arm64)
     runs-on: ubuntu-24.04-arm
-    if: matrix.php != '8.1'
+
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -94,6 +95,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Build and Push
+        if: matrix.php != '8.1'
         uses: docker/build-push-action@v6
         with:
           tags: |
@@ -110,7 +112,7 @@ jobs:
   frankenphp:
     name: FrankenPHP merge manifest
     runs-on: ubuntu-24.04
-    if: matrix.php != '8.1'
+
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     needs: [generate-matrix, frankenphp-amd64, frankenphp-arm64]
     steps:
@@ -122,6 +124,7 @@ jobs:
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
       - name: Merge manifest
+        if: matrix.php != '8.1'
         run: |
           ${{ matrix.frankenphp-merge }}
 
