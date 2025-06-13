@@ -147,6 +147,11 @@ foreach ($supportedVersions as $supportedVersion)
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm-otel',
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm-otel'
         ]);
+
+        $frankenphpImages = array_merge($frankenphpImages, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-frankenphp',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-frankenphp'
+        ]);
     }
 
     $redisModule = 'redis';
