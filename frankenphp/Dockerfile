@@ -1,6 +1,24 @@
 #syntax=docker/dockerfile:1.4
 #check=skip=SecretsUsedInArgOrEnv
 ARG PHP_VERSION=8.4
+FROM dunglas/frankenphp:builder-php${PHP_VERSION} AS builder
+COPY --from=caddy:builder /usr/bin/xcaddy /usr/bin/xcaddy
+
+RUN CGO_ENABLED=1 \
+    XCADDY_SETCAP=1 \
+    XCADDY_GO_BUILD_FLAGS="-ldflags='-w -s' -tags=nobadger,nomysql,nopgx" \
+    CGO_CFLAGS=$(php-config --includes) \
+    CGO_LDFLAGS="$(php-config --ldflags) $(php-config --libs)" \
+    xcaddy build \
+        --output /usr/local/bin/frankenphp \
+        --with github.com/dunglas/frankenphp=./ \
+        --with github.com/dunglas/frankenphp/caddy=./caddy/ \
+        --with github.com/dunglas/caddy-cbrotli \
+        --with github.com/dunglas/mercure/caddy \
+        --with github.com/dunglas/vulcain/caddy \
+        --with github.com/lolPants/caddy-requestid
+
+ARG PHP_VERSION=8.4
 FROM dunglas/frankenphp:php${PHP_VERSION}
 
 RUN <<EOF
@@ -56,6 +74,7 @@ ENV APP_ENV=prod \
 USER www-data
 
 COPY --link rootfs /
+COPY --from=builder --link /usr/local/bin/frankenphp /usr/local/bin/frankenphp
 
 WORKDIR /var/www/html
 
