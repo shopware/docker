@@ -42,7 +42,7 @@ jobs:
   frankenphp-amd64:
     name: FrankenPHP (amd64)
     runs-on: ubuntu-24.04
-    if: matrix.php != "8.1"
+    if: matrix.php != '8.1'
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -76,7 +76,7 @@ jobs:
   frankenphp-arm64:
     name: FrankenPHP (arm64)
     runs-on: ubuntu-24.04-arm
-    if: matrix.php != "8.1"
+    if: matrix.php != '8.1'
     needs: [generate-matrix]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     steps:
@@ -110,7 +110,7 @@ jobs:
   frankenphp:
     name: FrankenPHP merge manifest
     runs-on: ubuntu-24.04
-    if: matrix.php != "8.1"
+    if: matrix.php != '8.1'
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
     needs: [generate-matrix, frankenphp-amd64, frankenphp-arm64]
     steps:
