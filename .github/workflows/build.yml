@@ -39,6 +39,89 @@ jobs:
           echo "$MATRIX" >> $GITHUB_OUTPUT
           echo 'EOF' >> $GITHUB_OUTPUT
 
+  frankenphp-amd64:
+    name: FrankenPHP (amd64)
+    runs-on: ubuntu-24.04
+    needs: [generate-matrix]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          tags: |
+            ${{ matrix.frankenphp-tags-amd64 }}
+          context: frankenphp
+          cache-from: type=gha,scope=frankenphp-${{ matrix.php }}-amd64
+          cache-to: type=gha,mode=max,scope=frankenphp-${{ matrix.php }}-amd64
+          platforms: linux/amd64
+          build-args: |
+            PHP_VERSION=${{ matrix.php }}
+          push: true
+          provenance: false
+
+  frankenphp-arm64:
+    name: FrankenPHP (arm64)
+    runs-on: ubuntu-24.04-arm
+    needs: [generate-matrix]
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and Push
+        uses: docker/build-push-action@v6
+        with:
+          tags: |
+            ${{ matrix.frankenphp-tags-arm64 }}
+          context: frankenphp
+          cache-from: type=gha,scope=frankenphp-${{ matrix.php }}-arm64
+          cache-to: type=gha,mode=max,scope=frankenphp-${{ matrix.php }}-arm64
+          platforms: linux/arm64
+          build-args: |
+            PHP_VERSION=${{ matrix.php }}
+          push: true
+          provenance: false
+
+  frankenphp:
+    name: FrankenPHP merge manifest
+    runs-on: ubuntu-24.04
+    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    needs: [generate-matrix, frankenphp-amd64, frankenphp-arm64]
+    steps:
+      - name: Login into Docker Hub
+        if: github.ref == 'refs/heads/main'
+        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Merge manifest
+        run: |
+          ${{ matrix.frankenphp-merge }}
+
   fpm-amd64:
     name: PHP FPM ${{ matrix.php }} (amd64)
     runs-on: ubuntu-24.04

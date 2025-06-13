@@ -100,6 +100,11 @@ foreach ($supportedVersions as $supportedVersion)
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-nginx-otel',
     ];
 
+    $frankenphpImages = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-frankenphp',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-frankenphp'
+    ];
+
     $fpmImages = [
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-fpm'
@@ -156,10 +161,19 @@ foreach ($supportedVersions as $supportedVersion)
         $manifestMergeScript .= 'docker manifest push ' . $fpmImage . "\n";
     }
 
+    $manifestMergeScriptFrankenphp = '';
+    foreach($frankenphpImages as $frankenphpImage) {
+        $manifestMergeScriptFrankenphp .= 'docker manifest create ' . $frankenphpImage . ' ' . $frankenphpImage . '-amd64 ' . $frankenphpImage . '-arm64' . "\n";
+        $manifestMergeScriptFrankenphp .= 'docker manifest push ' . $frankenphpImage . "\n";
+    }
+
     $data[] = [
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
+        'frankenphp-merge' => $manifestMergeScriptFrankenphp,
+        'frankenphp-tags-amd64' => implode("\n", array_map(fn($tag) => $tag . '-amd64', $frankenphpImages)),
+        'frankenphp-tags-arm64' => implode("\n", array_map(fn($tag) => $tag . '-arm64', $frankenphpImages)),
         'fpm-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'fpm-tags' => implode("\n", $fpmImages),
         'fpm-merge' => $manifestMergeScript,
