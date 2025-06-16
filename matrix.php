@@ -100,6 +100,16 @@ foreach ($supportedVersions as $supportedVersion)
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $patchVersion['version'] . '-nginx-otel',
     ];
 
+    $frankenphpImages = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-frankenphp',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-frankenphp'
+    ];
+
+    $frankenphpImagesOtel = [
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-frankenphp-otel',
+        'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-frankenphp-otel'
+    ];
+
     $fpmImages = [
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'ghcr.io/shopware/docker-base' . $imageSuffix . ':'  . $imageTagPrefix . $patchVersion['version'] . '-fpm'
@@ -142,6 +152,16 @@ foreach ($supportedVersions as $supportedVersion)
             'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-fpm-otel',
             'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-fpm-otel'
         ]);
+
+        $frankenphpImages = array_merge($frankenphpImages, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-frankenphp',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-frankenphp'
+        ]);
+
+        $frankenphpImagesOtel = array_merge($frankenphpImagesOtel, [
+            'shopware/docker-base:' . $imageTagPrefix . $supportedVersion . '-frankenphp-otel',
+            'shopware/docker-base:' . $imageTagPrefix . $patchVersion['version'] . '-frankenphp-otel'
+        ]);
     }
 
     $redisModule = 'redis';
@@ -156,10 +176,21 @@ foreach ($supportedVersions as $supportedVersion)
         $manifestMergeScript .= 'docker manifest push ' . $fpmImage . "\n";
     }
 
+    $manifestMergeScriptFrankenphp = '';
+    foreach($frankenphpImages as $frankenphpImage) {
+        $manifestMergeScriptFrankenphp .= 'docker manifest create ' . $frankenphpImage . ' ' . $frankenphpImage . '-amd64 ' . $frankenphpImage . '-arm64' . "\n";
+        $manifestMergeScriptFrankenphp .= 'docker manifest push ' . $frankenphpImage . "\n";
+    }
+
     $data[] = [
         'php' => $supportedVersion,
         'phpPatch' => $patchVersion['version'],
         'phpPatchDigest' => $phpDigest,
+        'frankenphp-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-frankenphp',
+        'frankenphp-merge' => $manifestMergeScriptFrankenphp,
+        'frankenphp-tags-amd64' => implode("\n", array_map(fn($tag) => $tag . '-amd64', $frankenphpImages)),
+        'frankenphp-tags-arm64' => implode("\n", array_map(fn($tag) => $tag . '-arm64', $frankenphpImages)),
+        'frankenphp-tags-otel' => implode("\n", $frankenphpImagesOtel),
         'fpm-image' => 'ghcr.io/shopware/docker-base' . $imageSuffix . ':' . $imageTagPrefix . $supportedVersion . '-fpm',
         'fpm-tags' => implode("\n", $fpmImages),
         'fpm-merge' => $manifestMergeScript,

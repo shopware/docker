@@ -1,0 +1,20 @@
+#!/usr/bin/env sh
+
+set -e
+
+cd /var/www/html
+
+if [[ -e /var/www/html/vendor/bin/shopware-deployment-helper ]]; then
+    exec ./vendor/bin/shopware-deployment-helper run
+fi
+
+echo "### ERROR ###"
+echo ""
+echo "### The setup scripts are removed ###"
+echo "### Please install the Shopware Deployment Helper using composer require shopware/deployment-helper to continue ###"
+echo "### For more information see https://developer.shopware.com/docs/guides/hosting/installation-updates/deployments/deployment-helper.html ###"
+echo ""
+echo "### ERROR ###"
+echo ""
+
+exit 1
