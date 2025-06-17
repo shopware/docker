@@ -27,6 +27,8 @@ RUN <<EOF
     apt-get upgrade -y
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ffi opcache redis apcu amqp zstd
     mkdir -p /var/www/html
+    usermod -u 82 www-data
+    groupmod -g 82 www-data
     chown -R www-data:www-data /data/caddy && chown -R www-data:www-data /config/caddy
     rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
 EOF
