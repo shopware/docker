@@ -1,19 +1,31 @@
 :8000
 
-log
+log 
 
 {$CADDY_EXTRA_CONFIG}
 
 route {
+	root * /var/www/html/public
+	encode gzip zstd
+
+	@theme path /theme/*
 	@default {
 		not path /theme/* /media/* /thumbnail/* /bundles/*
 	}
-	root * /var/www/html/public
-	encode gzip zstd
+
 	php_fastcgi @default unix//tmp/php-fpm.sock {
 		trusted_proxies private_ranges
 	}
-	file_server
+	handle @theme {
+		@theme_file file
+		handle @theme_file {
+			file_server
+		}
+		respond 410
+	}
+	file_server {
+		hide *.php
+	}
 
 	{$CADDY_SERVER_EXTRA_DIRECTIVES}
 }

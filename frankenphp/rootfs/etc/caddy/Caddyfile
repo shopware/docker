@@ -1,20 +1,40 @@
 {
 	skip_install_trust 
 
-	{$CADDY_GLOBAL_OPTIONS} 
-	{$CADDY_EXTRA_CONFIG}
+	{$CADDY_GLOBAL_OPTIONS}
 
 	frankenphp {
 		{$FRANKENPHP_CONFIG}
 	}
 }
 
+{$CADDY_EXTRA_CONFIG}
+
 :8000 {
-	encode gzip zstd
-	php_server {
-		root /var/www/html
-		resolve_root_symlink false
+	root * /var/www/html/public
+	encode zstd gzip
+
+	log
+
+	@theme path /theme/*
+	@phpRoute {
+		not path /theme/* /media/* /thumbnail/* /bundles/*
+		not file {path}
 	}
 
-	{$CADDY_SERVER_EXTRA_DIRECTIVES}
+	rewrite @phpRoute index.php
+
+	@frontController path index.php
+	php @frontController
+
+	handle @theme {
+		@theme_file file
+		handle @theme_file {
+			file_server
+		}
+		respond 410
+	}
+	file_server {
+		hide *.php
+	}
 }
