@@ -21,7 +21,7 @@ jobs:
           - '8.3'
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Pull image
         run: docker pull shopware/docker-base:${{ matrix.php-version }}
