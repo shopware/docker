@@ -73,6 +73,7 @@ jobs:
             PHP_VERSION=${{ matrix.php }}
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
+            NODE_VERSION=${{ matrix.node }}
             REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
             NODE_VERSION=${{ matrix.node }}
           push: true
@@ -112,6 +113,7 @@ jobs:
             PHP_VERSION=${{ matrix.php }}
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
+            NODE_VERSION=${{ matrix.node }}
             REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
             NODE_VERSION=${{ matrix.node }}
           push: true
@@ -204,6 +206,7 @@ jobs:
           build-args: |
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
+            NODE_VERSION=${{ matrix.node }}
             REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
             NODE_VERSION=${{ matrix.node }}
           push: true
@@ -240,6 +243,7 @@ jobs:
           build-args: |
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
+            NODE_VERSION=${{ matrix.node }}
             REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
             NODE_VERSION=${{ matrix.node }}
           push: true

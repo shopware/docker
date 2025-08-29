@@ -1,0 +1,49 @@
+#!/usr/bin/env sh
+set -e
+set -x
+
+echo "Building nodeJS from source"
+
+apk add --no-cache --virtual .build-deps-full \
+    binutils-gold \
+    g++ \
+    gcc \
+    gnupg \
+    libgcc \
+    linux-headers \
+    make \
+    python3 \
+    py-setuptools
+
+export GNUPGHOME="$(mktemp -d)"
+
+gpg --batch --keyserver "hkps://keys.openpgp.org" --recv-keys $(curl -fsSL 'https://raw.githubusercontent.com/nodejs/docker-node/refs/heads/main/keys/node.keys' | tr '\n' ' ')
+
+# Check length of NODE_VERSION; if it's less than 6 chars, we need to determine the major and fetch the latest version
+if [ ${#NODE_VERSION} -lt 6 ]; then
+  export NODE_VERSION=$(curl -fsSL "https://nodejs.org/dist/index.tab" | awk -v "MAJOR=$NODE_VERSION" '$1 ~ "^v"MAJOR { print substr($1, 2) }' | sort -rV | head -1)
+fi
+
+curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.xz"
+curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc"
+
+gpg --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc
+
+gpgconf --kill all
+rm -rf "$GNUPGHOME"
+
+grep " node-v$NODE_VERSION.tar.xz\$" SHASUMS256.txt | sha256sum -c -
+
+tar -xf "node-v$NODE_VERSION.tar.xz"
+
+cd "node-v$NODE_VERSION"
+
+./configure
+make -j$(getconf _NPROCESSORS_ONLN) V=
+make install
+
+apk del .build-deps-full
+
+cd ..
+rm -Rf "node-v$NODE_VERSION"
+rm "node-v$NODE_VERSION.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt;
