@@ -81,7 +81,7 @@ FROM docker.io/library/node${NODE_VERSION:+:}${NODE_VERSION:+$NODE_VERSION-alpin
 
 FROM fpm AS fpm-node
 
-COPY --link --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules/
+COPY --link --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 COPY --link --from=node /opt/yarn-* /opt/
 
 COPY --link --from=node \
@@ -104,9 +104,9 @@ EOF
 
 USER www-data
 
-FROM node as node-22
+FROM fpm-node as node-22
 
-FROM node as node-24
+FROM fpm-node as node-24
 
 FROM fpm as node-none
 
