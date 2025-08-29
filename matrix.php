@@ -32,17 +32,30 @@ $supportedVersions = ['8.1', '8.2', '8.3', '8.4'];
 $disallowedVersions = ['8.2.20', '8.3.8'];
 $rcVersions = [];
 
-$supportedNodeVersions = [null, '22', '24'];
+$supportedNodeVersions = [
+    '8.1' => [
+        null,
+    ],
+    '8.2' => [
+        null,
+    ],
+    '8.3' => [
+        null,
+        '22',
+    ],
+    '8.4' => [
+        null,
+        '22',
+        '24',
+    ],
+];
 
 $data = [];
 
 $versionRegex ='/^(?<version>\d\.\d\.\d{1,}(RC\d)?)/m';
 
-
-foreach ($supportedNodeVersions as $supportedNodeVersion) {
-    foreach ($supportedVersions as $supportedVersion)
-    {
-
+foreach ($supportedVersions as $supportedVersion) {
+    foreach ($supportedNodeVersions[$supportedVersion] as $supportedNodeVersion) {
         $curVersion = null;
         $patchVersion = null;
         $rcVersion = null;
