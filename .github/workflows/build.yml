@@ -74,6 +74,7 @@ jobs:
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
             REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
+            NODE_VERSION=${{ matrix.node }}
           push: true
           provenance: false
 
@@ -112,6 +113,7 @@ jobs:
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
             REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
+            NODE_VERSION=${{ matrix.node }}
           push: true
           provenance: false
 
@@ -203,6 +205,7 @@ jobs:
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
             REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
+            NODE_VERSION=${{ matrix.node }}
           push: true
           provenance: false
 
@@ -238,6 +241,7 @@ jobs:
             PHP_PATCH_VERSION=${{ matrix.phpPatch }}
             PHP_DIGEST=${{ matrix.phpPatchDigest }}
             REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
+            NODE_VERSION=${{ matrix.node }}
           push: true
           provenance: false
 
