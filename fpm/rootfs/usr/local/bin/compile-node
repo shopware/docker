@@ -2,48 +2,113 @@
 set -e
 set -x
 
-echo "Building nodeJS from source"
+function determine_full_version() {
+  local major; major="${1}"
 
-apk add --no-cache --virtual .build-deps-full \
-    binutils-gold \
-    g++ \
-    gcc \
-    gnupg \
-    libgcc \
-    linux-headers \
-    make \
-    python3 \
-    py-setuptools
+  curl -fsSL https://nodejs.org/dist/index.tab | awk -v "MAJOR=${major}" '$1 ~ "^v"MAJOR { print substr($1, 2) }' | sort -V | tail -1
+}
 
-export GNUPGHOME="$(mktemp -d)"
+function install_build_deps() {
+  local alias; alias="${1:-.build-deps-full}"
 
-gpg --batch --keyserver "hkps://keys.openpgp.org" --recv-keys $(curl -fsSL 'https://raw.githubusercontent.com/nodejs/docker-node/refs/heads/main/keys/node.keys' | tr '\n' ' ')
+  apk add --no-cache --virtual "${alias}" \
+      binutils-gold \
+      g++ \
+      gcc \
+      gnupg \
+      libgcc \
+      linux-headers \
+      make \
+      python3 \
+      py-setuptools
+}
 
-# Check length of NODE_VERSION; if it's less than 6 chars, we need to determine the major and fetch the latest version
-if [ ${#NODE_VERSION} -lt 6 ]; then
-  export NODE_VERSION=$(curl -fsSL "https://nodejs.org/dist/index.tab" | awk -v "MAJOR=$NODE_VERSION" '$1 ~ "^v"MAJOR { print substr($1, 2) }' | sort -rV | head -1)
-fi
+function remove_build_deps() {
+  local alias; alias="${1:-.build-deps-full}"
 
-curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/node-v$NODE_VERSION.tar.xz"
-curl -fsSLO --compressed "https://nodejs.org/dist/v$NODE_VERSION/SHASUMS256.txt.asc"
+  apk del "${alias}"
+}
 
-gpg --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc
+function import_maintainer_keys() {
+  local gpg_home; gpg_home="${1}"
 
-gpgconf --kill all
-rm -rf "$GNUPGHOME"
+  gpg \
+    --homedir "${gpg_home}" \
+    --batch \
+    --keyserver "hkps://keys.openpgp.org" \
+    --recv-keys \
+    $(curl -fsSL 'https://raw.githubusercontent.com/nodejs/docker-node/refs/heads/main/keys/node.keys' | tr '\n' ' ')
+}
 
-grep " node-v$NODE_VERSION.tar.xz\$" SHASUMS256.txt | sha256sum -c -
+function download_node_source() {
+  curl -fsSLO --compressed "https://nodejs.org/dist/v${NODE_VERSION}/node-v${NODE_VERSION}.tar.xz"
+}
 
-tar -xf "node-v$NODE_VERSION.tar.xz"
+function verify_checksums() {
+  local gpg_home; gpg_home="${1:-$(mktemp -d)}"
 
-cd "node-v$NODE_VERSION"
+  import_maintainer_keys "${gpg_home}"
 
-./configure
-make -j$(getconf _NPROCESSORS_ONLN) V=
-make install
+  curl -fsSLO --compressed "https://nodejs.org/dist/v${NODE_VERSION}/SHASUMS256.txt.asc"
 
-apk del .build-deps-full
+  gpg --homedir="${gpg_home}" --batch --decrypt --output SHASUMS256.txt SHASUMS256.txt.asc
 
-cd ..
-rm -Rf "node-v$NODE_VERSION"
-rm "node-v$NODE_VERSION.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt;
+  gpgconf --kill all
+  rm -rf "${gpg_home}"
+
+  grep " node-v${NODE_VERSION}.tar.xz\$" SHASUMS256.txt | sha256sum -c -
+}
+
+build_node() {
+  tar -xf "node-v${NODE_VERSION}.tar.xz"
+
+  cd "node-v${NODE_VERSION}"
+
+  echo "Building nodeJS from source"
+
+  ./configure
+  make -j$(getconf _NPROCESSORS_ONLN) V=
+  make install
+
+  cd ..
+
+  rm -Rf "node-v${NODE_VERSION}"
+  rm "node-v${NODE_VERSION}.tar.xz" SHASUMS256.txt.asc SHASUMS256.txt;
+}
+
+general_cleanup() {
+  find /usr/local/include/node/openssl/archs -mindepth 1 -maxdepth 1 ! -name "$OPENSSL_ARCH" -exec rm -rf {} \; || true
+  rm -rf /tmp/*
+}
+
+smoketest() {
+  node --version
+  npm --version
+}
+
+function main() {
+    if [ -z "${NODE_VERSION}" ]; then
+      echo "NODE_VERSION is not set!" >&2
+      exit 1
+    fi
+
+    if [ ${#NODE_VERSION} -lt 6 ]; then
+      export NODE_VERSION=$(determine_full_version "${NODE_VERSION}")
+    fi
+
+    install_build_deps || exit 1
+
+    download_node_source || exit 1
+
+    verify_checksums || exit 1
+
+    build_node || exit 1
+
+    remove_build_deps || exit 1
+
+    general_cleanup || true
+
+    smoketest || exit 1
+}
+
+main

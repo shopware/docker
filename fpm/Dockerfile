@@ -20,6 +20,28 @@ RUN apk add --no-cache icu-data-full curl jq trurl && \
     rm -f /usr/local/etc/php-fpm.d/www.conf && \
     rm -f /usr/local/etc/php-fpm.d/www.conf.default
 
+COPY --link rootfs /
+
+ARG NODE_VERSION
+FROM fpm AS fpm-node
+
+ENV NODE_VERSION=${NODE_VERSION}
+
+RUN <<EOF
+compile-node
+EOF
+
+FROM fpm-node as local-node-22
+
+FROM fpm-node as local-node-24
+
+FROM fpm as local-node-none
+
+ARG NODE_VERSION
+FROM local-node-${NODE_VERSION:-none} AS all-deps
+
+FROM all-deps AS runtime-config
+
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
     LOCK_DSN=flock \
@@ -72,30 +94,8 @@ ENV APP_ENV=prod \
 
 USER www-data
 
-COPY --link rootfs /
-
 WORKDIR /var/www/html
 
-ARG NODE_VERSION
-FROM fpm AS fpm-node
-
-ENV NODE_VERSION=${NODE_VERSION}
-
-USER root
-
-RUN <<EOF
-compile-node
-EOF
-
-USER www-data
-
-FROM fpm-node as local-node-22
-
-FROM fpm-node as local-node-24
-
-FROM fpm as local-node-none
-
-ARG NODE_VERSION
-FROM local-node-${NODE_VERSION:-none} AS final
+FROM runtime-config AS final
 
 FROM final
