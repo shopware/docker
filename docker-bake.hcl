@@ -6,7 +6,6 @@ variable "tagPrefix" {
   default = ""
 }
 
-
 target "dev" {
     name = "dev-${replace(php, ".", "-")}-${node}"
     context = "./dev"
