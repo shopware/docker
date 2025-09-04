@@ -367,7 +367,11 @@ jobs:
   dev:
     name: Build Dev Image
     runs-on: namespace-profile-default
-    needs: [caddy-otel]
+    needs: [caddy-otel, nginx-otel]
+    strategy:
+      fail-fast: false
+      matrix:
+        webserver: [ caddy, nginx ]
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -379,7 +383,7 @@ jobs:
         uses: docker/bake-action@v6
         with:
           push: true
-          targets: dev
+          targets: dev-${{ matrix.webserver }}
         env:
           imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
           tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.run_id) || '' }}
