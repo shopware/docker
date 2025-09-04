@@ -78,7 +78,7 @@ jobs:
           provenance: false
 
   frankenphp-arm64:
-    name: FrankenPHP (arm64)
+    name: FrankenPHP ${{ matrix.php }} (arm64)
     runs-on: ubuntu-24.04-arm
 
     needs: [generate-matrix]
@@ -116,7 +116,7 @@ jobs:
           provenance: false
 
   frankenphp:
-    name: FrankenPHP merge manifest
+    name: FrankenPHP ${{ matrix.php }} merge manifest
     runs-on: ubuntu-24.04
 
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
@@ -135,7 +135,7 @@ jobs:
           ${{ matrix.frankenphp-merge }}
 
   frankenphp-otel:
-    name: FrankenPHP OTEL
+    name: FrankenPHP ${{ matrix.php }} OTEL
     runs-on: ubuntu-24.04
     needs: [generate-matrix, frankenphp]
     strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
@@ -358,6 +358,8 @@ jobs:
           tags: |
             ${{ matrix.caddy-tags-otel }}
           context: caddy
+          cache-from: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-caddy-otel
+          cache-to: type=registry,ref=ghcr.io/shopware/docker-cache:${{ matrix.php }}-caddy-otel,mode=max
           platforms: linux/amd64,linux/arm64
           build-args: |
             FPM_IMAGE=${{ matrix.fpm-image }}-otel
