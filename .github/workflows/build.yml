@@ -364,6 +364,26 @@ jobs:
           push: true
           provenance: false
 
+  dev:
+    name: Build Dev Image
+    runs-on: namespace-profile-default
+    needs: [caddy-otel]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Login into Github Docker Registery
+        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+      - name: Build and push
+        uses: docker/bake-action@v6
+        with:
+          push: true
+          targets: dev
+        env:
+          imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+          tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.run_id) || '' }}
+
   nginx:
     name: Build Nginx with ${{ matrix.php }}
     runs-on: ubuntu-24.04
