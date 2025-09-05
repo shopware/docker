@@ -1,8 +1,6 @@
 #syntax=docker/dockerfile:1.4
 
-ARG FRANKENPHP_IMAGE=ghcr.io/shopware/docker-base-ci-test:15628943495-8.4-frankenphp
-
-FROM ${FRANKENPHP_IMAGE}
+FROM base
 
 USER root
 
