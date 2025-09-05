@@ -17,6 +17,12 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Install and configure Namespace CLI
+      uses: namespacelabs/nscloud-setup@v0
+
+    - name: Configure Namespace powered Buildx
+      uses: namespacelabs/nscloud-setup-buildx-action@v0
+
     - name: Login into Docker Hub
       shell: bash
       run: echo "${{ inputs.docker_hub_password }}" | docker login -u ${{ inputs.docker_hub_username }} --password-stdin

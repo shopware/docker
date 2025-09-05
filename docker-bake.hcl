@@ -69,7 +69,7 @@ target "fpm" {
         "php" = phpMatrix
     }
     contexts = {
-        base = "docker-image://docker.io/library/php:${php}-fpm-alpine3.22"
+        base = "docker-image://docker.io/library/php:${php}-fpm-alpine"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -156,7 +156,7 @@ target "caddy-dev" {
     name = "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = phpMatrix
+        "php"  = frankenphpMatrix
         "node" = [ "22", "24" ]
     }
     contexts = {
@@ -222,7 +222,7 @@ target "nginx-dev" {
     name = "nginx-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = phpMatrix
+        "php"  = frankenphpMatrix
         "node" = [ "22", "24" ]
     }
     contexts = {
