@@ -10,13 +10,17 @@ variable "phpMatrix" {
   default = [ "8.1.33", "8.2.29", "8.3.25", "8.4.12" ]
 }
 
+variable "frankenphpMatrix" {
+  default = [ "8.2.29", "8.3.25", "8.4.12" ]
+}
+
 # Frankenphp
 
 target "frankenphp" {
     name = "frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./frankenphp"
     matrix = {
-        "php" = phpMatrix
+        "php" = frankenphpMatrix
     }
     args = {
         "PHP_VERSION" = php
@@ -38,7 +42,7 @@ target "frankenphp-otel" {
     name = "frankenphp-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./frankenphp-otel"
     matrix = {
-        "php" = phpMatrix
+        "php" = frankenphpMatrix
     }
     contexts = {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-frankenphp"
