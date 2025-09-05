@@ -55,7 +55,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   fpm:
-    name: Build FPM
+    name: FPM
     runs-on: namespace-profile-default
     steps:
       - name: Checkout
@@ -70,7 +70,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   fpm-otel:
-    name: Build FPM with OpenTelemetry
+    name: FPM with OpenTelemetry
     runs-on: namespace-profile-default
     needs: [fpm]
     steps:
@@ -86,7 +86,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   webserver:
-    name: Build ${{ matrix.webserver }}
+    name: ${{ matrix.webserver }}
     runs-on: namespace-profile-default
     needs: [fpm]
     strategy:
@@ -106,7 +106,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   webserver-otel:
-    name: Build ${{ matrix.webserver }} with OpenTelemetry
+    name: ${{ matrix.webserver }} with OpenTelemetry
     runs-on: namespace-profile-default
     needs: [fpm-otel]
     strategy:
@@ -126,7 +126,7 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   dev:
-    name: Build Dev Image
+    name: Dev ${{ matrix.webserver }}
     runs-on: namespace-profile-default
     needs: [webserver-otel]
     strategy:
