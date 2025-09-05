@@ -1,14 +1,19 @@
 #syntax=docker/dockerfile:1.4
 
-ARG PHP_PATCH_VERSION
-ARG PHP_DIGEST
-
-FROM docker.io/library/php:${PHP_PATCH_VERSION}-fpm-alpine@${PHP_DIGEST}
-ARG REDIS_PHP_MODULE=redis
+FROM base
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN apk add --no-cache icu-data-full curl jq trurl && \
+RUN <<EOF
+    set -e
+
+    REDIS_PHP_MODULE="redis"
+
+    if [ "$(php -r 'echo PHP_VERSION_ID;')" -lt 80400 ]; then
+        REDIS_PHP_MODULE="redis-6.0.2"
+    fi
+
+    apk add --no-cache icu-data-full curl jq trurl && \
     apk upgrade --no-cache && \
     chmod +x /usr/local/bin/install-php-extensions && \
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache ${REDIS_PHP_MODULE} apcu-5.1.24 amqp-2.1.2 zstd-0.13.3  && \
@@ -17,6 +22,7 @@ RUN apk add --no-cache icu-data-full curl jq trurl && \
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf && \
     rm -f /usr/local/etc/php-fpm.d/www.conf && \
     rm -f /usr/local/etc/php-fpm.d/www.conf.default
+EOF
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \

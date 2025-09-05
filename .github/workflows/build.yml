@@ -171,92 +171,20 @@ jobs:
           push: true
           provenance: false
 
-  fpm-amd64:
-    name: PHP FPM ${{ matrix.php }} (amd64)
-    runs-on: ubuntu-24.04
-    needs: [generate-matrix]
-    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login into Docker Hub
-        if: github.ref == 'refs/heads/main'
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and Push
-        uses: docker/build-push-action@v6
-        with:
-          tags: |
-            ${{ matrix.fpm-tags-amd64 }}
-          context: fpm
-          cache-from: type=gha,scope=fpm-${{ matrix.php }}-amd64
-          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}-amd64
-          platforms: linux/amd64
-          build-args: |
-            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
-            PHP_DIGEST=${{ matrix.phpPatchDigest }}
-            REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
-          push: true
-          provenance: false
-
-  fpm-arm64:
-    name: PHP FPM ${{ matrix.php }} (arm64)
-    runs-on: ubuntu-24.04-arm
-    needs: [generate-matrix]
-    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
-
-      - name: Login into Docker Hub
-        if: github.ref == 'refs/heads/main'
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and Push
-        uses: docker/build-push-action@v6
-        with:
-          tags: |
-            ${{ matrix.fpm-tags-arm64 }}
-          context: fpm
-          cache-from: type=gha,scope=fpm-${{ matrix.php }}-arm64
-          cache-to: type=gha,mode=max,scope=fpm-${{ matrix.php }}-arm64
-          platforms: linux/arm64
-          build-args: |
-            PHP_PATCH_VERSION=${{ matrix.phpPatch }}
-            PHP_DIGEST=${{ matrix.phpPatchDigest }}
-            REDIS_PHP_MODULE=${{ matrix.redisPHPModule }}
-          push: true
-          provenance: false
-
   fpm:
-    name: PHP FPM ${{ matrix.php }} merge manifest
-    runs-on: ubuntu-24.04
-    needs: [generate-matrix, fpm-amd64, fpm-arm64]
-    strategy: ${{ fromJson(needs.generate-matrix.outputs.matrix) }}
+    name: Build FPM
+    runs-on: namespace-profile-default
     steps:
-      - name: Login into Docker Hub
-        if: github.ref == 'refs/heads/main'
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
+      - name: Checkout
+        uses: actions/checkout@v5
 
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Merge manifest
-        run: |
-          ${{ matrix.fpm-merge }}
+      - name: Build
+        uses: ./.github/action/build-bake-publish
+        with:
+          targets: fpm
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   fpm-otel:
     name: Build FPM with OpenTelemetry

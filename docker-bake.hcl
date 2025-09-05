@@ -12,6 +12,28 @@ variable "phpMatrix" {
 
 # FPM
 
+target "fpm" {
+    name = "fpm-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "./fpm"
+    matrix = {
+        "php" = phpMatrix
+    }
+    contexts = {
+        base = "docker-image://docker.io/library/php:${php}-fpm-alpine"
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
+    tags = imageSuffix != "" ? [
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-fpm",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+    ] : [
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-fpm",
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm",
+
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-fpm",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+    ]
+}
+
 target "fpm-otel" {
     name = "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./fpm-otel"
@@ -33,7 +55,6 @@ target "fpm-otel" {
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
     ]
 }
-
 
 # Caddy
 
