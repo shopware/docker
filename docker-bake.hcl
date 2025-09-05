@@ -69,7 +69,7 @@ target "fpm" {
         "php" = phpMatrix
     }
     contexts = {
-        base = "docker-image://docker.io/library/php:${php}-fpm-alpine"
+        base = "docker-image://docker.io/library/php:${php}-fpm-alpine3.22"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
