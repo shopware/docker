@@ -22,12 +22,15 @@ target "caddy" {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
-    tags = [
-        "shopware/docker-base${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-caddy",
-        "shopware/docker-base${imageSuffix}:${tagPrefix}php${php}-caddy",
+    tags = imageSuffix != "" ? [
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-caddy",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy"
+    ] : [
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-caddy",
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy",
 
-        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-caddy",
-        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}php${php}-caddy"
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-caddy",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy"
     ]
 }
 
@@ -41,12 +44,15 @@ target "caddy-otel" {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
-    tags = [
-        "shopware/docker-base${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-caddy-otel",
-        "shopware/docker-base${imageSuffix}:${tagPrefix}php${php}-caddy-otel",
+    tags = imageSuffix != "" ? [
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-caddy-otel",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy-otel"
+    ] : [
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-caddy-otel",
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy-otel",
 
-        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-caddy-otel",
-        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}php${php}-caddy-otel"
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-caddy-otel",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy-otel"
     ]
 }
 
@@ -82,12 +88,15 @@ target "nginx" {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
-    tags = [
-        "shopware/docker-base${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-nginx",
-        "shopware/docker-base${imageSuffix}:${tagPrefix}php${php}-nginx",
+    tags = imageSuffix != "" ? [
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-nginx",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx"
+    ] : [
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-nginx",
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx",
 
-        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-nginx",
-        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}php${php}-nginx"
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-nginx",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx"
     ]
 }
 
@@ -101,12 +110,15 @@ target "nginx-otel" {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
-    tags = [
-        "shopware/docker-base${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-nginx-otel",
-        "shopware/docker-base${imageSuffix}:${tagPrefix}php${php}-nginx-otel",
+    tags = imageSuffix != "" ? [
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-nginx-otel",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx-otel"
+    ] : [
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-nginx-otel",
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx-otel",
 
-        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-nginx-otel",
-        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}php${php}-nginx-otel"
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-nginx-otel",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx-otel"
     ]
 }
 
