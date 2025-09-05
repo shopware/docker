@@ -5,15 +5,25 @@ inputs:
     description: 'Targets'
     required: true
     default: ''
+  docker_hub_username:
+    description: 'Docker Hub username'
+    required: true
+  docker_hub_password:
+    description: 'Docker Hub password'
+    required: true
+  github_token:
+    description: 'GitHub token'
+    required: true
 runs:
   using: "composite"
   steps:
     - name: Login into Docker Hub
-      run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-    - name: Login into Github Docker Registery
       shell: bash
-      run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      run: echo "${{ inputs.docker_hub_password }}" | docker login -u ${{ inputs.docker_hub_username }} --password-stdin
+
+    - name: Login into Github Docker Registry
+      shell: bash
+      run: echo "${{ inputs.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
     - name: Build and push
       uses: docker/bake-action@v6

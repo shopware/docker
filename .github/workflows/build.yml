@@ -270,6 +270,9 @@ jobs:
         uses: ./.github/action/build-bake-publish
         with:
           targets: fpm-otel
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   webserver:
     name: Build ${{ matrix.webserver }}
@@ -287,6 +290,9 @@ jobs:
         uses: ./.github/action/build-bake-publish
         with:
           targets: ${{ matrix.webserver}}
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   webserver-otel:
     name: Build ${{ matrix.webserver }} with OpenTelemetry
@@ -304,6 +310,9 @@ jobs:
         uses: ./.github/action/build-bake-publish
         with:
           targets: ${{ matrix.webserver}}-otel
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   dev:
     name: Build Dev Image
@@ -321,6 +330,9 @@ jobs:
         uses: ./.github/action/build-bake-publish
         with:
           targets: ${{ matrix.webserver }}-dev
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
