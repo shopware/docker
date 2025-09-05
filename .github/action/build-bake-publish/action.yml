@@ -1,5 +1,5 @@
 name: 'Build and Publish'
-description: 'Builds Image'
+description: 'Builds Image and pushes'
 inputs:
   targets:
     description: 'Targets'
