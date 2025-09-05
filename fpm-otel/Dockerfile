@@ -1,8 +1,6 @@
 #syntax=docker/dockerfile:1.4
 
-ARG FPM_IMAGE=ghcr.io/shopware/docker-base:8.3.1-fpm
-
-FROM ${FPM_IMAGE}
+FROM base
 
 USER root
 

@@ -10,6 +10,31 @@ variable "phpMatrix" {
   default = [ "8.1.33", "8.2.29", "8.3.25", "8.4.12" ]
 }
 
+# FPM
+
+target "fpm-otel" {
+    name = "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "./fpm-otel"
+    matrix = {
+        "php" = phpMatrix
+    }
+    contexts = {
+        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
+    tags = imageSuffix != "" ? [
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-fpm-otel",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
+    ] : [
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-fpm-otel",
+        "shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel",
+
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-fpm-otel",
+        "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
+    ]
+}
+
+
 # Caddy
 
 target "caddy" {
