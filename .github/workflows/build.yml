@@ -294,55 +294,10 @@ jobs:
           push: true
           provenance: false
 
-  caddy:
-    name: Build Caddy
+  webserver:
+    name: Build ${{ matrix.webserver }}
     runs-on: namespace-profile-default
     needs: [fpm]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and push
-        uses: docker/bake-action@v6
-        with:
-          push: true
-          targets: caddy
-        env:
-          imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
-
-  caddy-otel:
-    name: Build Caddy with OpenTelemetry
-    runs-on: namespace-profile-default
-    needs: [fpm-otel]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and push
-        uses: docker/bake-action@v6
-        with:
-          push: true
-          targets: caddy-otel
-        env:
-          imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
-          tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.run_id) || '' }}
-
-  dev:
-    name: Build Dev Image
-    runs-on: namespace-profile-default
-    needs: [caddy-otel, nginx-otel]
     strategy:
       fail-fast: false
       matrix:
@@ -351,68 +306,49 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and push
-        uses: docker/bake-action@v6
+      - name: Build
+        uses: ./.github/action/build-bake-publish
         with:
-          push: true
-          targets: ${{ matrix.webserver }}-dev
-        env:
-          imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
-          tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.run_id) || '' }}
+          targets: ${{ matrix.webserver}}
 
-  nginx:
-    name: Build Nginx
-    runs-on: namespace-profile-default
-    needs: [fpm]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and push
-        uses: docker/bake-action@v6
-        with:
-          push: true
-          targets: nginx
-        env:
-          imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
-          tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.run_id) || '' }}
-
-  nginx-otel:
-    name: Build Nginx with OpenTelemetry
+  webserver-otel:
+    name: Build ${{ matrix.webserver }} with OpenTelemetry
     runs-on: namespace-profile-default
     needs: [fpm-otel]
+    strategy:
+      fail-fast: false
+      matrix:
+        webserver: [ caddy, nginx ]
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Login into Docker Hub
-        run: echo "${{ secrets.DOCKER_HUB_PASSWORD }}" | docker login -u ${{ secrets.DOCKER_HUB_USERNAME }} --password-stdin
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
-      - name: Build and push
-        uses: docker/bake-action@v6
+      - name: Build
+        uses: ./.github/action/build-bake-publish
         with:
-          push: true
-          targets: nginx-otel
-        env:
-          imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
-          tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.run_id) || '' }}
+          targets: ${{ matrix.webserver}}-otel
+
+  dev:
+    name: Build Dev Image
+    runs-on: namespace-profile-default
+    needs: [webserver-otel]
+    strategy:
+      fail-fast: false
+      matrix:
+        webserver: [ caddy, nginx ]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build
+        uses: ./.github/action/build-bake-publish
+        with:
+          targets: ${{ matrix.webserver }}-dev
 
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
     runs-on: ubuntu-latest
-    needs: [caddy, nginx]
+    needs: [webserver]
     strategy:
       matrix:
         webserver:
