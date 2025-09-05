@@ -25,7 +25,7 @@ permissions:
 jobs:
   frankenphp:
     name: FrankenPHP
-    runs-on: namespace-profile-default
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -56,7 +56,7 @@ jobs:
 
   fpm:
     name: FPM
-    runs-on: namespace-profile-default
+    runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -71,7 +71,7 @@ jobs:
 
   fpm-otel:
     name: FPM with OpenTelemetry
-    runs-on: namespace-profile-default
+    runs-on: ubuntu-latest
     needs: [fpm]
     steps:
       - name: Checkout
@@ -87,7 +87,7 @@ jobs:
 
   webserver:
     name: ${{ matrix.webserver }}
-    runs-on: namespace-profile-default
+    runs-on: ubuntu-latest
     needs: [fpm]
     strategy:
       fail-fast: false
@@ -107,7 +107,7 @@ jobs:
 
   webserver-otel:
     name: ${{ matrix.webserver }} with OpenTelemetry
-    runs-on: namespace-profile-default
+    runs-on: ubuntu-latest
     needs: [fpm-otel]
     strategy:
       fail-fast: false
@@ -127,7 +127,7 @@ jobs:
 
   dev:
     name: Dev ${{ matrix.webserver }}
-    runs-on: namespace-profile-default
+    runs-on: ubuntu-latest
     needs: [webserver-otel]
     strategy:
       fail-fast: false
