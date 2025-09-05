@@ -22,7 +22,7 @@ target "caddy" {
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [
         "shopware/docker-caddy${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-caddy",
-        "shopware/docker-caddy${imageSuffix}:${tagPrefix}php${php}-caddy"
+        "shopware/docker-caddy${imageSuffix}:${tagPrefix}php${php}-caddy",
 
         "ghcr.io/shopware/docker-caddy${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-caddy",
         "ghcr.io/shopware/docker-caddy${imageSuffix}:${tagPrefix}php${php}-caddy"
@@ -41,7 +41,7 @@ target "caddy-otel" {
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [
         "shopware/docker-caddy${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-caddy-otel",
-        "shopware/docker-caddy${imageSuffix}:${tagPrefix}php${php}-caddy-otel"
+        "shopware/docker-caddy${imageSuffix}:${tagPrefix}php${php}-caddy-otel",
 
         "ghcr.io/shopware/docker-caddy${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-caddy-otel",
         "ghcr.io/shopware/docker-caddy${imageSuffix}:${tagPrefix}php${php}-caddy-otel"

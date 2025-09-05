@@ -295,7 +295,7 @@ jobs:
           provenance: false
 
   caddy:
-    name: Build Caddy with OpenTelemetry
+    name: Build Caddy
     runs-on: namespace-profile-default
     needs: [fpm]
     steps:
