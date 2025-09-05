@@ -11,7 +11,7 @@ variable "phpMatrix" {
 }
 
 target "dev-caddy" {
-    name = "dev-${replace(php, ".", "-")}-${node}"
+    name = "dev-caddy-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
         "php"  = phpMatrix
@@ -31,7 +31,7 @@ target "dev-caddy" {
 }
 
 target "dev-nginx" {
-    name = "dev-${replace(php, ".", "-")}-${node}"
+    name = "dev-nginx-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
         "php"  = phpMatrix
