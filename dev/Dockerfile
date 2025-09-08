@@ -40,6 +40,7 @@ EOF
 USER www-data
 
 COPY --link --from=ghcr.io/shopware/shopware-cli:bin /shopware-cli /usr/local/bin/shopware-cli
+COPY --link --from=composer/composer:2-bin /composer /usr/local/bin/composer
 COPY --link rootfs /
 
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
