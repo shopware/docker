@@ -1,0 +1,28 @@
+#/usr/bin/env bash
+
+set -e
+
+if [ "$(ls -A /var/www/html)" ]; then
+	echo "Error: /var/www/html is not empty." >&2
+	exit 1
+fi
+
+cd /var/www/html
+
+SHOPWARE_VERSION=${1:-*}
+
+echo "Creating Shopware project..."
+(composer create-project shopware/production:$SHOPWARE_VERSION . --no-interaction --prefer-dist --no-progress > /tmp/install.log 2>&1) || { echo "Installation failed. Log:"; cat /tmp/install.log; exit 1; }
+
+echo "Adding developer tools..."
+(composer require shopware/docker-dev --no-interaction > /tmp/install.log 2>&1) || { echo "Adding docker-dev failed. Log:"; cat /tmp/install.log; exit 1; }
+
+echo -n "Do you want to use Elasticsearch? (y/N): "
+read use_elasticsearch
+
+if [ -z "$use_elasticsearch" ] || [ "$use_elasticsearch" != "y" ] && [ "$use_elasticsearch" != "Y" ]; then
+	echo "Removing Elasticsearch..."
+	(composer remove shopware/elasticsearch --no-interaction > /tmp/install.log 2>&1) || { echo "Removing elasticsearch failed. Log:"; cat /tmp/install.log; exit 1; }
+fi
+
+echo "Project created successfully. Run 'make up' to start the containers and 'make setup' to initialize the project."

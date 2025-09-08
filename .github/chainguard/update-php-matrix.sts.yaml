@@ -1,0 +1,6 @@
+issuer: https://token.actions.githubusercontent.com
+subject: repo:shopware/docker:*
+
+permissions:
+  contents: write
+  pull-requests: write

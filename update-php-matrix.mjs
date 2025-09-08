@@ -40,7 +40,7 @@ function getLatestPatchVersion(apiResponse) {
     return null;
 }
 
-// Function to update the phpMatrix in docker-bake.hcl
+// Function to update the phpMatrix and frankenphpMatrix in docker-bake.hcl
 async function updatePhpMatrixInHcl(versions) {
     const hclPath = 'docker-bake.hcl';
     let hclContent = await fs.readFile(hclPath, 'utf8');
@@ -55,9 +55,21 @@ async function updatePhpMatrixInHcl(versions) {
 
     hclContent = hclContent.replace(phpMatrixRegex, `$1${newPhpMatrix}$3`);
 
+    // Find the frankenphpMatrix variable and replace its value (excludes PHP 8.1)
+    const frankenphpMatrixRegex = /(variable "frankenphpMatrix" \{\s*default = )(\[[^\]]*\])(\s*\})/s;
+    const frankenphpVersions = versions.filter(v => !v.startsWith('8.1'));
+    const newFrankenphpMatrix = `[ ${frankenphpVersions.map(v => `"${v}"`).join(', ')} ]`;
+
+    if (!frankenphpMatrixRegex.test(hclContent)) {
+        throw new Error('frankenphpMatrix variable not found in docker-bake.hcl');
+    }
+
+    hclContent = hclContent.replace(frankenphpMatrixRegex, `$1${newFrankenphpMatrix}$3`);
+
     await fs.writeFile(hclPath, hclContent);
-    console.log('Successfully updated phpMatrix in docker-bake.hcl');
-    console.log('New versions:', versions);
+    console.log('Successfully updated phpMatrix and frankenphpMatrix in docker-bake.hcl');
+    console.log('PHP versions:', versions);
+    console.log('FrankenPHP versions (excluding 8.1):', frankenphpVersions);
 }
 
 const versions = [];
