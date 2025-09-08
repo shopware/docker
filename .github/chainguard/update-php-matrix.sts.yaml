@@ -3,4 +3,4 @@ subject: repo:shopware/docker:*
 
 permissions:
   contents: write
-  pull-request: write
+  pull-requests: write
