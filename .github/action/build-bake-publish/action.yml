@@ -1,0 +1,43 @@
+name: 'Build and Publish'
+description: 'Builds Image and pushes'
+inputs:
+  targets:
+    description: 'Targets'
+    required: true
+    default: ''
+  docker_hub_username:
+    description: 'Docker Hub username'
+    required: true
+  docker_hub_password:
+    description: 'Docker Hub password'
+    required: true
+  github_token:
+    description: 'GitHub token'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Install and configure Namespace CLI
+      uses: namespacelabs/nscloud-setup@v0
+
+    - name: Configure Namespace powered Buildx
+      uses: namespacelabs/nscloud-setup-buildx-action@v0
+
+    - name: Login into Docker Hub
+      shell: bash
+      run: echo "${{ inputs.docker_hub_password }}" | docker login -u ${{ inputs.docker_hub_username }} --password-stdin
+
+    - name: Login into Github Docker Registry
+      shell: bash
+      run: echo "${{ inputs.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+
+    - name: Build and push
+      uses: docker/bake-action@v6
+      with:
+        push: true
+        targets: ${{ inputs.targets }}
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: false
+        DOCKER_BUILD_SUMMARY: false
+        imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.run_id) || '' }}

@@ -1,0 +1,64 @@
+name: Update PHP Matrix
+
+on:
+  schedule:
+    # Run daily at 6:00 AM UTC
+    - cron: '0 6 * * *'
+  workflow_dispatch: # Allow manual triggering
+
+jobs:
+  update-php-matrix:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: write
+      id-token: write
+    
+    steps:
+      - name: Generate GitHub token via octo-sts
+        id: generate-token
+        uses: octo-sts/action@v1.0.1
+        with:
+          scope: ${{ github.repository }}
+          identity: update-php-matrix
+
+      - name: Checkout repository
+        uses: actions/checkout@v5
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+
+      - name: Run PHP matrix update script
+        run: node update-php-matrix.mjs
+
+      - name: Check for changes
+        id: changes
+        run: |
+          if git diff --quiet; then
+            echo "changed=false" >> $GITHUB_OUTPUT
+            echo "No changes detected"
+          else
+            echo "changed=true" >> $GITHUB_OUTPUT
+            echo "Changes detected"
+            git diff
+          fi
+
+      - name: Create Pull Request
+        if: steps.changes.outputs.changed == 'true'
+        uses: peter-evans/create-pull-request@v7
+        with:
+          token: ${{ steps.generate-token.outputs.token }}
+          commit-message: 'chore: update PHP matrix to latest patch versions'
+          title: 'chore: update PHP matrix to latest patch versions'
+          body: |
+            This PR automatically updates the PHP matrix versions to the latest patch releases.
+            
+            The following matrices have been updated:
+            - `phpMatrix`: All supported PHP versions including 8.1
+            - `frankenphpMatrix`: All supported PHP versions excluding 8.1
+            
+            Changes were detected by the automated PHP matrix update workflow.
+            
+            🤖 This PR was created automatically by the `update-php-matrix` GitHub Action.
+          branch: update-php-matrix
+          delete-branch: true
+          draft: false
