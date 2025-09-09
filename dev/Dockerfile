@@ -19,7 +19,7 @@ RUN <<EOF
             nodejs npm
     fi
 
-    apk add --no-cache npm bash
+    apk add --no-cache npm bash git
     install-php-extensions tideways blackfire xdebug
 
     cd /usr/local/etc/php/conf.d
