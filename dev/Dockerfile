@@ -19,7 +19,7 @@ RUN <<EOF
             nodejs npm
     fi
 
-    apk add --no-cache npm bash git
+    apk add --no-cache npm bash git shadow
     install-php-extensions tideways blackfire xdebug
 
     cd /usr/local/etc/php/conf.d
@@ -28,13 +28,15 @@ RUN <<EOF
     mv docker-php-ext-tideways.ini docker-php-ext-tideways.disabled
     mv docker-php-ext-blackfire.ini docker-php-ext-blackfire.disabled
 
-    chown -R www-data:www-data /usr/local/etc/php/conf.d
-
     INSTALLED_NODE_VERSION=$(node -e "console.log(process.versions.node.substr(0,2))")
     if [[ "$INSTALLED_NODE_VERSION" != "$NODE_VERSION" ]]; then
         echo "ERROR: Installed Node.js version ($INSTALLED_NODE_VERSION) does not match expected version ($NODE_VERSION)"
         exit 1
     fi
+
+    usermod -u 1000 www-data
+    groupmod -g 1000 www-data
+    chown -R 1000:1000 /var/www/html /home/www-data /usr/local/etc/php/conf.d
 EOF
 
 USER www-data
