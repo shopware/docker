@@ -1,0 +1,17 @@
+name: Cleanup GHCR
+on:
+    push:
+
+permissions:
+    packages: write
+
+jobs:
+    cleanup:
+        name: Cleanup GHCR
+        runs-on: ubuntu-latest
+        steps:
+            - name: Cleanup GHCR
+              uses: dataaxiom/ghcr-cleanup-action@v1
+              with:
+                packages: docker-base-ci-test,docker-dev-ci-test,demo-ci-test
+                older-than: 1 day
