@@ -5,6 +5,13 @@ on:
     branches:
       - main
   pull_request:
+    paths:
+      - caddy/**
+      - nginx/**
+      - frankenphp/**
+      - fpm/**
+      - dev/**
+      - docker-bake.hcl
   schedule:
     - cron: '10 4 * * *'
 
