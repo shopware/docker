@@ -15,4 +15,4 @@ jobs:
               with:
                 packages: docker-base-ci-test,docker-dev-ci-test,demo-ci-test
                 older-than: 1 day
-                dry-run: true
+
