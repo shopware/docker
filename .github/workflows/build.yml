@@ -1,9 +1,16 @@
-name: Build
+name: Build Base Images
 on:
   workflow_dispatch:
   push:
     branches:
       - main
+    paths:
+      - caddy/**
+      - nginx/**
+      - frankenphp/**
+      - fpm/**
+      - dev/**
+      - bake-base.hcl
   pull_request:
     paths:
       - caddy/**
@@ -11,7 +18,7 @@ on:
       - frankenphp/**
       - fpm/**
       - dev/**
-      - docker-bake.hcl
+      - bake-base.hcl
   schedule:
     - cron: '10 4 * * *'
 
@@ -152,22 +159,6 @@ jobs:
           docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-  demo:
-    name: Demo
-    runs-on: ubuntu-latest
-    needs: [webserver]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Build
-        uses: ./.github/action/build-bake-publish
-        with:
-          targets: demo
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
     runs-on: ubuntu-latest
@@ -194,7 +185,7 @@ jobs:
 
       - name: Build PR
         if: github.ref != 'refs/heads/main'
-        run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.run_id }}-8.3-${{ matrix.webserver}}
+        run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.event.number }}-8.3-${{ matrix.webserver}}
         env:
           DOCKER_BUILDKIT: 0
 
