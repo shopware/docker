@@ -6,14 +6,13 @@ on:
     - cron: '0 6 * * *'
   workflow_dispatch: # Allow manual triggering
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   update-php-matrix:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
-      pull-requests: write
-      id-token: write
-    
     steps:
       - name: Generate GitHub token via octo-sts
         id: generate-token
