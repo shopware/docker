@@ -145,6 +145,22 @@ jobs:
           docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+  demo:
+    name: Demo
+    runs-on: ubuntu-latest
+    needs: [webserver]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Build
+        uses: ./.github/action/build-bake-publish
+        with:
+          targets: demo
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
     runs-on: ubuntu-latest

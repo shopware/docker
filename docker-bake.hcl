@@ -3,15 +3,44 @@ variable "imageSuffix" {
 }
 
 variable "tagPrefix" {
-  default = ""
+    default = ""
 }
 
 variable "phpMatrix" {
-  default = [ "8.1.33", "8.2.29", "8.3.25", "8.4.12" ]
+    default = [ "8.1.33", "8.2.29", "8.3.25", "8.4.12" ]
 }
 
 variable "frankenphpMatrix" {
-  default = [ "8.2.29", "8.3.25", "8.4.12" ]
+    default = [ "8.2.29", "8.3.25", "8.4.12" ]
+}
+
+variable "shopwareVersions" {
+  default = [
+    {
+        version = "6.7.2.1"
+        tag = "latest"
+    },
+    {
+        version = "6.7.2.1"
+        tag = "6.7.2"
+    },
+    {
+        version = "6.7.1.2"
+        tag = "6.7.1"
+    },
+    {
+        version = "6.7.0.1"
+        tag = "6.7.0"
+    },
+    {
+        version = "6.6.10.6"
+        tag = "6.6.10"
+    },
+    {
+        version = "6.6.9.0"
+        tag = "6.6.9"
+    }
+  ]
 }
 
 # Frankenphp
@@ -163,7 +192,7 @@ target "caddy-dev" {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy-otel"
     }
     args = {
-      "NODE_VERSION" = node
+        "NODE_VERSION" = node
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [
@@ -229,7 +258,7 @@ target "nginx-dev" {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx-otel"
     }
     args = {
-      "NODE_VERSION" = node
+        "NODE_VERSION" = node
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [
@@ -241,12 +270,19 @@ target "nginx-dev" {
 # Demo
 
 target "demo" {
-  context = "./demo"
-  platforms = [ "linux/amd64", "linux/arm64" ]
-  contexts = {
-    base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}8.3-caddy"
-  }
-  tags = [
-    "ghcr.io/shopware/demo${imageSuffix}:${tagPrefix}latest",
-  ]
+    name = "demo-${replace(item.tag, ".", "-")}"
+    context = "./demo"
+    platforms = [ "linux/amd64", "linux/arm64" ]
+    matrix = {
+        item = shopwareVersions
+    }
+    args = {
+      "SHOPWARE_VERSION" = item.version
+    }
+    contexts = {
+        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}8.3-caddy"
+    }
+    tags = [
+        "ghcr.io/shopware/demo${imageSuffix}:${tagPrefix}${item.tag}",
+    ]
 }
