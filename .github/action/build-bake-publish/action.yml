@@ -14,9 +14,6 @@ inputs:
   github_token:
     description: 'GitHub token'
     required: true
-  bake_file:
-    description: 'Bake file'
-    default: 'bake-base.hcl'
 runs:
   using: "composite"
   steps:
@@ -39,7 +36,6 @@ runs:
       with:
         push: true
         targets: ${{ inputs.targets }}
-        files: ${{ inputs.bake_file }}
       env:
         DOCKER_BUILD_RECORD_UPLOAD: false
         DOCKER_BUILD_SUMMARY: false

@@ -131,9 +131,9 @@ function getLatestShopwareVersions(tags) {
     return result;
 }
 
-// Function to update PHP matrices in bake-base.hcl
+// Function to update PHP matrices in docker-bake.hcl
 async function updatePhpMatricesInHcl(phpVersions) {
-    const hclPath = 'bake-base.hcl';
+    const hclPath = 'docker-bake.hcl';
     let hclContent = await fs.readFile(hclPath, 'utf8');
 
     // Find the phpMatrix variable and replace its value
@@ -141,7 +141,7 @@ async function updatePhpMatricesInHcl(phpVersions) {
     const newPhpMatrix = `[ ${phpVersions.map(v => `"${v}"`).join(', ')} ]`;
 
     if (!phpMatrixRegex.test(hclContent)) {
-        throw new Error('phpMatrix variable not found in bake-base.hcl');
+        throw new Error('phpMatrix variable not found in docker-bake.hcl');
     }
 
     hclContent = hclContent.replace(phpMatrixRegex, `$1${newPhpMatrix}$3`);
@@ -152,20 +152,20 @@ async function updatePhpMatricesInHcl(phpVersions) {
     const newFrankenphpMatrix = `[ ${frankenphpVersions.map(v => `"${v}"`).join(', ')} ]`;
 
     if (!frankenphpMatrixRegex.test(hclContent)) {
-        throw new Error('frankenphpMatrix variable not found in bake-base.hcl');
+        throw new Error('frankenphpMatrix variable not found in docker-bake.hcl');
     }
 
     hclContent = hclContent.replace(frankenphpMatrixRegex, `$1${newFrankenphpMatrix}$3`);
 
     await fs.writeFile(hclPath, hclContent);
-    console.log('Successfully updated phpMatrix and frankenphpMatrix in bake-base.hcl');
+    console.log('Successfully updated phpMatrix and frankenphpMatrix in docker-bake.hcl');
     console.log('PHP versions:', phpVersions);
     console.log('FrankenPHP versions (excluding 8.1):', frankenphpVersions);
 }
 
-// Function to update shopwareVersions in bake-demo.hcl
+// Function to update shopwareVersions in docker-bake.hcl
 async function updateShopwareVersionsInHcl(shopwareVersions) {
-    const hclPath = 'bake-demo.hcl';
+    const hclPath = 'docker-bake.hcl';
     let hclContent = await fs.readFile(hclPath, 'utf8');
     
     // Find the shopwareVersions variable and replace its value
@@ -179,7 +179,7 @@ async function updateShopwareVersionsInHcl(shopwareVersions) {
     hclContent = hclContent.replace(shopwareVersionsRegex, `$1${newShopwareVersions}$3`);
 
     await fs.writeFile(hclPath, hclContent);
-    console.log('Successfully updated shopwareVersions in bake-demo.hcl');
+    console.log('Successfully updated shopwareVersions in docker-bake.hcl');
     console.log('Shopware versions:', shopwareVersions);
 }
 
@@ -213,6 +213,6 @@ try {
     await updateShopwareVersionsInHcl(shopwareVersions);
 } catch (error) {
     console.error('Warning: Failed to update Shopware versions:', error.message);
-    console.log('PHP matrices have been updated successfully in bake-base.hcl');
-    console.log('You may need to run the script again later to update Shopware versions in bake-demo.hcl');
+    console.log('PHP matrices have been updated successfully in docker-bake.hcl');
+    console.log('You may need to run the script again later to update Shopware versions in docker-bake.hcl');
 }
