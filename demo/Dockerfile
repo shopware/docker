@@ -53,8 +53,11 @@ monolog:
 EOF
 
 FROM base
+ARG SHOPWARE_VERSION=6.7.2.0
 
-ENV APP_URL=http://localhost:8000
+ENV APP_URL=http://localhost:8000 \
+    PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
+    PHP_OPCACHE_FILE_OVERRIDE=0
 
 USER root
 
@@ -124,6 +127,14 @@ RUN <<EOF
     echo "autostart=true" | tee -a /etc/supervisord.conf
     echo "autorestart=true" | tee -a /etc/supervisord.conf
 EOF
+
+LABEL org.opencontainers.image.vendor="shopware AG" \
+    org.opencontainers.image.url="https://www.shopware.com/" \
+    org.opencontainers.image.documentation="https://developer.shopware.com/docs/guides/installation/setups/docker.html" \
+    org.opencontainers.image.source="https://github.com/shopware/docker/tree/main/demo" \
+    org.opencontainers.image.title="Shopware 6 Demo" \
+    org.opencontainers.image.version="${SHOPWARE_VERSION}" \
+    org.opencontainers.image.description="This is a Shopware installation with demo data for testing purposes."
 
 USER www-data
 
