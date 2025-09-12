@@ -1,0 +1,18 @@
+name: Cleanup GHCR
+on:
+  schedule:
+    - cron: "0 0 * * *"
+
+permissions:
+  packages: write
+
+jobs:
+  cleanup:
+    name: Cleanup GHCR
+    runs-on: ubuntu-latest
+    steps:
+      - name: Cleanup GHCR
+        uses: dataaxiom/ghcr-cleanup-action@cd0cdb900b5dbf3a6f2cc869f0dbb0b8211f50c4 # ratchet:dataaxiom/ghcr-cleanup-action@v1
+        with:
+          packages: docker-base-ci-test,docker-dev-ci-test,demo-ci-test
+          older-than: 1 day
