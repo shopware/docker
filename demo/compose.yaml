@@ -1,0 +1,118 @@
+x-env: &env
+  APP_ENV: dev
+  APP_DEBUG: 1
+  PROJECT_ROOT: /var/www/html
+  MYSQL_ROOT_PASSWORD: app
+  MYSQL_DATABASE: shopware
+  ADMINER_DEFAULT_SERVER: database
+  SHOPWARE_HTTP_CACHE_ENABLED: 0
+  DATABASE_URL: mysql://root:app@database:3306/shopware
+  APP_SECRET: 0000shopwareAAAA0000shopwareAAAA
+  APP_URL: http://localhost:8000
+  SALES_CHANNEL_URL: http://localhost:8000
+  MAILER_DSN: smtp://mailpit:1025
+  MAILPIT_BASE_URL: http://localhost:8013
+  SERVICES_ENABLED: 1
+  SHOPWARE_DISABLE_UPDATE_CHECK: '1'
+  INSTALL_LOCALE: en-US
+  INSTALL_CURRENCY: EUR
+  PHP_OPCACHE_VALIDATE_TIMESTAMPS: 1
+
+x-service: &service
+  environment:
+    <<: *env
+  networks:
+    - local
+
+x-shopware-volumes: &shopware-volumes
+  volumes:
+    - jwt:/var/www/html/config/jwt
+    - media:/var/www/html/public/media
+    - theme:/var/www/html/public/theme
+    - bundles:/var/www/html/public/bundles
+    - thumbnail:/var/www/html/public/thumbnail
+    - cache:/var/www/html/var/cache
+
+services:
+  database:
+    <<: [ *service ]
+    image: mysql:8.0
+    entrypoint:
+      [
+        "sh",
+        "-c",
+        "docker-entrypoint.sh mysqld --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci --sql-require-primary-key=ON"
+      ]
+    tmpfs:
+      - /var/lib/mysql:uid=999,gid=999
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      start_interval: 1s
+      start_period: 10s
+
+  adminer:
+    <<: [ *service ]
+    image: adminer:latest
+    depends_on:
+      database:
+        condition: service_healthy
+    ports:
+      - '8012:8080'
+
+  mailpit:
+    <<: [ *service ]
+    image: axllent/mailpit
+    ports:
+      - '8013:8025'
+    healthcheck:
+      test: ["CMD", "wget", "-q", "--spider", "http://localhost:8025"]
+
+  init-volumes:
+    <<: [ *shopware-volumes ]
+    image: alpine:latest
+    entrypoint: ["chown"]
+    command: ["-R", "82:82", "/var/www/html"]
+    user: root
+
+  init:
+    <<: [ *service, *shopware-volumes ]
+    image: ghcr.io/shopware/acceptance-test-suite/test-image:${SHOPWARE_VERSION:-trunk}
+    build:
+      context: .
+      args:
+        - PHP_VERSION=${PHP_VERSION:-8.4}
+        - SHOPWARE_VERSION=${SHOPWARE_VERSION:-trunk}
+        - SHOPWARE_BUILD_SOURCE=${SHOPWARE_BUILD_SOURCE:-branch}
+    depends_on:
+      init-volumes:
+        condition: service_completed_successfully
+      database:
+        condition: service_healthy
+    entrypoint: ['vendor/bin/shopware-deployment-helper']
+    command: ['run']
+
+  shopware:
+    extends:
+      service: init
+    depends_on:
+      init:
+        condition: service_completed_successfully
+      mailpit:
+        condition: service_healthy
+    ports:
+      - '8000:8000'
+    entrypoint: ['/usr/bin/supervisord', '-c', '/etc/supervisord.conf']
+    command: []
+    healthcheck:
+      test: ["CMD", "curl", "-fsSL", "http://localhost:8000/api/_info/health-check"]
+
+volumes:
+  jwt:
+  media:
+  theme:
+  bundles:
+  thumbnail:
+  cache:
+
+networks:
+  local:
