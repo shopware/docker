@@ -266,22 +266,3 @@ target "nginx-dev" {
         "ghcr.io/shopware/docker-dev${imageSuffix}:${tagPrefix}php${php}-node${node}-nginx"
     ]
 }
-
-target "demo" {
-    name = "demo-${replace(item.tag, ".", "-")}"
-    context = "./demo"
-    platforms = [ "linux/amd64", "linux/arm64" ]
-    matrix = {
-        item = shopwareVersions
-    }
-    args = {
-      "SHOPWARE_VERSION" = item.version
-    }
-    contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}8.3-caddy"
-    }
-    tags = [
-        "ghcr.io/shopware/demo${imageSuffix}:${tagPrefix}${item.tag}",
-    ]
-}
-
