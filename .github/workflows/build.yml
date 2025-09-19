@@ -1,4 +1,4 @@
-name: Build
+name: Build Base Images
 on:
   workflow_dispatch:
   push:
@@ -30,7 +30,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        with:
+          files: |
+            frankenphp*/**
+
       - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/action/build-bake-publish
         with:
           targets: frankenphp
@@ -46,7 +54,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        with:
+          files: |
+            frankenphp*/**
+
       - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/action/build-bake-publish
         with:
           targets: frankenphp-otel
@@ -61,7 +77,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        with:
+          files: |
+            fpm*/**
+
       - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/action/build-bake-publish
         with:
           targets: fpm
@@ -77,7 +101,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        with:
+          files: |
+            fpm*/**
+
       - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/action/build-bake-publish
         with:
           targets: fpm-otel
@@ -97,7 +129,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        with:
+          files: |
+            ${{ matrix.webserver }}/**
+
       - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/action/build-bake-publish
         with:
           targets: ${{ matrix.webserver}}
@@ -117,7 +157,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        with:
+          files: |
+            ${{ matrix.webserver }}/**
+
       - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/action/build-bake-publish
         with:
           targets: ${{ matrix.webserver}}-otel
@@ -137,7 +185,15 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        with:
+          files: |
+            dev/**
+
       - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: ./.github/action/build-bake-publish
         with:
           targets: ${{ matrix.webserver }}-dev
@@ -158,29 +214,38 @@ jobs:
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@ed68ef82c095e0d48ec87eccea555d944a631a4c # v46
+        with:
+          files: |
+            ${{ matrix.webserver }}/**
+
       - name: Checkout example repo
         uses: actions/checkout@v5
         with:
           repository: shopwareLabs/example-docker-repository
 
       - name: Build main branch
-        if: github.ref == 'refs/heads/main'
+        if: github.ref == 'refs/heads/main' && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base:8.3-caddy
         env:
           DOCKER_BUILDKIT: 0
 
       - name: Build PR
-        if: github.ref != 'refs/heads/main'
-        run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.run_id }}-8.3-${{ matrix.webserver}}
+        if: github.ref != 'refs/heads/main' && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
+        run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.event.number }}-8.3-${{ matrix.webserver}}
         env:
           DOCKER_BUILDKIT: 0
 
       - name: Run image
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         env:
           DOCKER_BUILDKIT: 0
         run: docker compose up -d --wait
 
       - name: Wait for Webserver reachable
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           attempt_counter=0
           max_attempts=5
@@ -197,12 +262,14 @@ jobs:
           done
 
       - name: Check if shopware admin is running
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: curl --fail localhost:8000/admin
 
       - name: Check if shopware is running
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: curl --fail localhost:8000
 
       # output logs if failed
       - name: Output logs
+        if: always() && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: docker compose logs
-        if: ${{ always() }}

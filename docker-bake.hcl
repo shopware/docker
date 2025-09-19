@@ -3,15 +3,15 @@ variable "imageSuffix" {
 }
 
 variable "tagPrefix" {
-  default = ""
+    default = ""
 }
 
 variable "phpMatrix" {
-  default = [ "8.1.33", "8.2.29", "8.3.25", "8.4.12" ]
+    default = [ "8.1.33", "8.2.29", "8.3.25", "8.4.12" ]
 }
 
 variable "frankenphpMatrix" {
-  default = [ "8.2.29", "8.3.25", "8.4.12" ]
+    default = [ "8.2.29", "8.3.25", "8.4.12" ]
 }
 
 # Frankenphp
@@ -163,7 +163,7 @@ target "caddy-dev" {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy-otel"
     }
     args = {
-      "NODE_VERSION" = node
+        "NODE_VERSION" = node
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [
@@ -229,7 +229,7 @@ target "nginx-dev" {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx-otel"
     }
     args = {
-      "NODE_VERSION" = node
+        "NODE_VERSION" = node
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [

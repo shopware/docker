@@ -40,4 +40,4 @@ runs:
         DOCKER_BUILD_RECORD_UPLOAD: false
         DOCKER_BUILD_SUMMARY: false
         imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
-        tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.run_id) || '' }}
+        tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
