@@ -134,6 +134,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            fpm/**
             ${{ matrix.webserver }}/**
 
       - name: Build
@@ -162,6 +163,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            fpm/**
             ${{ matrix.webserver }}/**
 
       - name: Build
@@ -190,6 +192,8 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            fpm/**
+            ${ matrix.webserver }/**
             dev/**
 
       - name: Build
