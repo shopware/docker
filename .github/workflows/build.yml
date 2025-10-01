@@ -220,8 +220,11 @@ jobs:
           rename-to: container-structure-test
           chmod: 0755
 
+      - name: Pull image
+        run: docker pull ghcr.io/shopware/docker-dev:php8.4-node24-caddy
+
       - name: Test Dev Image
-        run: container-structure-test test --config dev/config.yaml --image ghcr.io/shopware/docker-dev:php8.4-node24-caddy --pull
+        run: container-structure-test test --config dev/config.yaml --image ghcr.io/shopware/docker-dev:php8.4-node24-caddy
 
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
