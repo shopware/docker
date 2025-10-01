@@ -83,6 +83,9 @@ jobs:
         with:
           files: |
             fpm*/**
+            nginx/**
+            caddy/**
+            dev/**
 
       - name: Build
         if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -107,6 +110,9 @@ jobs:
         with:
           files: |
             fpm*/**
+            nginx/**
+            caddy/**
+            dev/**
 
       - name: Build
         if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -136,6 +142,7 @@ jobs:
           files: |
             fpm/**
             ${{ matrix.webserver }}/**
+            dev/**
 
       - name: Build
         if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -165,6 +172,7 @@ jobs:
           files: |
             fpm/**
             ${{ matrix.webserver }}/**
+            dev/**
 
       - name: Build
         if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
@@ -204,6 +212,37 @@ jobs:
           docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  dev-check:
+    name: Check Dev Image
+    runs-on: ubuntu-latest
+    needs: [dev]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install a binary from GitHub releases
+        uses: jaxxstorm/action-install-gh-release@v2.1.0
+        with:
+          repo: GoogleContainerTools/container-structure-test
+          extension-matching: disable
+          rename-to: container-structure-test
+          chmod: 0755
+
+      - name: Determine image tag
+        id: image-tag
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "IMAGE_TAG=ghcr.io/shopware/docker-dev-ci-test:${{ github.event.number }}-php8.4-node24-caddy" >> $GITHUB_OUTPUT
+          else
+            echo "IMAGE_TAG=ghcr.io/shopware/docker-dev:php8.4-node24-caddy" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pull image
+        run: docker pull ${{ steps.image-tag.outputs.IMAGE_TAG }}
+
+      - name: Test Dev Image
+        run: container-structure-test test --config dev/config.yaml --image ${{ steps.image-tag.outputs.IMAGE_TAG }}
 
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}

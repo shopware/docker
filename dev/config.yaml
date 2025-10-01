@@ -1,0 +1,97 @@
+schemaVersion: 2.0.0
+commandTests:
+  - name: "PHP installed"
+    command: "php"
+    args: ["-v"]
+    expectedOutput:
+      - 'PHP 8.4.*'
+  - name: "PHP extensions there"
+    command: "php"
+    args: ["-m"]
+    expectedOutput:
+      - 'OPcache'
+      - 'redis'
+      - 'amqp'
+      - 'apcu'
+      - 'zstd'
+    excludedOutput:
+      - 'xdebug'
+      - 'opentelemetry'
+      - 'tideways'
+      - 'blackfire'
+  - name: "PHP dev extensions disabled by default"
+    command: "sh"
+    args: ["-c", "ls /usr/local/etc/php/conf.d/*.disabled"]
+    expectedOutput:
+      - 'docker-php-ext-xdebug.disabled'
+      - 'docker-php-ext-tideways.disabled'
+      - 'docker-php-ext-blackfire.disabled'
+      - 'docker-php-ext-opentelemetry.disabled'
+  - name: "Node installed"
+    command: 'node'
+    args: ["-v"]
+    expectedOutput:
+      - '^v24'
+  - name: "NPM installed"
+    command: 'npm'
+    args: ["-v"]
+  - name: 'Git installed'
+    command: 'git'
+    args: ["-v"]
+  - name: 'Bash installed'
+    command: 'bash'
+    args: ["--version"]
+    expectedOutput:
+      - 'GNU bash'
+  - name: 'Composer installed'
+    command: 'composer'
+    args: ["--version"]
+    expectedOutput:
+      - 'Composer version 2'
+  - name: 'Shopware CLI installed'
+    command: 'shopware-cli'
+    args: ["--version"]
+  - name: 'Supervisord installed'
+    command: 'supervisord'
+    args: ["--version"]
+  - name: 'Patch utility installed'
+    command: 'patch'
+    args: ["--version"]
+  - name: 'User ID is 1000'
+    command: 'id'
+    args: ["-u"]
+    expectedOutput:
+      - '1000'
+fileExistenceTests:
+  - name: 'Entrypoint script exists'
+    path: '/entrypoint'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'Supervisord config exists'
+    path: '/etc/supervisord.conf'
+    shouldExist: true
+  - name: 'PHP config directory exists'
+    path: '/usr/local/etc/php/conf.d'
+    shouldExist: true
+    isExecutableBy: 'group'
+  - name: 'Working directory exists'
+    path: '/var/www/html'
+    shouldExist: true
+metadataTest:
+  envVars:
+    - key: PHP_OPCACHE_VALIDATE_TIMESTAMPS
+      value: '1'
+    - key: PHP_OPCACHE_FILE_OVERRIDE
+      value: '0'
+    - key: APP_URL_CHECK_DISABLED
+      value: '0'
+    - key: SHOPWARE_SKIP_WEBINSTALLER
+      value: '0'
+    - key: APP_SECRET
+      value: 'def00000bb5acb32b54ff8ee130270586eec0e878f7337dc7a837acc31d3ff00f93a56b595448b4b29664847dd51991b3314ff65aeeeb761a133b0ec0e070433bff08e48'
+    - key: LOCK_DSN
+      value: 'flock'
+  entrypoint: ["/entrypoint"]
+  cmd: ["/usr/bin/supervisord", "-c", "/etc/supervisord.conf"]
+  user: 'www-data'
+  workdir: '/var/www/html'
