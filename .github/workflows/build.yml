@@ -216,6 +216,7 @@ jobs:
         uses: jaxxstorm/action-install-gh-release@v2.1.0
         with:
           repo: GoogleContainerTools/container-structure-test
+          extension-matching: disable
 
       - name: Test Dev Image
         run: container-structure-test test --config dev/config.yaml --image ghcr.io/shopware/docker-dev:php8.4-node24-caddy
