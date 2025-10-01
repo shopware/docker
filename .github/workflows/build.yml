@@ -221,7 +221,7 @@ jobs:
           chmod: 0755
 
       - name: Test Dev Image
-        run: container-structure-test test --config dev/config.yaml --image ghcr.io/shopware/docker-dev:php8.4-node24-caddy
+        run: container-structure-test test --config dev/config.yaml --image ghcr.io/shopware/docker-dev:php8.4-node24-caddy --pull
 
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
