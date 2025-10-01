@@ -218,6 +218,7 @@ jobs:
           repo: GoogleContainerTools/container-structure-test
           extension-matching: disable
           rename-to: container-structure-test
+          chmod: 0755
 
       - name: Test Dev Image
         run: container-structure-test test --config dev/config.yaml --image ghcr.io/shopware/docker-dev:php8.4-node24-caddy
