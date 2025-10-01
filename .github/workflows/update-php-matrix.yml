@@ -16,7 +16,7 @@ jobs:
     steps:
       - name: Generate GitHub token via octo-sts
         id: generate-token
-        uses: octo-sts/action@v1.0.1
+        uses: octo-sts/action@v1.0.2
         with:
           scope: ${{ github.repository }}
           identity: update-php-matrix
