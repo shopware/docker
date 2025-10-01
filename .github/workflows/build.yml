@@ -205,6 +205,21 @@ jobs:
           docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
+  dev-check:
+    name: Check Dev Image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install a binary from GitHub releases
+        uses: jaxxstorm/action-install-gh-release@v2.1.0
+        with:
+          repo: GoogleContainerTools/container-structure-test
+
+      - name: Test Dev Image
+        run: container-structure-test test --config dev/config.yaml --image ghcr.io/shopware/docker-dev:php8.4-node24-caddy
+
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
     runs-on: ubuntu-latest
