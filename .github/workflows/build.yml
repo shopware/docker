@@ -227,7 +227,8 @@ jobs:
         with:
           files: |
             fpm/**
-            ${ matrix.webserver }/**
+            nginx/**
+            caddy/**
             dev/**
 
       - name: Install a binary from GitHub releases
