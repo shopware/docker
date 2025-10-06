@@ -221,7 +221,18 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v5
 
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
+        with:
+          files: |
+            fpm/**
+            nginx/**
+            caddy/**
+            dev/**
+
       - name: Install a binary from GitHub releases
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: jaxxstorm/action-install-gh-release@v2.1.0
         with:
           repo: GoogleContainerTools/container-structure-test
@@ -230,6 +241,7 @@ jobs:
           chmod: 0755
 
       - name: Determine image tag
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: image-tag
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -239,9 +251,11 @@ jobs:
           fi
 
       - name: Pull image
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: docker pull ${{ steps.image-tag.outputs.IMAGE_TAG }}
 
       - name: Test Dev Image
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: container-structure-test test --config dev/config.yaml --image ${{ steps.image-tag.outputs.IMAGE_TAG }}
 
   check:
@@ -275,19 +289,13 @@ jobs:
       - name: Build main branch
         if: github.ref == 'refs/heads/main' && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base:8.3-caddy
-        env:
-          DOCKER_BUILDKIT: 0
 
       - name: Build PR
         if: github.ref != 'refs/heads/main' && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.event.number }}-8.3-${{ matrix.webserver}}
-        env:
-          DOCKER_BUILDKIT: 0
 
       - name: Run image
         if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          DOCKER_BUILDKIT: 0
         run: docker compose up -d --wait
 
       - name: Wait for Webserver reachable
