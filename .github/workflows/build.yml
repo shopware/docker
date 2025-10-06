@@ -275,19 +275,13 @@ jobs:
       - name: Build main branch
         if: github.ref == 'refs/heads/main' && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base:8.3-caddy
-        env:
-          DOCKER_BUILDKIT: 0
 
       - name: Build PR
         if: github.ref != 'refs/heads/main' && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
         run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.event.number }}-8.3-${{ matrix.webserver}}
-        env:
-          DOCKER_BUILDKIT: 0
 
       - name: Run image
         if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        env:
-          DOCKER_BUILDKIT: 0
         run: docker compose up -d --wait
 
       - name: Wait for Webserver reachable
