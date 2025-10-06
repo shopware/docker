@@ -9,7 +9,6 @@ RUN <<EOF
 
     REDIS_PHP_MODULE="redis"
 
-
     if [ "$(php -r 'echo PHP_VERSION_ID;')" -lt 80400 ]; then
         REDIS_PHP_MODULE="redis-6.0.2"
     fi
