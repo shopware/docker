@@ -7,6 +7,7 @@ USER root
 RUN apk add --no-cache git grpc-cpp grpc-dev $PHPIZE_DEPS && \
     GRPC_VERSION=$(apk info grpc -d | grep grpc | cut -d- -f2) && \
     git clone --depth 1 -b v${GRPC_VERSION} https://github.com/grpc/grpc /tmp/grpc && \
+    cd /tmp/grpc && curl -sSL https://patch-diff.githubusercontent.com/raw/grpc/grpc/pull/40337.patch | git apply - && \
     cd /tmp/grpc/src/php/ext/grpc && \
     phpize && \
     ./configure && \

@@ -35,6 +35,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            docker-bake.hcl
             frankenphp*/**
 
       - name: Build
@@ -59,6 +60,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            docker-bake.hcl
             frankenphp*/**
 
       - name: Build
@@ -82,6 +84,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            docker-bake.hcl
             fpm*/**
             nginx/**
             caddy/**
@@ -109,6 +112,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            docker-bake.hcl
             fpm*/**
             nginx/**
             caddy/**
@@ -140,6 +144,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            docker-bake.hcl
             fpm/**
             ${{ matrix.webserver }}/**
             dev/**
@@ -170,6 +175,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            docker-bake.hcl
             fpm/**
             ${{ matrix.webserver }}/**
             dev/**
@@ -200,6 +206,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            docker-bake.hcl
             fpm/**
             ${ matrix.webserver }/**
             dev/**
@@ -226,6 +233,7 @@ jobs:
         uses: tj-actions/changed-files@24d32ffd492484c1d75e0c0b894501ddb9d30d62 # v46
         with:
           files: |
+            docker-bake.hcl
             fpm/**
             nginx/**
             caddy/**
