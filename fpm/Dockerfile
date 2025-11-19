@@ -1,5 +1,22 @@
 #syntax=docker/dockerfile:1.4
 
+FROM base AS amqpinstall
+
+RUN <<EOF
+    set -e
+
+    apk add --no-cache $PHPIZE_DEPS git patch rabbitmq-c-dev curl
+    git clone https://github.com/php-amqp/php-amqp /tmp/php-amqp
+    cd /tmp/php-amqp
+    git reset --hard 3618db5f781aa3d371b630c666bc90845d7c77d4
+    curl -L https://patch-diff.githubusercontent.com/raw/php-amqp/php-amqp/pull/595.patch | patch -p1
+    phpize
+    ./configure
+    make -j"$(nproc)"
+    make install
+    echo 'extension=amqp.so' > /usr/local/etc/php/conf.d/docker-php-ext-amqp.ini
+EOF
+
 FROM base
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
@@ -13,16 +30,19 @@ RUN <<EOF
         REDIS_PHP_MODULE="redis-6.0.2"
     fi
 
-    apk add --no-cache icu-data-full curl jq trurl && \
-    apk upgrade --no-cache && \
-    chmod +x /usr/local/bin/install-php-extensions && \
-    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache ${REDIS_PHP_MODULE} apcu-5.1.24 amqp-2.1.2 zstd-0.13.3  && \
-    mkdir -p /var/www/html && \
-    mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini" && \
-    rm -f /usr/local/etc/php-fpm.d/zz-docker.conf && \
-    rm -f /usr/local/etc/php-fpm.d/www.conf && \
+    apk add --no-cache icu-data-full curl jq trurl rabbitmq-c
+    apk upgrade --no-cache
+    chmod +x /usr/local/bin/install-php-extensions
+    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache ${REDIS_PHP_MODULE} apcu-5.1.27 zstd-0.15.2
+    mkdir -p /var/www/html
+    mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini"
+    rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
+    rm -f /usr/local/etc/php-fpm.d/www.conf
     rm -f /usr/local/etc/php-fpm.d/www.conf.default
 EOF
+
+COPY --from=amqpinstall /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
+COPY --from=amqpinstall /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
