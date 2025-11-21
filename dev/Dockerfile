@@ -24,14 +24,12 @@ RUN <<EOF
     PHP_VERSION_ID=$(php -r 'echo PHP_VERSION_ID;')
     if [[ "$PHP_VERSION_ID" -lt 80500 ]]; then
         install-php-extensions tideways blackfire xdebug
-    else
-        install-php-extensions xdebug
     fi
 
     cd /usr/local/etc/php/conf.d
     mv docker-php-ext-opentelemetry.ini docker-php-ext-opentelemetry.disabled
-    mv docker-php-ext-xdebug.ini docker-php-ext-xdebug.disabled
     if [[ "$PHP_VERSION_ID" -lt 80500 ]]; then
+        mv docker-php-ext-xdebug.ini docker-php-ext-xdebug.disabled
         mv docker-php-ext-tideways.ini docker-php-ext-tideways.disabled
         mv docker-php-ext-blackfire.ini docker-php-ext-blackfire.disabled
     fi
