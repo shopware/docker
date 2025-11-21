@@ -7,11 +7,11 @@ variable "tagPrefix" {
 }
 
 variable "phpMatrix" {
-    default = [ "8.1.33", "8.2.29", "8.3.28", "8.4.15", "8.5.0" ]
+    default = [ "8.2.29", "8.3.28", "8.4.15", "8.5.0" ]
 }
 
 variable "frankenphpMatrix" {
-    default = [ "8.2.29", "8.3.28", "8.4.15", "8.5.0" ]
+    default = [ "8.2.29", "8.3.28", "8.4.15" ]
 }
 
 # Frankenphp
@@ -222,7 +222,7 @@ target "nginx-dev" {
     name = "nginx-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = frankenphpMatrix
+        "php"  = phpMatrix
         "node" = [ "22", "24" ]
     }
     contexts = {
