@@ -3,7 +3,7 @@
 import fs from 'node:fs/promises';
 
 // Supported PHP major.minor versions
-const supportedVersions = ['8.1', '8.2', '8.3', '8.4'];
+const supportedVersions = ['8.1', '8.2', '8.3', '8.4', '8.5'];
 
 // Function to fetch PHP tags from Docker Hub API
 async function fetchPhpTags(version) {
