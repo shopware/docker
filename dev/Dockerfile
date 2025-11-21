@@ -20,13 +20,19 @@ RUN <<EOF
     fi
 
     apk add --no-cache npm bash git shadow patch coreutils
-    install-php-extensions tideways blackfire xdebug
+    
+    PHP_VERSION_ID=$(php -r 'echo PHP_VERSION_ID;')
+    if [[ "$PHP_VERSION_ID" -lt 80500 ]]; then
+        install-php-extensions tideways blackfire xdebug
+    fi
 
     cd /usr/local/etc/php/conf.d
     mv docker-php-ext-opentelemetry.ini docker-php-ext-opentelemetry.disabled
-    mv docker-php-ext-xdebug.ini docker-php-ext-xdebug.disabled
-    mv docker-php-ext-tideways.ini docker-php-ext-tideways.disabled
-    mv docker-php-ext-blackfire.ini docker-php-ext-blackfire.disabled
+    if [[ "$PHP_VERSION_ID" -lt 80500 ]]; then
+        mv docker-php-ext-xdebug.ini docker-php-ext-xdebug.disabled
+        mv docker-php-ext-tideways.ini docker-php-ext-tideways.disabled
+        mv docker-php-ext-blackfire.ini docker-php-ext-blackfire.disabled
+    fi
 
     INSTALLED_NODE_VERSION=$(node -e "console.log(process.versions.node.substr(0,2))")
     if [[ "$INSTALLED_NODE_VERSION" != "$NODE_VERSION" ]]; then
