@@ -11,7 +11,7 @@ variable "phpMatrix" {
 }
 
 variable "frankenphpMatrix" {
-    default = [ "8.2.29", "8.3.28", "8.4.15" ]
+    default = [ "8.2.29", "8.3.28", "8.4.15", "8.5.0" ]
 }
 
 # Frankenphp
