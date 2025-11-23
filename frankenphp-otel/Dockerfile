@@ -10,6 +10,7 @@ RUN <<EOF
     apt-get install -y libgrpc++1.51 libgrpc-dev git
     GRPC_VERSION=$(dpkg -s libgrpc-dev | grep '^Version:' | cut -d' ' -f2 | cut -d'-' -f1)
     git clone --depth 1 -b v${GRPC_VERSION} https://github.com/grpc/grpc /tmp/grpc
+    cd /tmp/grpc && curl -sSL https://patch-diff.githubusercontent.com/raw/grpc/grpc/pull/40337.patch | git apply - && \
     cd /tmp/grpc/src/php/ext/grpc
     phpize
     ./configure

@@ -8,7 +8,7 @@ RUN <<EOF
     set -e
     apt-get update
     apt-get upgrade -y
-    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache redis apcu amqp zstd
+    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache redis apcu php-amqp/php-amqp@977449987412a3d5c59a036dbab8b6d67764bb3e zstd
     mkdir -p /var/www/html
     usermod -u 82 www-data
     groupmod -g 82 www-data
