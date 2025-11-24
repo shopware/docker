@@ -28,7 +28,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -53,7 +53,7 @@ jobs:
     needs: [frankenphp]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -77,7 +77,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -105,7 +105,7 @@ jobs:
     needs: [fpm]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -137,7 +137,7 @@ jobs:
         webserver: [ caddy, nginx ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -168,7 +168,7 @@ jobs:
         webserver: [ caddy, nginx ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -199,7 +199,7 @@ jobs:
         webserver: [ caddy, nginx ]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -226,7 +226,7 @@ jobs:
     needs: [dev]
     steps:
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -280,7 +280,7 @@ jobs:
         uses: docker/setup-buildx-action@v3
 
       - name: Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
 
       - name: Get all changed files
         id: changed-files
@@ -290,7 +290,7 @@ jobs:
             ${{ matrix.webserver }}/**
 
       - name: Checkout example repo
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           repository: shopwareLabs/example-docker-repository
 

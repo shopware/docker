@@ -22,7 +22,7 @@ jobs:
           identity: update-php-matrix
 
       - name: Checkout repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
         with:
           token: ${{ steps.generate-token.outputs.token }}
 
