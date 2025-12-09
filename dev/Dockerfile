@@ -21,7 +21,7 @@ RUN <<EOF
     node --version
     npm --version
 
-    INSTALLED_NODE_VERSION=$(node -e "console.log(process.versions.node.substr(0,2))")
+    INSTALLED_NODE_VERSION=$(node -e "console.log(process.versions.node.substring(0,2))")
     if [[ "$INSTALLED_NODE_VERSION" != "$NODE_VERSION" ]]; then
         echo "ERROR: Installed Node.js version ($INSTALLED_NODE_VERSION) does not match expected version ($NODE_VERSION)"
         exit 1
