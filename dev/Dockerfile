@@ -1,44 +1,41 @@
-FROM base
-
 ARG NODE_VERSION=22
 
+FROM node:${NODE_VERSION}-alpine AS node
+
+FROM base
+
+ARG NODE_VERSION
+
 USER root
+
+COPY --link --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --link --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 
 RUN <<EOF
     set -e
 
-    if [[ "$NODE_VERSION" == "24" ]]; then
-        apk add \
-            --no-cache \
-            --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
-            nodejs-current npm
-    else
-        apk add \
-            --no-cache \
-            --repository=https://dl-cdn.alpinelinux.org/alpine/edge/community \
-            nodejs npm
-    fi
+    ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+    ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+    ln -s /usr/local/lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack
 
-    apk add --no-cache npm bash git shadow patch coreutils
-    
-    PHP_VERSION_ID=$(php -r 'echo PHP_VERSION_ID;')
-    if [[ "$PHP_VERSION_ID" -lt 80500 ]]; then
-        install-php-extensions tideways blackfire xdebug
-    fi
+    node --version
+    npm --version
 
-    cd /usr/local/etc/php/conf.d
-    mv docker-php-ext-opentelemetry.ini docker-php-ext-opentelemetry.disabled
-    if [[ "$PHP_VERSION_ID" -lt 80500 ]]; then
-        mv docker-php-ext-xdebug.ini docker-php-ext-xdebug.disabled
-        mv docker-php-ext-tideways.ini docker-php-ext-tideways.disabled
-        mv docker-php-ext-blackfire.ini docker-php-ext-blackfire.disabled
-    fi
-
-    INSTALLED_NODE_VERSION=$(node -e "console.log(process.versions.node.substr(0,2))")
+    INSTALLED_NODE_VERSION=$(node -e "console.log(process.versions.node.substring(0,2))")
     if [[ "$INSTALLED_NODE_VERSION" != "$NODE_VERSION" ]]; then
         echo "ERROR: Installed Node.js version ($INSTALLED_NODE_VERSION) does not match expected version ($NODE_VERSION)"
         exit 1
     fi
+
+    apk add --no-cache bash git shadow patch coreutils
+    
+    install-php-extensions tideways blackfire xdebug/xdebug@3.5.0
+
+    cd /usr/local/etc/php/conf.d
+    mv docker-php-ext-opentelemetry.ini docker-php-ext-opentelemetry.disabled
+    mv docker-php-ext-xdebug.ini docker-php-ext-xdebug.disabled
+    mv docker-php-ext-tideways.ini docker-php-ext-tideways.disabled
+    mv docker-php-ext-blackfire.ini docker-php-ext-blackfire.disabled
 
     usermod -u 1000 www-data
     groupmod -g 1000 www-data
