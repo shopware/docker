@@ -22,7 +22,7 @@ read use_elasticsearch
 
 if [ -z "$use_elasticsearch" ] || [ "$use_elasticsearch" != "y" ] && [ "$use_elasticsearch" != "Y" ]; then
 	echo "Removing Elasticsearch..."
-	(composer remove shopware/elasticsearch --no-interaction > /tmp/install.log 2>&1) || { echo "Removing elasticsearch failed. Log:"; cat /tmp/install.log; exit 1; }
+	(composer remove shopware/elasticsearch --no-interaction --no-scripts > /tmp/install.log 2>&1) || { echo "Removing elasticsearch failed. Log:"; cat /tmp/install.log; exit 1; }
 fi
 
 echo "Project created successfully. Run 'make up' to start the containers and 'make setup' to initialize the project."
