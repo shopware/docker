@@ -17,6 +17,11 @@ echo "Creating Shopware project..."
 echo "Adding developer tools..."
 (composer require shopware/docker-dev --no-interaction > /tmp/install.log 2>&1) || { echo "Adding docker-dev failed. Log:"; cat /tmp/install.log; exit 1; }
 
+if [ -f compose.yaml ]; then
+	PHP_VERSION=$(php -r 'echo PHP_MAJOR_VERSION . "." . PHP_MINOR_VERSION;')
+	sed -i "s/php[0-9]\.[0-9]/php$PHP_VERSION/g" compose.yaml
+fi
+
 echo -n "Do you want to use Elasticsearch? (y/N): "
 read use_elasticsearch
 
