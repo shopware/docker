@@ -156,7 +156,7 @@ target "caddy-dev" {
     name = "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = frankenphpMatrix
+        "php"  = phpMatrix
         "node" = [ "22", "24" ]
     }
     contexts = {
