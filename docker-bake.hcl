@@ -7,7 +7,7 @@ variable "tagPrefix" {
 }
 
 variable "phpMatrix" {
-    default = [ "8.2.29", "8.3.28", "8.4.15", "8.5.0" ]
+    default = [ "8.2.30", "8.3.29", "8.4.16", "8.5.1" ]
 }
 
 variable "frankenphpMatrix" {
@@ -156,7 +156,7 @@ target "caddy-dev" {
     name = "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = frankenphpMatrix
+        "php"  = phpMatrix
         "node" = [ "22", "24" ]
     }
     contexts = {
