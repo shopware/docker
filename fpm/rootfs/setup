@@ -4,7 +4,7 @@ set -e
 
 cd /var/www/html
 
-if [[ -e /var/www/html/vendor/bin/shopware-deployment-helper ]]; then
+if [ -x ./vendor/bin/shopware-deployment-helper ]; then
     exec ./vendor/bin/shopware-deployment-helper run
 fi
 
