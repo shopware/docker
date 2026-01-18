@@ -7,11 +7,11 @@ variable "tagPrefix" {
 }
 
 variable "phpMatrix" {
-    default = [ "8.2.30", "8.3.29", "8.4.17", "8.5.1" ]
+    default = [ "8.2.30", "8.3.30", "8.4.17", "8.5.2" ]
 }
 
 variable "frankenphpMatrix" {
-    default = [ "8.2.30", "8.3.29", "8.4.17", "8.5.1" ]
+    default = [ "8.2.30", "8.3.30", "8.4.17", "8.5.2" ]
 }
 
 # Frankenphp
