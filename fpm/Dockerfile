@@ -24,16 +24,10 @@ ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/do
 RUN <<EOF
     set -e
 
-    REDIS_PHP_MODULE="redis"
-
-    if [ "$(php -r 'echo PHP_VERSION_ID;')" -lt 80400 ]; then
-        REDIS_PHP_MODULE="redis-6.0.2"
-    fi
-
     apk add --no-cache icu-data-full curl jq trurl rabbitmq-c
     apk upgrade --no-cache
     chmod +x /usr/local/bin/install-php-extensions
-    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache ${REDIS_PHP_MODULE} apcu-5.1.27 zstd-0.15.2
+    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache redis apcu-5.1.27 zstd-0.15.2
     mkdir -p /var/www/html
     mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini"
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
