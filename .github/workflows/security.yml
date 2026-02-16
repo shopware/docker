@@ -31,7 +31,7 @@ jobs:
 
       - name: Scan for vulnerabilities
         id: scan
-        uses: crazy-max/ghaction-container-scan@v3
+        uses: crazy-max/ghaction-container-scan@v4
         with:
           image: shopware/docker-base:${{ matrix.php-version }}
           dockerfile: ./${{ matrix.php-version }}/Dockerfile
