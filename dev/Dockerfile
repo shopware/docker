@@ -54,7 +54,8 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
     APP_URL_CHECK_DISABLED=0 \
     SHOPWARE_SKIP_WEBINSTALLER=0 \
     APP_SECRET=def00000bb5acb32b54ff8ee130270586eec0e878f7337dc7a837acc31d3ff00f93a56b595448b4b29664847dd51991b3314ff65aeeeb761a133b0ec0e070433bff08e48 \
-    LOCK_DSN=flock
+    LOCK_DSN=flock \
+    APP_ENV=xxxxxxx
 
 ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/usr/bin/supervisord", "-c", "/etc/supervisord.conf" ]
