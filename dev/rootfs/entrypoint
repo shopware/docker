@@ -1,5 +1,9 @@
 #!/usr/bin/env sh
 
+if [ "$APP_ENV" = "xxxxxxx" ]; then
+    unset APP_ENV
+fi
+
 if [ -n "$PHP_PROFILER" ]; then
     mv /usr/local/etc/php/conf.d/docker-php-ext-$PHP_PROFILER.disabled /usr/local/etc/php/conf.d/docker-php-ext-$PHP_PROFILER.ini
 fi
