@@ -2,7 +2,7 @@
 #check=skip=SecretsUsedInArgOrEnv
 
 ARG PHP_VERSION=8.4
-FROM dunglas/frankenphp:php${PHP_VERSION}
+FROM dunglas/frankenphp:1.11.3-php${PHP_VERSION}
 
 RUN <<EOF
     set -e
