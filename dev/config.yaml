@@ -19,6 +19,7 @@ commandTests:
       - 'opentelemetry'
       - 'tideways'
       - 'blackfire'
+      - 'spx'
   - name: "PHP dev extensions disabled by default"
     command: "sh"
     args: ["-c", "ls /usr/local/etc/php/conf.d/*.disabled"]
@@ -27,6 +28,7 @@ commandTests:
       - 'docker-php-ext-tideways.disabled'
       - 'docker-php-ext-blackfire.disabled'
       - 'docker-php-ext-opentelemetry.disabled'
+      - 'docker-php-ext-spx.disabled'
   - name: "Node installed"
     command: 'node'
     args: ["-v"]

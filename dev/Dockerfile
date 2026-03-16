@@ -29,13 +29,14 @@ RUN <<EOF
 
     apk add --no-cache bash git shadow patch coreutils
     
-    install-php-extensions tideways blackfire xdebug/xdebug@3.5.0
+    install-php-extensions tideways blackfire xdebug/xdebug@3.5.0 spx
 
     cd /usr/local/etc/php/conf.d
     mv docker-php-ext-opentelemetry.ini docker-php-ext-opentelemetry.disabled
     mv docker-php-ext-xdebug.ini docker-php-ext-xdebug.disabled
     mv docker-php-ext-tideways.ini docker-php-ext-tideways.disabled
     mv docker-php-ext-blackfire.ini docker-php-ext-blackfire.disabled
+    mv docker-php-ext-spx.ini docker-php-ext-spx.disabled
 
     usermod -u 1000 www-data
     groupmod -g 1000 www-data
