@@ -48,6 +48,7 @@ USER www-data
 COPY --link --from=ghcr.io/shopware/shopware-cli:bin /shopware-cli /usr/local/bin/shopware-cli
 COPY --link --from=composer/composer:2-bin /composer /usr/local/bin/composer
 COPY --link --from=blackfire/blackfire /usr/local/bin/blackfire /usr/local/bin/blackfire
+COPY --link --from=ghcr.io/shopware/shopware-cli/env-bridge /env-bridge /usr/local/bin/env-bridge
 COPY --link rootfs /
 
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
