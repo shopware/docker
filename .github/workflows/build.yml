@@ -241,7 +241,7 @@ jobs:
 
       - name: Install a binary from GitHub releases
         if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: jaxxstorm/action-install-gh-release@v2.1.0
+        uses: jaxxstorm/action-install-gh-release@v3.0.0
         with:
           repo: GoogleContainerTools/container-structure-test
           extension-matching: disable
