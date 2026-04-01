@@ -36,6 +36,7 @@ runs:
       with:
         push: true
         targets: ${{ inputs.targets }}
+        no-cache: true
       env:
         DOCKER_BUILD_RECORD_UPLOAD: false
         DOCKER_BUILD_SUMMARY: false
