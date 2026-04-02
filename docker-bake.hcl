@@ -14,6 +14,46 @@ variable "frankenphpMatrix" {
     default = [ "8.2.30", "8.3.30", "8.4.19", "8.5.4" ]
 }
 
+group "frankenphp" {
+    targets = [ for php in frankenphpMatrix : "frankenphp-${replace(substr(php, 0, 3), ".", "-")}" ]
+}
+
+group "frankenphp-otel" {
+    targets = [ for php in frankenphpMatrix : "frankenphp-otel-${replace(substr(php, 0, 3), ".", "-")}" ]
+}
+
+group "fpm" {
+    targets = [ for php in phpMatrix : "fpm-${replace(substr(php, 0, 3), ".", "-")}" ]
+}
+
+group "fpm-otel" {
+    targets = [ for php in phpMatrix : "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}" ]
+}
+
+group "caddy" {
+    targets = [ for php in phpMatrix : "caddy-${replace(substr(php, 0, 3), ".", "-")}" ]
+}
+
+group "caddy-otel" {
+    targets = [ for php in phpMatrix : "caddy-otel-${replace(substr(php, 0, 3), ".", "-")}" ]
+}
+
+group "nginx" {
+    targets = [ for php in phpMatrix : "nginx-${replace(substr(php, 0, 3), ".", "-")}" ]
+}
+
+group "nginx-otel" {
+    targets = [ for php in phpMatrix : "nginx-otel-${replace(substr(php, 0, 3), ".", "-")}" ]
+}
+
+group "caddy-dev" {
+    targets = flatten([ for php in phpMatrix : [ for node in [ "22", "24" ] : "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}" ] ])
+}
+
+group "nginx-dev" {
+    targets = flatten([ for php in phpMatrix : [ for node in [ "22", "24" ] : "nginx-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}" ] ])
+}
+
 # Frankenphp
 
 target "frankenphp" {
