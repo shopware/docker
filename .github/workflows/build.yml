@@ -41,9 +41,11 @@ jobs:
           files_yaml: |
             frankenphp:
               - docker-bake.hcl
+              - .github/workflows/build.yml
               - frankenphp*/**
             fpm:
               - docker-bake.hcl
+              - .github/workflows/build.yml
               - fpm*/**
               - nginx/**
               - caddy/**
