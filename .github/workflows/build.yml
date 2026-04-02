@@ -23,9 +23,13 @@ permissions:
   pull-requests: write
 
 jobs:
-  frankenphp:
-    name: FrankenPHP
+  changes:
+    name: Detect Changes
     runs-on: ubuntu-latest
+    outputs:
+      frankenphp: ${{ steps.changed-files.outputs.frankenphp_any_changed }}
+      fpm: ${{ steps.changed-files.outputs.fpm_any_changed }}
+      should_build: ${{ github.event_name == 'schedule' || github.event_name == 'workflow_dispatch' || github.event_name == 'push' && github.ref == 'refs/heads/main' }}
     steps:
       - name: Checkout
         uses: actions/checkout@v6
@@ -34,213 +38,214 @@ jobs:
         id: changed-files
         uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
         with:
-          files: |
-            docker-bake.hcl
-            frankenphp*/**
+          files_yaml: |
+            frankenphp:
+              - docker-bake.hcl
+              - frankenphp*/**
+            fpm:
+              - docker-bake.hcl
+              - fpm*/**
+              - nginx/**
+              - caddy/**
+              - dev/**
 
-      - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/action/build-bake-publish
-        with:
-          targets: frankenphp
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+  frankenphp:
+    name: FrankenPHP
+    needs: [changes]
+    if: needs.changes.outputs.frankenphp == 'true' || needs.changes.outputs.should_build == 'true'
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      output: image
+      push: true
+      target: frankenphp
+      distribute: false
+      vars: |
+        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   frankenphp-otel:
     name: FrankenPHP with OpenTelemetry
-    runs-on: namespace-profile-default
-    needs: [frankenphp]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Get all changed files
-        id: changed-files
-        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
-        with:
-          files: |
-            docker-bake.hcl
-            frankenphp*/**
-
-      - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/action/build-bake-publish
-        with:
-          targets: frankenphp-otel
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    needs: [changes, frankenphp]
+    if: needs.changes.outputs.frankenphp == 'true' || needs.changes.outputs.should_build == 'true'
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      output: image
+      push: true
+      target: frankenphp-otel
+      distribute: false
+      vars: |
+        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   fpm:
     name: FPM
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Get all changed files
-        id: changed-files
-        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
-        with:
-          files: |
-            docker-bake.hcl
-            fpm*/**
-            nginx/**
-            caddy/**
-            dev/**
-
-      - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/action/build-bake-publish
-        with:
-          targets: fpm
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    needs: [changes]
+    if: needs.changes.outputs.fpm == 'true' || needs.changes.outputs.should_build == 'true'
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      output: image
+      push: true
+      target: fpm
+      distribute: false
+      vars: |
+        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   fpm-otel:
     name: FPM with OpenTelemetry
-    runs-on: ubuntu-latest
-    needs: [fpm]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Get all changed files
-        id: changed-files
-        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
-        with:
-          files: |
-            docker-bake.hcl
-            fpm*/**
-            nginx/**
-            caddy/**
-            dev/**
-
-      - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/action/build-bake-publish
-        with:
-          targets: fpm-otel
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    needs: [changes, fpm]
+    if: needs.changes.outputs.fpm == 'true' || needs.changes.outputs.should_build == 'true'
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      output: image
+      push: true
+      target: fpm-otel
+      distribute: false
+      vars: |
+        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   webserver:
     name: ${{ matrix.webserver }}
-    runs-on: ubuntu-latest
-    needs: [fpm]
+    needs: [changes, fpm]
+    if: needs.changes.outputs.fpm == 'true' || needs.changes.outputs.should_build == 'true'
     strategy:
       fail-fast: false
       matrix:
         webserver: [ caddy, nginx ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Get all changed files
-        id: changed-files
-        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
-        with:
-          files: |
-            docker-bake.hcl
-            fpm/**
-            ${{ matrix.webserver }}/**
-            dev/**
-
-      - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/action/build-bake-publish
-        with:
-          targets: ${{ matrix.webserver}}
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      output: image
+      push: true
+      target: ${{ matrix.webserver }}
+      distribute: false
+      vars: |
+        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   webserver-otel:
     name: ${{ matrix.webserver }} with OpenTelemetry
-    runs-on: ubuntu-latest
-    needs: [fpm-otel]
+    needs: [changes, fpm-otel]
+    if: needs.changes.outputs.fpm == 'true' || needs.changes.outputs.should_build == 'true'
     strategy:
       fail-fast: false
       matrix:
         webserver: [ caddy, nginx ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Get all changed files
-        id: changed-files
-        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
-        with:
-          files: |
-            docker-bake.hcl
-            fpm/**
-            ${{ matrix.webserver }}/**
-            dev/**
-
-      - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/action/build-bake-publish
-        with:
-          targets: ${{ matrix.webserver}}-otel
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      output: image
+      push: true
+      target: ${{ matrix.webserver }}-otel
+      distribute: false
+      vars: |
+        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   dev:
     name: Dev ${{ matrix.webserver }}
-    runs-on: ubuntu-latest
-    needs: [webserver-otel]
+    needs: [changes, webserver-otel]
+    if: needs.changes.outputs.fpm == 'true' || needs.changes.outputs.should_build == 'true'
     strategy:
       fail-fast: false
       matrix:
         webserver: [ caddy, nginx ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v6
-
-      - name: Get all changed files
-        id: changed-files
-        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
-        with:
-          files: |
-            docker-bake.hcl
-            fpm/**
-            ${ matrix.webserver }/**
-            dev/**
-
-      - name: Build
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
-        uses: ./.github/action/build-bake-publish
-        with:
-          targets: ${{ matrix.webserver }}-dev
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    permissions:
+      contents: read
+      id-token: write
+    with:
+      output: image
+      push: true
+      target: ${{ matrix.webserver }}-dev
+      distribute: false
+      vars: |
+        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
   dev-check:
     name: Check Dev Image
     runs-on: ubuntu-latest
-    needs: [dev]
+    needs: [changes, dev]
+    if: needs.changes.outputs.fpm == 'true' || needs.changes.outputs.should_build == 'true'
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Get all changed files
-        id: changed-files
-        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
-        with:
-          files: |
-            docker-bake.hcl
-            fpm/**
-            nginx/**
-            caddy/**
-            dev/**
-
       - name: Install a binary from GitHub releases
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: jaxxstorm/action-install-gh-release@v3.0.0
         with:
           repo: GoogleContainerTools/container-structure-test
@@ -249,7 +254,6 @@ jobs:
           chmod: 0755
 
       - name: Determine image tag
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         id: image-tag
         run: |
           if [[ "${{ github.event_name }}" == "pull_request" ]]; then
@@ -259,17 +263,16 @@ jobs:
           fi
 
       - name: Pull image
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: docker pull ${{ steps.image-tag.outputs.IMAGE_TAG }}
 
       - name: Test Dev Image
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: container-structure-test test --config dev/config.yaml --image ${{ steps.image-tag.outputs.IMAGE_TAG }}
 
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
     runs-on: ubuntu-latest
-    needs: [webserver]
+    needs: [changes, webserver]
+    if: needs.changes.outputs.fpm == 'true' || needs.changes.outputs.should_build == 'true'
     strategy:
       matrix:
         webserver:
@@ -282,32 +285,23 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v6
 
-      - name: Get all changed files
-        id: changed-files
-        uses: tj-actions/changed-files@22103cc46bda19c2b464ffe86db46df6922fd323 # v46
-        with:
-          files: |
-            ${{ matrix.webserver }}/**
-
       - name: Checkout example repo
         uses: actions/checkout@v6
         with:
           repository: shopwareLabs/example-docker-repository
 
       - name: Build main branch
-        if: github.ref == 'refs/heads/main' && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
+        if: github.ref == 'refs/heads/main'
         run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base:8.3-caddy
 
       - name: Build PR
-        if: github.ref != 'refs/heads/main' && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
+        if: github.ref != 'refs/heads/main'
         run: docker compose build --build-arg BASE_IMAGE=ghcr.io/shopware/docker-base-ci-test:${{ github.event.number }}-8.3-${{ matrix.webserver}}
 
       - name: Run image
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: docker compose up -d --wait
 
       - name: Wait for Webserver reachable
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: |
           attempt_counter=0
           max_attempts=5
@@ -324,14 +318,12 @@ jobs:
           done
 
       - name: Check if shopware admin is running
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: curl --fail localhost:8000/admin
 
       - name: Check if shopware is running
-        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
         run: curl --fail localhost:8000
 
       # output logs if failed
       - name: Output logs
-        if: always() && (steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main')
+        if: always()
         run: docker compose logs
