@@ -67,7 +67,6 @@ jobs:
       output: image
       push: true
       target: frankenphp-${{ matrix.php }}
-      distribute: true
       vars: |
         imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
@@ -96,7 +95,6 @@ jobs:
       output: image
       push: true
       target: frankenphp-otel-${{ matrix.php }}
-      distribute: true
       vars: |
         imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
@@ -125,7 +123,6 @@ jobs:
       output: image
       push: true
       target: fpm-${{ matrix.php }}
-      distribute: true
       vars: |
         imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
@@ -154,7 +151,6 @@ jobs:
       output: image
       push: true
       target: fpm-otel-${{ matrix.php }}
-      distribute: true
       vars: |
         imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
@@ -184,7 +180,6 @@ jobs:
       output: image
       push: true
       target: ${{ matrix.webserver }}-${{ matrix.php }}
-      distribute: true
       vars: |
         imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
@@ -214,7 +209,6 @@ jobs:
       output: image
       push: true
       target: ${{ matrix.webserver }}-otel-${{ matrix.php }}
-      distribute: true
       vars: |
         imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
@@ -245,7 +239,6 @@ jobs:
       output: image
       push: true
       target: ${{ matrix.webserver }}-dev-${{ matrix.php }}-${{ matrix.node }}
-      distribute: true
       vars: |
         imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.pull_request.number) || '' }}
