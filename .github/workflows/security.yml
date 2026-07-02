@@ -39,7 +39,7 @@ jobs:
             dockerfile: frankenphp-otel/Dockerfile
     steps:
       - name: Checkout
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
 
       - name: Pull image
         run: docker pull shopware/docker-base:${{ matrix.php-version }}-${{ matrix.variant.name }}
