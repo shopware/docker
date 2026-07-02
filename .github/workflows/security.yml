@@ -10,21 +10,39 @@ permissions:
 
 jobs:
   scan:
-    name: 'Image Scan (PHP: ${{ matrix.php-version }})'
+    name: 'Image Scan (PHP: ${{ matrix.php-version }}, Variant: ${{ matrix.variant.name }})'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
         php-version:
-          - '8.1'
           - '8.2'
           - '8.3'
+          - '8.4'
+          - '8.5'
+        variant:
+          - name: fpm
+            dockerfile: fpm/Dockerfile
+          - name: fpm-otel
+            dockerfile: fpm-otel/Dockerfile
+          - name: caddy
+            dockerfile: caddy/Dockerfile
+          - name: caddy-otel
+            dockerfile: caddy/Dockerfile
+          - name: nginx
+            dockerfile: nginx/Dockerfile
+          - name: nginx-otel
+            dockerfile: nginx/Dockerfile
+          - name: frankenphp
+            dockerfile: frankenphp/Dockerfile
+          - name: frankenphp-otel
+            dockerfile: frankenphp-otel/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v6
 
       - name: Pull image
-        run: docker pull shopware/docker-base:${{ matrix.php-version }}
+        run: docker pull shopware/docker-base:${{ matrix.php-version }}-${{ matrix.variant.name }}
 
       - name: Login into Github Docker Registery
         run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
@@ -33,8 +51,8 @@ jobs:
         id: scan
         uses: crazy-max/ghaction-container-scan@v4
         with:
-          image: shopware/docker-base:${{ matrix.php-version }}
-          dockerfile: ./${{ matrix.php-version }}/Dockerfile
+          image: shopware/docker-base:${{ matrix.php-version }}-${{ matrix.variant.name }}
+          dockerfile: ./${{ matrix.variant.dockerfile }}
 
       - name: Upload SARIF file
         if: ${{ steps.scan.outputs.sarif != '' }}
