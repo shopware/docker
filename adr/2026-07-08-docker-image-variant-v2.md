@@ -110,6 +110,13 @@ Support windows are an explicit, dated promise — an image that silently stops 
 - A **new** PHP minor version is only added to the *current* calendar version — adding one is a feature, not a security fix.
 - The versioned-tag contract is therefore: same base OS, extension set, and defaults **for the PHP versions upstream still supports**. A PHP tag disappearing due to upstream EOL is not a breaking change to the calendar version.
 
+**Propagating EOL to users**
+
+A base image has no channel back to its consumers, so the images carry their own lifecycle information:
+
+- **Every image knows its own dates.** The lifecycle dates are baked into every image as OCI labels (`com.shopware.image.version`, `com.shopware.image.security-only`, `com.shopware.image.eol`) for registries, scanners and admission controllers to read. In addition, the entrypoint compares the baked EOL date against the current clock at container start and prints a warning once the date has passed. Because the date is known and baked in at build time, this works even after rebuilds have stopped — a frozen image starts warning on EOL day without any rebuild, registry support, or network call. The warning escalates with the lifecycle stage: a single startup line during the security-only phase, a prominent warning in the last 3 months, a loud permanent warning past EOL. Setting `SHOPWARE_DOCKER_SUPPRESS_EOL_WARNING=1` silences it for users who consciously accept the risk.
+- **Developers are warned at build time, not only at runtime.** Consumers do not run `docker-base` directly — they build their own image `FROM` it, so a runtime log line reaches the ops team while the people who can bump the tag live in CI. An `ONBUILD RUN` hook performs the same EOL date check during every downstream build, and `shopware-cli` / the deployment helper read the EOL label and warn during project builds. Both are strictly warn-only: an EOL base image never fails a downstream build or refuses to start — warning without blocking is the contract.
+
 **Communication**
 
 - The README carries an EOL table (version, release date, security-only date, EOL date), updated at every release; PHP-EOL-driven removals are announced ahead of the known upstream dates. Registering the image lifecycle on [endoflife.date](https://endoflife.date/) is desirable so tooling can consume it.
