@@ -119,7 +119,7 @@ A base image has no channel back to its consumers, so the images carry their own
 
 **Communication**
 
-- The README carries an EOL table (version, release date, security-only date, EOL date), updated at every release; PHP-EOL-driven removals are announced ahead of the known upstream dates. Registering the image lifecycle on [endoflife.date](https://endoflife.date/) is desirable so tooling can consume it.
+- The README carries an EOL table (version, release date, security-only date, EOL date), updated at every release; PHP-EOL-driven removals are announced ahead of the known upstream dates.
 - Example, assuming v2026.1 releases 2026-07 and v2027.1 releases 2027-07:
 
   | Version | Release | Rolling tag flips | Security-only | EOL |
