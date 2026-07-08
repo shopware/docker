@@ -35,7 +35,7 @@ Rules:
 
 - A **versioned tag** (`-vYYYY.N`) never receives breaking changes. It continues to be rebuilt on schedule so it picks up OS security patches, PHP patch releases and extension bugfix releases, but the contract (base OS, extension list, environment variable defaults, entrypoint behavior) is frozen for its lifetime.
 - **Breaking changes only ship in a new calendar version.** Users opt in by moving the suffix.
-- A new calendar version deprecates the previous one. During the deprecation window the old version keeps being rebuilt (security patches only) and its image logs a deprecation warning at container start. After the window ends, the rolling (unversioned) tag switches over to the new version and the old versioned tags stop receiving rebuilds.
+- A new calendar version deprecates the previous one. During the deprecation window the old version keeps being rebuilt (security patches only) and its image logs a deprecation warning at container start. Rollover of the rolling tag and end of rebuilds are governed by the support policy below (section 7).
 - Users who need bit-exact reproducibility should additionally pin by digest; versioned tags trade strict immutability for continued security patching, which is the right default for a base image.
 
 ### 2. Debian as the only base OS
@@ -92,6 +92,37 @@ Together with v2 we adopt the following (largely orthogonal, but cheapest to int
 - **`HEALTHCHECK`** built into the image (FrankenPHP/Caddy exposes an endpoint), so orchestrators get container health without per-deployment configuration.
 - **Keep the non-root default** (`USER www-data`, already in place) and continue to run scheduled rebuilds so OS packages stay patched between releases.
 
+### 7. Support policy
+
+Support windows are an explicit, dated promise — an image that silently stops being rebuilt accumulates CVEs without anyone noticing, so every lifecycle event below is announced with a date rather than derived from a formula.
+
+**Calendar version lifecycle**
+
+- **At most one calendar version per year**, and only when a breaking change actually requires one. There is no version bump for cadence's sake.
+- **At most two calendar versions are supported concurrently**: the current one (full support) and the previous one (security-only rebuilds: OS packages, PHP patch releases, extension bugfix releases — no new features, no new PHP minor versions). This caps the build and scan matrix at 2×.
+- **The previous version reaches end of life 12 months after its successor is released.** This matches the extended-support year of a Shopware major release and covers one full merchant/agency upgrade cycle. After EOL, tags remain pullable but are frozen and no longer rebuilt.
+- **Rolling tags switch to the new calendar version 3 months after its release**, announced at release and preceded by a startup warning in the old image. Rolling tags are documented as "latest, may introduce breaking changes"; anyone who needs stability pins a calendar version.
+
+**PHP version lifecycle**
+
+- **PHP versions that are end of life upstream are not supported — dropped on day one.** The moment a PHP minor version reaches its upstream end of security support ([php.net supported versions](https://www.php.net/supported-versions.php)), its image tags stop being rebuilt immediately, in *every* calendar version, regardless of how much support time the calendar version itself has left. There is no grace period: without upstream patches a "security rebuild" of that PHP version is impossible, and continuing to publish it would only feign safety. New calendar versions launch without EOL PHP versions from day one.
+- PHP versions in their upstream *security-only* phase remain part of the matrix and receive patch rebuilds as usual.
+- A **new** PHP minor version is only added to the *current* calendar version — adding one is a feature, not a security fix.
+- The versioned-tag contract is therefore: same base OS, extension set, and defaults **for the PHP versions upstream still supports**. A PHP tag disappearing due to upstream EOL is not a breaking change to the calendar version.
+
+**Communication**
+
+- The README carries an EOL table (version, release date, security-only date, EOL date), updated at every release; PHP-EOL-driven removals are announced ahead of the known upstream dates. Registering the image lifecycle on [endoflife.date](https://endoflife.date/) is desirable so tooling can consume it.
+- Example, assuming v2026.1 releases 2026-07 and v2027.1 releases 2027-07:
+
+  | Version | Release | Rolling tag flips | Security-only | EOL |
+  |---|---|---|---|---|
+  | v1 (legacy, unversioned) | — | 2026-10 (3 months after v2026.1) | 2026-07 (v2026.1 GA) | 2027-07 |
+  | v2026.1 | 2026-07 | — | 2027-07 (v2027.1 GA) | 2028-07 |
+  | PHP 8.2 tags (all versions) | — | — | — | 2026-12-31 (upstream EOL, dropped day one) |
+
+- **v1 special case**: current users never opted into a versioning contract, so the existing unversioned images get the same treatment as a "previous version" — 12 months of security-only rebuilds starting at v2026.1 GA, with a deprecation notice at container start. This doubles as the migration grace period for users of the discontinued `fpm`/`caddy`/`nginx` variants.
+
 ## Consequences
 
 ### Positive
@@ -110,6 +141,7 @@ Together with v2 we adopt the following (largely orthogonal, but cheapest to int
 - Anyone relying on the image-baked Shopware env defaults must set them explicitly after upgrading; this must be called out in the migration guide with a complete list of removed variables.
 - Maintaining rebuilds for the deprecated v1 during the transition window temporarily *increases* CI load before it decreases.
 - Version pinning of extensions means we must keep the update automation healthy; a stalled bot would now mean stale extensions rather than (unnoticed) auto-updates.
+- Users lagging on PHP upgrades lose rebuilds the day their PHP version goes EOL upstream — deliberate, but it will surprise anyone who assumed the calendar-version window shields them from PHP's own lifecycle. The published EOL table and upfront announcements are the mitigation.
 
 ### Migration outline
 
