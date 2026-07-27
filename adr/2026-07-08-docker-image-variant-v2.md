@@ -24,9 +24,9 @@ Finally, the production images are Alpine-based (except FrankenPHP, which is alr
 
 ## Decision
 
-### 1. Calendar-versioned, immutable image tags
+### 1. Calendar-versioned tags with a frozen contract
 
-We adopt a calendar-based versioning scheme, following the model of [pimcore/docker](https://github.com/pimcore/docker#versioning):
+We adopt a calendar-based versioning scheme, following the model of [pimcore/docker](https://github.com/pimcore/docker#versioning). The scheme applies identically to both registries we publish to (`ghcr.io/shopware/*` and Docker Hub `shopware/*`):
 
 - `ghcr.io/shopware/docker-base:8.3-frankenphp` — rolling tag (points to the latest supported version)
 - `ghcr.io/shopware/docker-base:8.3-frankenphp-v2026.1` — versioned tag
@@ -36,7 +36,8 @@ Rules:
 - A **versioned tag** (`-vYYYY.N`) never receives breaking changes. It continues to be rebuilt on schedule so it picks up OS security patches, PHP patch releases and extension bugfix releases, but the contract (base OS, extension list, environment variable defaults, entrypoint behavior) is frozen for its lifetime.
 - **Breaking changes only ship in a new calendar version.** Users opt in by moving the suffix.
 - A new calendar version deprecates the previous one. During the deprecation window the old version keeps being rebuilt (security patches only) and its image logs a deprecation warning at container start. Rollover of the rolling tag and end of rebuilds are governed by the support policy below (section 7).
-- Users who need bit-exact reproducibility should additionally pin by digest; versioned tags trade strict immutability for continued security patching, which is the right default for a base image.
+- Users who need bit-exact reproducibility should additionally pin by digest; versioned tags trade strict immutability for continued security patching, which is the right default for a base image. ("Immutable" in this document always means a frozen *contract*, not frozen bits.)
+- The rolling tag remains an explicit opt-in to living on the latest version. Flipping it to a new calendar version *is* the breaking-change event for everyone still on it — the same silent-rollout property this ADR criticizes — so the flip is always announced with a date (see section 7) and never happens without a versioned alternative to pin to.
 
 ### 2. Debian as the only base OS
 
@@ -52,11 +53,11 @@ v2 reduces the production matrix to a single variant:
 
 - `ghcr.io/shopware/docker-base:8.3-frankenphp-v2026.1`
 
-with **gRPC and OpenTelemetry always included** (extensions installed but loadable/configurable via environment, so the cost for non-users is disk size only, not runtime overhead). The `fpm`, `caddy`, `nginx` and all `-otel` variants are not continued in v2.
+with **gRPC and OpenTelemetry always included**. Both extensions are installed but *not loaded by default* (shipped as disabled ini files, enabled via environment variables), so the cost for non-users is disk size only — a loaded-but-idle otel/grpc extension has measurable runtime overhead, and "available" must not mean "active". The `fpm`, `caddy`, `nginx` and all `-otel` variants are not continued in v2.
 
 Rationale: the 8-variant matrix multiplies build time, security scanning, and support surface, while FrankenPHP covers the same use cases with a single process model (and worker mode as an upside). Users who require a plain FPM pool behind their own web server can stay on v1 during the deprecation window; if there is significant demand, an `fpm` variant can be re-added to v2 in a later calendar version — the versioning scheme makes that a non-breaking addition. (Raised in the issue discussion: nginx is the familiar entry point for newcomers. We accept this trade-off in favor of a drastically smaller matrix and will address it with documentation and a migration guide rather than by keeping the variant.)
 
-Dev images follow the same consolidation:
+Dev images follow the same consolidation and are rebuilt on top of the FrankenPHP variant (today they are based on the discontinued `caddy-otel`/`nginx-otel` images; FrankenPHP serves the storefront/admin watcher in v2):
 
 - `ghcr.io/shopware/docker-dev:8.3-node22-v2026.1`
 - `ghcr.io/shopware/docker-dev:8.3-node24-v2026.1`
@@ -98,7 +99,7 @@ Support windows are an explicit, dated promise — an image that silently stops 
 
 **Calendar version lifecycle**
 
-- **At most one calendar version per year**, and only when a breaking change actually requires one. There is no version bump for cadence's sake.
+- **At most one planned calendar version per year**, and only when a breaking change actually requires one. There is no version bump for cadence's sake. Emergency exception: if a forced breaking change is unavoidable mid-cycle (e.g. an upstream security fix that cannot be shipped within the frozen contract), an unscheduled version may be cut; it must be announced with the same deprecation dates as a planned one.
 - **At most two calendar versions are supported concurrently**: the current one (full support) and the previous one (security-only rebuilds: OS packages, PHP patch releases, extension bugfix releases — no new features, no new PHP minor versions). This caps the build and scan matrix at 2×.
 - **The previous version reaches end of life 12 months after its successor is released.** This matches the extended-support year of a Shopware major release and covers one full merchant/agency upgrade cycle. After EOL, tags remain pullable but are frozen and no longer rebuilt.
 - **Rolling tags switch to the new calendar version 3 months after its release**, announced at release and preceded by a startup warning in the old image. Rolling tags are documented as "latest, may introduce breaking changes"; anyone who needs stability pins a calendar version.
@@ -115,7 +116,7 @@ Support windows are an explicit, dated promise — an image that silently stops 
 A base image has no channel back to its consumers, so the images carry their own lifecycle information:
 
 - **Every image knows its own dates.** The lifecycle dates are baked into every image as OCI labels (`com.shopware.image.version`, `com.shopware.image.security-only`, `com.shopware.image.eol`) for registries, scanners and admission controllers to read. In addition, the entrypoint compares the baked EOL date against the current clock at container start and prints a warning once the date has passed. Because the date is known and baked in at build time, this works even after rebuilds have stopped — a frozen image starts warning on EOL day without any rebuild, registry support, or network call. The warning escalates with the lifecycle stage: a single startup line during the security-only phase, a prominent warning in the last 3 months, a loud permanent warning past EOL. Setting `SHOPWARE_DOCKER_SUPPRESS_EOL_WARNING=1` silences it for users who consciously accept the risk.
-- **Developers are warned at build time, not only at runtime.** Consumers do not run `docker-base` directly — they build their own image `FROM` it, so a runtime log line reaches the ops team while the people who can bump the tag live in CI. An `ONBUILD RUN` hook performs the same EOL date check during every downstream build, and `shopware-cli` / the deployment helper read the EOL label and warn during project builds. Both are strictly warn-only: an EOL base image never fails a downstream build or refuses to start — warning without blocking is the contract.
+- **Developers are warned at build time, not only at runtime.** Consumers do not run `docker-base` directly — they build their own image `FROM` it, so a runtime log line reaches the ops team while the people who can bump the tag live in CI. An `ONBUILD RUN` hook performs the same EOL date check during every downstream build, and `shopware-cli` / the deployment helper read the EOL label and warn during project builds. (Caveat to verify before GA: BuildKit's execution of `ONBUILD` triggers from base-image configs is unreliable, and the containerd image store does not support them at all. If the hook does not fire under `docker buildx` in practice, the shopware-cli warning becomes the primary build-time channel and the `ONBUILD` hook is best-effort only.) Both are strictly warn-only: an EOL base image never fails a downstream build or refuses to start — warning without blocking is the contract.
 
 **Communication**
 
@@ -154,7 +155,7 @@ A base image has no channel back to its consumers, so the images carry their own
 
 1. Introduce versioned tags for the **current** images (retroactively tag the existing setup as `v2025.x`) so the mechanism exists before the breaking change.
 2. Publish v2 images (`-v2026.1`) alongside v1.
-3. Announce deprecation of v1 variants with a fixed end date; add a startup deprecation notice to v1 images.
+3. Announce deprecation of v1 variants with a fixed end date. Adding the startup deprecation notice to v1 is an explicit, deliberate change to the otherwise frozen v1 entrypoint — it ships as its own announced v1 rebuild, not silently.
 4. After the window: point rolling tags at v2, stop rebuilding v1.
 
 ## References
