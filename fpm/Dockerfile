@@ -27,7 +27,7 @@ RUN <<EOF
     apk add --no-cache icu-data-full curl jq trurl rabbitmq-c
     apk upgrade --no-cache
     chmod +x /usr/local/bin/install-php-extensions
-    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache redis apcu-5.1.27 zstd-0.15.2
+    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache redis apcu-5.1.27 zstd-0.15.2 xsl
     mkdir -p /var/www/html
     mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini"
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
