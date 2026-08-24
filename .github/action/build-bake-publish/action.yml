@@ -5,6 +5,10 @@ inputs:
     description: 'Targets'
     required: true
     default: ''
+  files:
+    description: 'Bake definition file'
+    required: false
+    default: 'docker-bake.hcl'
   docker_hub_username:
     description: 'Docker Hub username'
     required: true
@@ -35,6 +39,7 @@ runs:
       uses: docker/bake-action@v6
       with:
         push: true
+        files: ${{ inputs.files }}
         targets: ${{ inputs.targets }}
         no-cache: true
       env:

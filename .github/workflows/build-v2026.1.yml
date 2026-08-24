@@ -1,0 +1,190 @@
+name: Build Images v2026.1
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+  schedule:
+    - cron: '30 4 * * *'
+
+concurrency:
+  group: "v2026.1-${{ github.ref }}"
+  cancel-in-progress: true
+
+env:
+  DOCKER_BUILDKIT: 1
+  # bake variables for the OCI labels
+  gitSha: ${{ github.sha }}
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  frankenphp:
+    name: FrankenPHP v2026.1
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v46
+        with:
+          files: |
+            v2026.1/docker-bake.hcl
+            v2026.1/frankenphp/**
+
+      - name: Set build date
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: echo "buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: ./.github/action/build-bake-publish
+        with:
+          files: v2026.1/docker-bake.hcl
+          targets: frankenphp
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  frankenphp-check:
+    name: Check FrankenPHP v2026.1
+    runs-on: ubuntu-latest
+    needs: [frankenphp]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v46
+        with:
+          files: |
+            v2026.1/docker-bake.hcl
+            v2026.1/frankenphp/**
+
+      - name: Determine image tag
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: image-tag
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "IMAGE_TAG=ghcr.io/shopware/docker-base-ci-test:${{ github.event.number }}-8.4-frankenphp-v2026.1" >> $GITHUB_OUTPUT
+          else
+            echo "IMAGE_TAG=ghcr.io/shopware/docker-base:8.4-frankenphp-v2026.1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pull image
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: docker pull ${{ steps.image-tag.outputs.IMAGE_TAG }}
+
+      - name: grpc and opentelemetry are shipped but not loaded
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE=${{ steps.image-tag.outputs.IMAGE_TAG }}
+          MODULES=$(docker run --rm $IMAGE php -m)
+          if echo "$MODULES" | grep -qi '^grpc$'; then echo "grpc must not be loaded by default"; exit 1; fi
+          if echo "$MODULES" | grep -qi '^opentelemetry$'; then echo "opentelemetry must not be loaded by default"; exit 1; fi
+          echo "$MODULES" | grep -qi '^redis$' || { echo "redis missing"; exit 1; }
+          echo "$MODULES" | grep -qi '^amqp$' || { echo "amqp missing"; exit 1; }
+
+      - name: grpc and opentelemetry can be enabled via env
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE=${{ steps.image-tag.outputs.IMAGE_TAG }}
+          MODULES=$(docker run --rm -e PHP_EXTENSION_GRPC=1 -e PHP_EXTENSION_OPENTELEMETRY=1 $IMAGE php -m)
+          echo "$MODULES" | grep -qi '^grpc$' || { echo "grpc not loaded with PHP_EXTENSION_GRPC=1"; exit 1; }
+          echo "$MODULES" | grep -qi '^opentelemetry$' || { echo "opentelemetry not loaded with PHP_EXTENSION_OPENTELEMETRY=1"; exit 1; }
+
+      - name: No Shopware application env baked into the image
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE=${{ steps.image-tag.outputs.IMAGE_TAG }}
+          ENVS=$(docker inspect --format '{{range .Config.Env}}{{println .}}{{end}}' $IMAGE)
+          for var in APP_ENV LOCK_DSN MAILER_DSN SHOPWARE_HTTP_CACHE_ENABLED INSTALL_LOCALE; do
+            if echo "$ENVS" | grep -q "^$var="; then echo "$var must not be baked into the v2 image"; exit 1; fi
+          done
+          echo "$ENVS" | grep -q "^PHP_MEMORY_LIMIT=" || { echo "PHP_MEMORY_LIMIT missing"; exit 1; }
+
+      - name: www-data runs with uid/gid 82 (v1 parity)
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: |
+          IMAGE=${{ steps.image-tag.outputs.IMAGE_TAG }}
+          UID_GID=$(docker run --rm $IMAGE sh -c 'echo "$(id -u):$(id -g)"')
+          [ "$UID_GID" = "82:82" ] || { echo "expected uid:gid 82:82, got $UID_GID"; exit 1; }
+
+  dev:
+    name: Dev v2026.1
+    runs-on: ubuntu-latest
+    needs: [frankenphp]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v46
+        with:
+          files: |
+            v2026.1/**
+
+      - name: Set build date
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: echo "buildDate=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_ENV"
+
+      - name: Build
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: ./.github/action/build-bake-publish
+        with:
+          files: v2026.1/docker-bake.hcl
+          targets: dev
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  dev-check:
+    name: Check Dev v2026.1 Image
+    runs-on: ubuntu-latest
+    needs: [dev]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Get all changed files
+        id: changed-files
+        uses: tj-actions/changed-files@9426d40962ed5378910ee2e21d5f8c6fcbf2dd96 # v46
+        with:
+          files: |
+            v2026.1/**
+
+      - name: Install container-structure-test
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        uses: jaxxstorm/action-install-gh-release@25e24d2d23ae098373794ef1d6faecb48ee52da8 # v3.0.0
+        with:
+          repo: GoogleContainerTools/container-structure-test
+          extension-matching: disable
+          rename-to: container-structure-test
+          chmod: 0755
+
+      - name: Determine image tag
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        id: image-tag
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            echo "IMAGE_TAG=ghcr.io/shopware/docker-dev-ci-test:${{ github.event.number }}-8.4-node24-v2026.1" >> $GITHUB_OUTPUT
+          else
+            echo "IMAGE_TAG=ghcr.io/shopware/docker-dev:8.4-node24-v2026.1" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Pull image
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: docker pull ${{ steps.image-tag.outputs.IMAGE_TAG }}
+
+      - name: Test Dev Image
+        if: steps.changed-files.outputs.any_changed == 'true' || github.event_name == 'schedule' || github.event_name == 'push' && github.ref == 'refs/heads/main'
+        run: container-structure-test test --config v2026.1/dev/config.yaml --image ${{ steps.image-tag.outputs.IMAGE_TAG }}

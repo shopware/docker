@@ -37,6 +37,8 @@ jobs:
             dockerfile: frankenphp/Dockerfile
           - name: frankenphp-otel
             dockerfile: frankenphp-otel/Dockerfile
+          - name: frankenphp-v2026.1
+            dockerfile: v2026.1/frankenphp/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v7
