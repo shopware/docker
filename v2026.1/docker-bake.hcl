@@ -1,6 +1,9 @@
 # v2026.1 images — built alongside v1 (see adr/2026-07-08-docker-image-variant-v2.md)
 #
 # Build from the repository root: docker buildx bake -f v2026.1/docker-bake.hcl <target>
+# CI builds run through docker/github-builder, which supplies tags (docker/metadata-action)
+# and signed SBOM/provenance attestations — the tags below apply to local builds only.
+#
 # NOTE: bake resolves relative context paths against the working directory,
 # not this file — paths below are therefore relative to the repository root.
 
@@ -96,10 +99,6 @@ target "frankenphp" {
         "com.shopware.image.security-only" = securityOnlyDate
         "com.shopware.image.eol" = eolDate
     }
-    attest = [
-        "type=sbom",
-        "type=provenance,mode=max"
-    ]
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(item.php, 0, 3)}-frankenphp-${imageVersion}",
@@ -136,10 +135,6 @@ target "dev" {
         "com.shopware.image.security-only" = securityOnlyDate
         "com.shopware.image.eol" = eolDate
     }
-    attest = [
-        "type=sbom",
-        "type=provenance,mode=max"
-    ]
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [
         "ghcr.io/shopware/docker-dev${imageSuffix}:${tagPrefix}${substr(item.php, 0, 3)}-node${node}-${imageVersion}",
