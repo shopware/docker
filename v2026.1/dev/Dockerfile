@@ -1,5 +1,9 @@
-#syntax=docker/dockerfile:1.7
+#syntax=docker/dockerfile:1
 #check=skip=SecretsUsedInArgOrEnv
+
+# The unpinned syntax directive is deliberate: it resolves to the latest stable
+# dockerfile frontend. An older pin (1.7) lacks the source.git.checksum
+# capability that docker/github-builder's git-context builds require.
 
 # v2 dev image — built on top of the v2 FrankenPHP image
 # (see adr/2026-07-08-docker-image-variant-v2.md)
