@@ -123,6 +123,51 @@ async function updatePhpMatrixInHcl(phpVersions, frankenphpVersions) {
     console.log('FrankenPHP versions:', frankenphpVersions);
 }
 
+// Function to fetch the manifest-list digest of the docker/dockerfile:1 frontend
+async function fetchDockerfileFrontendDigest() {
+    const url = 'https://hub.docker.com/v2/repositories/docker/dockerfile/tags/1';
+
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch docker/dockerfile:1 tag: ${response.status} ${response.statusText}`);
+    }
+
+    const jsonData = await response.json();
+    if (!jsonData.digest) {
+        throw new Error('No digest found for docker/dockerfile:1');
+    }
+
+    return jsonData.digest;
+}
+
+// Function to update the digest-pinned #syntax frontend line in the Dockerfiles of a versioned directory
+async function updateDockerfileFrontendPin(versionDir, digest) {
+    const dirents = await fs.readdir(versionDir, { withFileTypes: true });
+
+    for (const dirent of dirents) {
+        if (!dirent.isDirectory()) {
+            continue;
+        }
+
+        const dockerfilePath = `${versionDir}/${dirent.name}/Dockerfile`;
+        let content;
+        try {
+            content = await fs.readFile(dockerfilePath, 'utf8');
+        } catch {
+            continue;
+        }
+
+        const syntaxRegex = /^#syntax=docker\/dockerfile:1@sha256:[0-9a-f]{64}$/m;
+        if (!syntaxRegex.test(content)) {
+            continue;
+        }
+
+        content = content.replace(syntaxRegex, `#syntax=docker/dockerfile:1@${digest}`);
+        await fs.writeFile(dockerfilePath, content);
+        console.log(`Successfully updated dockerfile frontend pin in ${dockerfilePath}`);
+    }
+}
+
 // Function to find the bake files of calendar-versioned images (v2026.1/docker-bake.hcl, ...)
 async function findVersionedHclFiles() {
     const dirents = await fs.readdir('.', { withFileTypes: true });
@@ -209,5 +254,13 @@ if (versionedHclFiles.length > 0) {
 
     for (const hclPath of versionedHclFiles) {
         await updateDigestMatrixInHcl(hclPath, digestEntries);
+    }
+
+    console.log('Fetching digest for docker/dockerfile:1 frontend...');
+    const frontendDigest = await fetchDockerfileFrontendDigest();
+    console.log(`Found digest for docker/dockerfile:1: ${frontendDigest}`);
+
+    for (const hclPath of versionedHclFiles) {
+        await updateDockerfileFrontendPin(hclPath.replace('/docker-bake.hcl', ''), frontendDigest);
     }
 }

@@ -1,8 +1,8 @@
-#syntax=docker/dockerfile:1
+#syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
 #check=skip=SecretsUsedInArgOrEnv
 
-# The unpinned syntax directive is deliberate: it resolves to the latest stable
-# dockerfile frontend. An older pin (1.7) lacks the source.git.checksum
+# The dockerfile frontend is pinned by digest (refreshed by update-php-matrix.mjs).
+# It must stay recent: frontends before 1.10 lack the source.git.checksum
 # capability that docker/github-builder's git-context builds require.
 
 # v2 image — see adr/2026-07-08-docker-image-variant-v2.md
