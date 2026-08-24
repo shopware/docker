@@ -1,11 +1,10 @@
-# v2026.1 images — built alongside v1 (see adr/2026-07-08-docker-image-variant-v2.md)
+# v2026.1 images, built alongside v1 (see adr/2026-07-08-docker-image-variant-v2.md)
 #
-# Build from the repository root: docker buildx bake -f v2026.1/docker-bake.hcl <target>
-# CI builds run through docker/github-builder, which supplies tags (docker/metadata-action)
-# and signed SBOM/provenance attestations — the tags below apply to local builds only.
+# Run from the repository root: docker buildx bake -f v2026.1/docker-bake.hcl <target>
+# (bake resolves relative context paths against the working directory, not this file)
 #
-# NOTE: bake resolves relative context paths against the working directory,
-# not this file — paths below are therefore relative to the repository root.
+# CI builds through docker/github-builder, which supplies the tags and signed
+# SBOM/provenance attestations — the tags below apply to local builds only.
 
 variable "imageSuffix" {
     default = ""
@@ -15,13 +14,11 @@ variable "tagPrefix" {
     default = ""
 }
 
-# Calendar version of this contract (ADR section 1) — matches the directory name
 variable "imageVersion" {
     default = "v2026.1"
 }
 
-# Lifecycle dates baked into every image (ADR section 7).
-# Empty = not scheduled yet. Format: YYYY-MM-DD.
+# lifecycle dates (YYYY-MM-DD), empty = not scheduled yet
 variable "securityOnlyDate" {
     default = ""
 }
@@ -30,7 +27,7 @@ variable "eolDate" {
     default = ""
 }
 
-# Set by CI for OCI labels
+# set by CI for the OCI labels
 variable "gitSha" {
     default = ""
 }
@@ -39,8 +36,7 @@ variable "buildDate" {
     default = ""
 }
 
-# Updated by update-php-matrix.mjs. The digest pins the multi-arch manifest
-# list of dunglas/frankenphp:php<version> so rebuilds are reproducible (ADR section 6).
+# updated by update-php-matrix.mjs
 variable "frankenphpDigestMatrix" {
     default = [
         { php = "8.2.33", digest = "sha256:ab7284dddea6f9430986918b270d09adf751e8edb2053ab2cac50240a39959bb" },
@@ -50,8 +46,7 @@ variable "frankenphpDigestMatrix" {
     ]
 }
 
-# Single source of truth for the PHP extension set (ADR section 5).
-# Core extensions are versioned implicitly by the pinned PHP base image.
+# core extensions are versioned implicitly by the pinned PHP base image
 variable "installPhpExtensionsVersion" {
     default = "2.11.12"
 }
@@ -64,8 +59,7 @@ variable "pinnedExtensions" {
     default = "redis-6.3.0 apcu-5.1.28 amqp-2.2.0 zstd-0.18.0"
 }
 
-# Installed but not loaded by default (ADR section 3);
-# enabled via PHP_EXTENSION_GRPC=1 / PHP_EXTENSION_OPENTELEMETRY=1
+# installed but not loaded by default, enabled via PHP_EXTENSION_GRPC=1 / PHP_EXTENSION_OPENTELEMETRY=1
 variable "optionalExtensions" {
     default = "grpc-1.83.0 opentelemetry-1.2.1"
 }

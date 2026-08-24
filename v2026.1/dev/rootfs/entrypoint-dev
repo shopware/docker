@@ -2,9 +2,6 @@
 
 set -e
 
-# Profilers (xdebug, tideways, blackfire, spx) ship installed but not loaded.
-# PHP_PROFILER=<name> enables one by appending its ini directory to
-# PHP_INI_SCAN_DIR — no filesystem writes needed.
 if [ -n "${PHP_PROFILER:-}" ]; then
     if [ -d "/usr/local/etc/php/conf.available/$PHP_PROFILER" ]; then
         if [ -z "${PHP_INI_SCAN_DIR:-}" ]; then
@@ -18,8 +15,7 @@ if [ -n "${PHP_PROFILER:-}" ]; then
     fi
 fi
 
-# Boot fallback only: a fresh dev container without a project yet needs an
-# APP_SECRET to serve anything. Never shadows container env or an .env file.
+# boot fallback for a container without a project; never shadows container env or an .env file
 if [ -z "${APP_SECRET:-}" ] && [ ! -f /var/www/html/.env ] && [ ! -f /var/www/html/.env.local ]; then
     export APP_SECRET=def00000bb5acb32b54ff8ee130270586eec0e878f7337dc7a837acc31d3ff00f93a56b595448b4b29664847dd51991b3314ff65aeeeb761a133b0ec0e070433bff08e48
 fi

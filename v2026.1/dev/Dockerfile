@@ -1,12 +1,8 @@
 #syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
 #check=skip=SecretsUsedInArgOrEnv
 
-# The dockerfile frontend is pinned by digest (refreshed by update-php-matrix.mjs).
-# It must stay recent: frontends before 1.10 lack the source.git.checksum
-# capability that docker/github-builder's git-context builds require.
-
-# v2 dev image — built on top of the v2 FrankenPHP image
-# (see adr/2026-07-08-docker-image-variant-v2.md)
+# frontend digest refreshed by update-php-matrix.mjs; must stay >= 1.10 for
+# the source.git.checksum capability used by docker/github-builder
 ARG NODE_VERSION=22
 
 FROM node:${NODE_VERSION}-bookworm-slim AS node
@@ -15,8 +11,7 @@ FROM base
 
 ARG NODE_VERSION
 
-# Versions are injected from docker-bake.hcl (single source of truth).
-# tideways/blackfire/spx are distributed without PECL version pins.
+# tideways/blackfire/spx have no PECL version pins
 ARG PHP_DEV_PINNED_EXTENSIONS="xdebug-3.5.3"
 ARG PHP_DEV_EXTENSIONS="tideways blackfire spx"
 
@@ -46,8 +41,7 @@ RUN <<EOF
 
     install-php-extensions ${PHP_DEV_PINNED_EXTENSIONS} ${PHP_DEV_EXTENSIONS}
 
-    # profilers ship installed but not loaded; enabled via PHP_PROFILER=<name>
-    # by adding their ini directory to PHP_INI_SCAN_DIR (see entrypoint-dev)
+    # installed but not loaded; the entrypoint enables one via PHP_PROFILER=<name>
     for ext in xdebug tideways blackfire spx; do
         mkdir -p /usr/local/etc/php/conf.available/$ext
         mv /usr/local/etc/php/conf.d/docker-php-ext-$ext.ini /usr/local/etc/php/conf.available/$ext/

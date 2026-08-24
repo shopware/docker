@@ -1,24 +1,20 @@
 #syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
 #check=skip=SecretsUsedInArgOrEnv
 
-# The dockerfile frontend is pinned by digest (refreshed by update-php-matrix.mjs).
-# It must stay recent: frontends before 1.10 lack the source.git.checksum
-# capability that docker/github-builder's git-context builds require.
+# frontend digest refreshed by update-php-matrix.mjs; must stay >= 1.10 for
+# the source.git.checksum capability used by docker/github-builder
 
-# v2 image — see adr/2026-07-08-docker-image-variant-v2.md
-# The base image is pinned by digest via docker-bake.hcl (single source of truth).
+# see adr/2026-07-08-docker-image-variant-v2.md
 ARG PHP_BASE_IMAGE=dunglas/frankenphp:php8.4
 
 FROM ${PHP_BASE_IMAGE}
 
-# All versions below are injected from docker-bake.hcl so production and dev
-# images cannot drift (ADR section 5: single source of truth).
+# defaults overridden from docker-bake.hcl
 ARG INSTALL_PHP_EXTENSIONS_VERSION=2.11.12
 ARG PHP_CORE_EXTENSIONS="bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl"
 ARG PHP_PINNED_EXTENSIONS="redis-6.3.0 apcu-5.1.28 amqp-2.2.0 zstd-0.18.0"
 ARG PHP_OPTIONAL_EXTENSIONS="grpc-1.83.0 opentelemetry-1.2.1"
 
-# Pinned extension installer instead of the bundled/latest one (ADR section 5)
 ADD --chmod=0755 https://github.com/mlocati/docker-php-extension-installer/releases/download/${INSTALL_PHP_EXTENSIONS_VERSION}/install-php-extensions /usr/local/bin/install-php-extensions
 
 RUN <<EOF
@@ -28,13 +24,11 @@ RUN <<EOF
     apt-get install -y --no-install-recommends curl
     install-php-extensions ${PHP_CORE_EXTENSIONS} ${PHP_PINNED_EXTENSIONS} ${PHP_OPTIONAL_EXTENSIONS}
     mkdir -p /var/www/html
-    # uid/gid 82 keeps parity with the v1 production images (Alpine www-data)
+    # uid/gid 82 keeps parity with the v1 images (Alpine www-data)
     usermod -u 82 www-data
     groupmod -g 82 www-data
     chown -R www-data:www-data /data/caddy /config/caddy
-    # grpc and opentelemetry ship installed but NOT loaded (ADR section 3).
-    # Their ini files live outside the scan dir; the entrypoint adds them to
-    # PHP_INI_SCAN_DIR when PHP_EXTENSION_GRPC / PHP_EXTENSION_OPENTELEMETRY is set to 1.
+    # installed but not loaded; the entrypoint enables them via PHP_EXTENSION_GRPC=1 / PHP_EXTENSION_OPENTELEMETRY=1
     for ext in grpc opentelemetry; do
         mkdir -p /usr/local/etc/php/conf.available/$ext
         mv /usr/local/etc/php/conf.d/docker-php-ext-$ext.ini /usr/local/etc/php/conf.available/$ext/
@@ -42,8 +36,7 @@ RUN <<EOF
     rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
 EOF
 
-# Lifecycle metadata (ADR section 7) — also exposed as OCI/com.shopware labels via bake.
-# Empty date = not scheduled yet. The entrypoint compares these against the clock.
+# lifecycle dates for the startup warning; empty = not scheduled yet
 ARG IMAGE_VERSION=""
 ARG IMAGE_SECURITY_ONLY_DATE=""
 ARG IMAGE_EOL_DATE=""
@@ -51,9 +44,8 @@ ENV SHOPWARE_IMAGE_VERSION=${IMAGE_VERSION} \
     SHOPWARE_IMAGE_SECURITY_ONLY=${IMAGE_SECURITY_ONLY_DATE} \
     SHOPWARE_IMAGE_EOL=${IMAGE_EOL_DATE}
 
-# Only infrastructure-level defaults live in ENV (ADR section 4). Shopware
-# application defaults (APP_ENV, LOCK_DSN, MAILER_DSN, SHOPWARE_*, INSTALL_*)
-# are intentionally NOT baked so container env and .env files stay in control.
+# application defaults (APP_ENV, LOCK_DSN, SHOPWARE_*, ...) are intentionally
+# not baked so container env and .env files stay in control
 ENV COMPOSER_HOME=/tmp/composer \
     COMPOSER_ROOT_VERSION=1.0.0 \
     PHP_EXTENSION_GRPC=0 \
@@ -86,12 +78,10 @@ WORKDIR /var/www/html
 
 EXPOSE 8000
 
-# Caddy's admin endpoint answers on localhost:2019 as long as the server runs
 HEALTHCHECK --interval=30s --timeout=5s --start-period=60s --retries=3 \
     CMD curl -fsS http://localhost:2019/metrics >/dev/null || exit 1
 
-# Best-effort build-time EOL warning for downstream images (ADR section 7).
-# Warn-only by contract: the script always exits 0.
+# best-effort EOL warning for downstream builds; always exits 0
 ONBUILD RUN /usr/local/bin/shopware-image-lifecycle build
 
 ENTRYPOINT ["/entrypoint"]
