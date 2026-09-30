@@ -1,0 +1,64 @@
+#!/usr/bin/env sh
+
+# Usage: shopware-image-lifecycle [runtime|build]
+#
+# Prints image lifecycle warnings based on the dates baked in at build time.
+# Warn-only by contract: always exits 0, an EOL image must never fail a
+# downstream build or refuse to start.
+
+mode="${1:-runtime}"
+
+if [ "${SHOPWARE_DOCKER_SUPPRESS_EOL_WARNING:-0}" = "1" ]; then
+    exit 0
+fi
+
+version="${SHOPWARE_IMAGE_VERSION:-}"
+security_only="${SHOPWARE_IMAGE_SECURITY_ONLY:-}"
+eol="${SHOPWARE_IMAGE_EOL:-}"
+
+now=$(date +%s)
+
+to_epoch() {
+    date -d "$1" +%s 2>/dev/null || echo ""
+}
+
+warn() {
+    echo "$@" >&2
+}
+
+context="starting a container from"
+if [ "$mode" = "build" ]; then
+    context="building on top of"
+fi
+
+eol_epoch=""
+if [ -n "$eol" ]; then
+    eol_epoch=$(to_epoch "$eol")
+fi
+
+if [ -n "$eol_epoch" ] && [ "$now" -ge "$eol_epoch" ]; then
+    warn "###################################################################"
+    warn "# WARNING: This Shopware Docker image ($version) reached its"
+    warn "# END OF LIFE on $eol. It no longer receives security updates."
+    warn "# You are $context an unsupported image."
+    warn "# Migrate to a supported version: https://github.com/shopware/docker"
+    warn "# Set SHOPWARE_DOCKER_SUPPRESS_EOL_WARNING=1 to silence this warning."
+    warn "###################################################################"
+    exit 0
+fi
+
+if [ -n "$eol_epoch" ] && [ "$now" -ge "$((eol_epoch - 7776000))" ]; then
+    # within 90 days of EOL
+    warn "WARNING: This Shopware Docker image ($version) reaches end of life on $eol."
+    warn "WARNING: Plan your migration now: https://github.com/shopware/docker"
+    exit 0
+fi
+
+if [ -n "$security_only" ]; then
+    security_only_epoch=$(to_epoch "$security_only")
+    if [ -n "$security_only_epoch" ] && [ "$now" -ge "$security_only_epoch" ]; then
+        warn "NOTICE: Shopware Docker image $version is in its security-only support phase (EOL: ${eol:-unscheduled}). See https://github.com/shopware/docker"
+    fi
+fi
+
+exit 0

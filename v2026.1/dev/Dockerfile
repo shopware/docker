@@ -1,0 +1,72 @@
+#syntax=docker/dockerfile:1@sha256:ecfaec9ed6d810b56388c508f4121597bfbba70d41a6dfeee4d8cad5f295fc32
+#check=skip=SecretsUsedInArgOrEnv
+
+# frontend digest refreshed by update-php-matrix.mjs; must stay >= 1.10 for
+# the source.git.checksum capability used by docker/github-builder
+ARG NODE_VERSION=22
+
+FROM node:${NODE_VERSION}-bookworm-slim AS node
+
+FROM base
+
+ARG NODE_VERSION
+
+# tideways/blackfire/spx have no PECL version pins
+ARG PHP_DEV_PINNED_EXTENSIONS="xdebug-3.5.3"
+ARG PHP_DEV_EXTENSIONS="tideways blackfire spx"
+
+USER root
+
+COPY --link --from=node /usr/local/bin/node /usr/local/bin/node
+COPY --link --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
+
+RUN <<EOF
+    set -e
+
+    ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
+    ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
+    ln -s /usr/local/lib/node_modules/corepack/dist/corepack.js /usr/local/bin/corepack
+
+    node --version
+    npm --version
+
+    INSTALLED_NODE_VERSION=$(node -e "console.log(process.versions.node.split('.')[0])")
+    if [ "$INSTALLED_NODE_VERSION" != "$NODE_VERSION" ]; then
+        echo "ERROR: Installed Node.js version ($INSTALLED_NODE_VERSION) does not match expected version ($NODE_VERSION)"
+        exit 1
+    fi
+
+    apt-get update
+    apt-get install -y --no-install-recommends git patch unzip procps
+
+    install-php-extensions ${PHP_DEV_PINNED_EXTENSIONS} ${PHP_DEV_EXTENSIONS}
+
+    # installed but not loaded; the entrypoint enables one via PHP_PROFILER=<name>
+    for ext in xdebug tideways blackfire spx; do
+        mkdir -p /usr/local/etc/php/conf.available/$ext
+        mv /usr/local/etc/php/conf.d/docker-php-ext-$ext.ini /usr/local/etc/php/conf.available/$ext/
+    done
+
+    usermod -u 1000 www-data
+    groupmod -g 1000 www-data
+    mkdir -p /home/www-data
+    usermod -d /home/www-data www-data
+    chown -R 1000:1000 /var/www/html /home/www-data /data/caddy /config/caddy
+
+    rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
+EOF
+
+USER www-data
+
+COPY --link --from=ghcr.io/shopware/shopware-cli:bin /shopware-cli /usr/local/bin/shopware-cli
+COPY --link --from=composer/composer:2-bin /composer /usr/local/bin/composer
+COPY --link --from=blackfire/blackfire /usr/local/bin/blackfire /usr/local/bin/blackfire
+COPY --link --from=ghcr.io/shopware/shopware-cli/env-bridge /env-bridge /usr/local/bin/env-bridge
+COPY --link rootfs /
+
+ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
+    PHP_OPCACHE_FILE_OVERRIDE=0
+
+ENTRYPOINT ["/entrypoint-dev"]
+
+CMD ["--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]

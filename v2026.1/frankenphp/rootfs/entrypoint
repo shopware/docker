@@ -1,0 +1,25 @@
+#!/usr/bin/env sh
+
+set -e
+
+/usr/local/bin/shopware-image-lifecycle runtime
+
+append_scan_dir() {
+    if [ -z "${PHP_INI_SCAN_DIR:-}" ]; then
+        # a leading colon keeps the compiled-in conf.d in the scan path
+        PHP_INI_SCAN_DIR=":$1"
+    else
+        PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR}:$1"
+    fi
+    export PHP_INI_SCAN_DIR
+}
+
+if [ "${PHP_EXTENSION_GRPC:-0}" = "1" ]; then
+    append_scan_dir /usr/local/etc/php/conf.available/grpc
+fi
+
+if [ "${PHP_EXTENSION_OPENTELEMETRY:-0}" = "1" ]; then
+    append_scan_dir /usr/local/etc/php/conf.available/opentelemetry
+fi
+
+exec docker-php-entrypoint "$@"

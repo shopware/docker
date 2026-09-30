@@ -1,0 +1,23 @@
+#!/usr/bin/env sh
+
+set -e
+
+if [ -n "${PHP_PROFILER:-}" ]; then
+    if [ -d "/usr/local/etc/php/conf.available/$PHP_PROFILER" ]; then
+        if [ -z "${PHP_INI_SCAN_DIR:-}" ]; then
+            # a leading colon keeps the compiled-in conf.d in the scan path
+            export PHP_INI_SCAN_DIR=":/usr/local/etc/php/conf.available/$PHP_PROFILER"
+        else
+            export PHP_INI_SCAN_DIR="${PHP_INI_SCAN_DIR}:/usr/local/etc/php/conf.available/$PHP_PROFILER"
+        fi
+    else
+        echo "WARNING: unknown PHP_PROFILER '$PHP_PROFILER' — expected one of: xdebug, tideways, blackfire, spx" >&2
+    fi
+fi
+
+# boot fallback for a container without a project; never shadows container env or an .env file
+if [ -z "${APP_SECRET:-}" ] && [ ! -f /var/www/html/.env ] && [ ! -f /var/www/html/.env.local ]; then
+    export APP_SECRET=def00000bb5acb32b54ff8ee130270586eec0e878f7337dc7a837acc31d3ff00f93a56b595448b4b29664847dd51991b3314ff65aeeeb761a133b0ec0e070433bff08e48
+fi
+
+exec /entrypoint "$@"
