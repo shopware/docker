@@ -1,0 +1,100 @@
+schemaVersion: 2.0.0
+commandTests:
+  - name: "PHP installed"
+    command: "php"
+    args: ["-v"]
+    expectedOutput:
+      - 'PHP 8.4.*'
+  - name: "PHP extensions there"
+    command: "php"
+    args: ["-m"]
+    expectedOutput:
+      - 'OPcache'
+      - 'redis'
+      - 'amqp'
+      - 'apcu'
+      - 'zstd'
+      - 'xsl'
+    excludedOutput:
+      - 'grpc'
+      - 'opentelemetry'
+      - 'xdebug'
+      - 'tideways'
+      - 'blackfire'
+      - 'spx'
+  - name: "Optional extensions shipped but not loaded"
+    command: "sh"
+    args: ["-c", "ls /usr/local/etc/php/conf.available/*/"]
+    expectedOutput:
+      - 'docker-php-ext-grpc.ini'
+      - 'docker-php-ext-opentelemetry.ini'
+      - 'docker-php-ext-xdebug.ini'
+      - 'docker-php-ext-tideways.ini'
+      - 'docker-php-ext-blackfire.ini'
+      - 'docker-php-ext-spx.ini'
+  - name: "Node installed"
+    command: 'node'
+    args: ["-v"]
+    expectedOutput:
+      - '^v24'
+  - name: "NPM installed"
+    command: 'npm'
+    args: ["-v"]
+  - name: 'Git installed'
+    command: 'git'
+    args: ["-v"]
+  - name: 'Bash installed'
+    command: 'bash'
+    args: ["--version"]
+    expectedOutput:
+      - 'GNU bash'
+  - name: 'Composer installed'
+    command: 'composer'
+    args: ["--version"]
+    expectedOutput:
+      - 'Composer version 2'
+  - name: 'Shopware CLI installed'
+    command: 'shopware-cli'
+    args: ["--version"]
+  - name: 'Patch utility installed'
+    command: 'patch'
+    args: ["--version"]
+  - name: 'User ID is 1000'
+    command: 'id'
+    args: ["-u"]
+    expectedOutput:
+      - '1000'
+  - name: 'Debian based'
+    command: 'sh'
+    args: ["-c", "grep '^ID=' /etc/os-release"]
+    expectedOutput:
+      - 'debian'
+fileExistenceTests:
+  - name: 'Entrypoint script exists'
+    path: '/entrypoint-dev'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'Base entrypoint exists'
+    path: '/entrypoint'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'Lifecycle script exists'
+    path: '/usr/local/bin/shopware-image-lifecycle'
+    shouldExist: true
+    permissions: '-rwxr-xr-x'
+  - name: 'PHP config directory exists'
+    path: '/usr/local/etc/php/conf.d'
+    shouldExist: true
+  - name: 'Working directory exists'
+    path: '/var/www/html'
+    shouldExist: true
+metadataTest:
+  envVars:
+    - key: PHP_OPCACHE_VALIDATE_TIMESTAMPS
+      value: '1'
+    - key: PHP_OPCACHE_FILE_OVERRIDE
+      value: '0'
+  entrypoint: ["/entrypoint-dev"]
+  cmd: ["--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+  user: 'www-data'
+  workdir: '/var/www/html'

@@ -75,6 +75,23 @@ function getLatestFrankenphpPatchVersion(apiResponse) {
     return null;
 }
 
+// Function to fetch the manifest-list digest of a specific FrankenPHP tag (used for the v2 digest pins)
+async function fetchFrankenPhpTagDigest(fullVersion) {
+    const url = `https://hub.docker.com/v2/repositories/dunglas/frankenphp/tags/php${fullVersion}`;
+
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch FrankenPHP tag php${fullVersion}: ${response.status} ${response.statusText}`);
+    }
+
+    const jsonData = await response.json();
+    if (!jsonData.digest) {
+        throw new Error(`No digest found for FrankenPHP tag php${fullVersion}`);
+    }
+
+    return jsonData.digest;
+}
+
 // Function to update the phpMatrix and frankenphpMatrix in docker-bake.hcl
 async function updatePhpMatrixInHcl(phpVersions, frankenphpVersions) {
     const hclPath = 'docker-bake.hcl';
@@ -106,6 +123,93 @@ async function updatePhpMatrixInHcl(phpVersions, frankenphpVersions) {
     console.log('FrankenPHP versions:', frankenphpVersions);
 }
 
+// Function to fetch the manifest-list digest of the docker/dockerfile:1 frontend
+async function fetchDockerfileFrontendDigest() {
+    const url = 'https://hub.docker.com/v2/repositories/docker/dockerfile/tags/1';
+
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch docker/dockerfile:1 tag: ${response.status} ${response.statusText}`);
+    }
+
+    const jsonData = await response.json();
+    if (!jsonData.digest) {
+        throw new Error('No digest found for docker/dockerfile:1');
+    }
+
+    return jsonData.digest;
+}
+
+// Function to update the digest-pinned #syntax frontend line in the Dockerfiles of a versioned directory
+async function updateDockerfileFrontendPin(versionDir, digest) {
+    const dirents = await fs.readdir(versionDir, { withFileTypes: true });
+
+    for (const dirent of dirents) {
+        if (!dirent.isDirectory()) {
+            continue;
+        }
+
+        const dockerfilePath = `${versionDir}/${dirent.name}/Dockerfile`;
+        let content;
+        try {
+            content = await fs.readFile(dockerfilePath, 'utf8');
+        } catch {
+            continue;
+        }
+
+        const syntaxRegex = /^#syntax=docker\/dockerfile:1@sha256:[0-9a-f]{64}$/m;
+        if (!syntaxRegex.test(content)) {
+            continue;
+        }
+
+        content = content.replace(syntaxRegex, `#syntax=docker/dockerfile:1@${digest}`);
+        await fs.writeFile(dockerfilePath, content);
+        console.log(`Successfully updated dockerfile frontend pin in ${dockerfilePath}`);
+    }
+}
+
+// Function to find the bake files of calendar-versioned images (v2026.1/docker-bake.hcl, ...)
+async function findVersionedHclFiles() {
+    const dirents = await fs.readdir('.', { withFileTypes: true });
+    const files = [];
+
+    for (const dirent of dirents) {
+        if (!dirent.isDirectory() || !/^v\d{4}\.\d+$/.test(dirent.name)) {
+            continue;
+        }
+
+        const hclPath = `${dirent.name}/docker-bake.hcl`;
+        try {
+            await fs.access(hclPath);
+            files.push(hclPath);
+        } catch {
+            // version directory without a bake file — skip
+        }
+    }
+
+    return files.sort();
+}
+
+// Function to update the digest-pinned frankenphpDigestMatrix in a versioned bake file
+async function updateDigestMatrixInHcl(hclPath, entries) {
+    let hclContent = await fs.readFile(hclPath, 'utf8');
+
+    const digestMatrixRegex = /(variable "frankenphpDigestMatrix" \{[\s\S]*?default = )(\[[^\]]*\])(\s*\})/;
+
+    if (!digestMatrixRegex.test(hclContent)) {
+        throw new Error(`frankenphpDigestMatrix variable not found in ${hclPath}`);
+    }
+
+    const newMatrix = '[\n' + entries
+        .map(e => `        { php = "${e.php}", digest = "${e.digest}" }`)
+        .join(',\n') + '\n    ]';
+
+    hclContent = hclContent.replace(digestMatrixRegex, `$1${newMatrix}$3`);
+
+    await fs.writeFile(hclPath, hclContent);
+    console.log(`Successfully updated frankenphpDigestMatrix in ${hclPath}`);
+}
+
 const phpVersions = [];
 const frankenphpVersions = [];
 
@@ -134,3 +238,29 @@ for (const version of supportedVersions) {
 }
 
 await updatePhpMatrixInHcl(phpVersions, frankenphpVersions);
+
+// Refresh the digest pins for the calendar-versioned images
+const versionedHclFiles = await findVersionedHclFiles();
+
+if (versionedHclFiles.length > 0) {
+    const digestEntries = [];
+
+    for (const version of frankenphpVersions) {
+        console.log(`Fetching digest for FrankenPHP tag php${version}...`);
+        const digest = await fetchFrankenPhpTagDigest(version);
+        digestEntries.push({ php: version, digest });
+        console.log(`Found digest for php${version}: ${digest}`);
+    }
+
+    for (const hclPath of versionedHclFiles) {
+        await updateDigestMatrixInHcl(hclPath, digestEntries);
+    }
+
+    console.log('Fetching digest for docker/dockerfile:1 frontend...');
+    const frontendDigest = await fetchDockerfileFrontendDigest();
+    console.log(`Found digest for docker/dockerfile:1: ${frontendDigest}`);
+
+    for (const hclPath of versionedHclFiles) {
+        await updateDockerfileFrontendPin(hclPath.replace('/docker-bake.hcl', ''), frontendDigest);
+    }
+}
