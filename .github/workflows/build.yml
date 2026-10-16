@@ -208,7 +208,7 @@ jobs:
           files: |
             docker-bake.hcl
             fpm/**
-            ${ matrix.webserver }/**
+            ${{ matrix.webserver }}/**
             dev/**
 
       - name: Build
