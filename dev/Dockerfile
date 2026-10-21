@@ -11,8 +11,9 @@ USER root
 COPY --link --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --link --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 
-RUN <<EOF
+RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
     set -e
+    export PIE_WORKING_DIRECTORY=/tmp/pie
 
     ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
     ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
@@ -29,7 +30,13 @@ RUN <<EOF
 
     apk add --no-cache bash git shadow patch coreutils
     
-    install-php-extensions tideways blackfire xdebug/xdebug@3.5.0 spx
+    install-php-extensions tideways blackfire
+    apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip linux-headers zlib-dev
+    pie install --no-interaction --no-cache --skip-enable-extension xdebug/xdebug:3.5.0
+    pie install --no-interaction --no-cache --skip-enable-extension noisebynorthwest/php-spx
+    docker-php-ext-enable xdebug spx
+    rm -rf /tmp/pie
+    apk del --no-cache .pie-build-deps
 
     cd /usr/local/etc/php/conf.d
     mv docker-php-ext-opentelemetry.ini docker-php-ext-opentelemetry.disabled

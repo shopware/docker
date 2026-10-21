@@ -1,22 +1,5 @@
 #syntax=docker/dockerfile:1.4
 
-FROM base AS amqpinstall
-
-RUN <<EOF
-    set -e
-
-    apk add --no-cache $PHPIZE_DEPS git patch rabbitmq-c-dev curl
-    git clone https://github.com/php-amqp/php-amqp /tmp/php-amqp
-    cd /tmp/php-amqp
-    git reset --hard 3618db5f781aa3d371b630c666bc90845d7c77d4
-    curl -L https://patch-diff.githubusercontent.com/raw/php-amqp/php-amqp/pull/595.patch | patch -p1
-    phpize
-    ./configure
-    make -j"$(nproc)"
-    make install
-    echo 'extension=amqp.so' > /usr/local/etc/php/conf.d/docker-php-ext-amqp.ini
-EOF
-
 FROM base
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
@@ -24,19 +7,29 @@ ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/do
 RUN <<EOF
     set -e
 
-    apk add --no-cache icu-data-full curl jq trurl rabbitmq-c
+    apk add --no-cache icu-data-full curl jq trurl rabbitmq-c zstd-libs lz4-libs liblzf
     apk upgrade --no-cache
     chmod +x /usr/local/bin/install-php-extensions
-    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache redis apcu-5.1.27 zstd-0.15.2 xsl
+    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
+EOF
+
+RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+    set -e
+    export PIE_WORKING_DIRECTORY=/tmp/pie
+    apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip rabbitmq-c-dev zstd-dev lz4-dev liblzf-dev
+    pie install --no-interaction --no-cache --skip-enable-extension phpredis/phpredis --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
+    pie install --no-interaction --no-cache --skip-enable-extension apcu/apcu:5.1.27
+    pie install --no-interaction --no-cache --skip-enable-extension kjdev/zstd:0.15.2
+    pie install --no-interaction --no-cache --skip-enable-extension php-amqp/php-amqp:2.2.0
+    docker-php-ext-enable redis apcu zstd amqp
+    rm -rf /tmp/pie
+    apk del --no-cache .pie-build-deps
     mkdir -p /var/www/html
     mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini"
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
     rm -f /usr/local/etc/php-fpm.d/www.conf
     rm -f /usr/local/etc/php-fpm.d/www.conf.default
 EOF
-
-COPY --from=amqpinstall /usr/local/lib/php/extensions/ /usr/local/lib/php/extensions/
-COPY --from=amqpinstall /usr/local/etc/php/conf.d/ /usr/local/etc/php/conf.d/
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
