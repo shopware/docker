@@ -7,11 +7,64 @@ variable "tagPrefix" {
 }
 
 variable "phpMatrix" {
-    default = [ "8.2.34", "8.3.35", "8.4.26", "8.5.11" ]
+    default = [ "8.2.35", "8.3.36", "8.4.27", "8.5.12" ]
 }
 
 variable "frankenphpMatrix" {
-    default = [ "8.2.34", "8.3.35", "8.4.26", "8.5.11" ]
+    default = [ "8.2.35", "8.3.36", "8.4.27", "8.5.12" ]
+}
+
+variable "phpLibraryRef" {
+    default = "e3eaff845f7a9f7259c31da54dce0320b47a3bbd"
+}
+
+variable "alpineVersion" {
+    default = "3.24"
+}
+
+variable "frankenphpRef" {
+    default = "v1.13.1"
+}
+
+variable "goVersion" {
+    default = "1.27"
+}
+
+# PHP built from source with the upstream docker-library/php Dockerfiles
+
+target "php-fpm-alpine" {
+    name = "php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "https://github.com/docker-library/php.git#${phpLibraryRef}:${substr(php, 0, 3)}/alpine${alpineVersion}/fpm"
+    matrix = {
+        "php" = phpMatrix
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
+}
+
+target "php-zts-trixie" {
+    name = "php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "https://github.com/docker-library/php.git#${phpLibraryRef}:${substr(php, 0, 3)}/trixie/zts"
+    matrix = {
+        "php" = frankenphpMatrix
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
+}
+
+target "frankenphp-upstream" {
+    name = "frankenphp-upstream-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "https://github.com/php/frankenphp.git#${frankenphpRef}"
+    target = "runner"
+    matrix = {
+        "php" = frankenphpMatrix
+    }
+    contexts = {
+        php-base = "target:php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}"
+        golang-base = "docker-image://docker.io/library/golang:${goVersion}-trixie"
+    }
+    args = {
+        "FRANKENPHP_VERSION" = frankenphpRef
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
 }
 
 # Frankenphp
@@ -22,8 +75,8 @@ target "frankenphp" {
     matrix = {
         "php" = frankenphpMatrix
     }
-    args = {
-        "PHP_VERSION" = php
+    contexts = {
+        base = "target:frankenphp-upstream-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -69,7 +122,7 @@ target "fpm" {
         "php" = phpMatrix
     }
     contexts = {
-        base = "docker-image://docker.io/library/php:${php}-fpm-alpine"
+        base = "target:php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
