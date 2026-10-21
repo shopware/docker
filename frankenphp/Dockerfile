@@ -1,8 +1,7 @@
 #syntax=docker/dockerfile:1.4
 #check=skip=SecretsUsedInArgOrEnv
 
-ARG PHP_VERSION=8.4
-FROM dunglas/frankenphp:php${PHP_VERSION}
+FROM base
 
 RUN <<EOF
     set -e
