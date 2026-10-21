@@ -8,7 +8,24 @@ RUN <<EOF
     set -e
     apt-get update
     apt-get upgrade -y
-    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache redis apcu php-amqp/php-amqp@977449987412a3d5c59a036dbab8b6d67764bb3e zstd xsl
+    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
+EOF
+
+RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+    set -e
+    export PIE_WORKING_DIRECTORY=/tmp/pie
+    apt-get update
+    savedAptMark=$(apt-mark showmanual)
+    apt-get install -y --no-install-recommends $PHPIZE_DEPS libtool unzip librabbitmq-dev libzstd-dev liblz4-dev liblzf-dev
+    pie install --no-interaction --no-cache --skip-enable-extension phpredis/phpredis --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
+    pie install --no-interaction --no-cache --skip-enable-extension apcu/apcu
+    pie install --no-interaction --no-cache --skip-enable-extension kjdev/zstd
+    pie install --no-interaction --no-cache --skip-enable-extension php-amqp/php-amqp:2.2.0
+    docker-php-ext-enable redis apcu zstd amqp
+    rm -rf /tmp/pie
+    apt-mark auto '.*' > /dev/null
+    apt-mark manual $savedAptMark librabbitmq4 libzstd1 liblz4-1 liblzf1
+    apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
     mkdir -p /var/www/html
     usermod -u 82 www-data
     groupmod -g 82 www-data

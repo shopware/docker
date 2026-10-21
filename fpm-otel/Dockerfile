@@ -16,6 +16,14 @@ RUN apk add --no-cache git grpc-cpp grpc-dev $PHPIZE_DEPS && \
     apk del --no-cache git grpc-dev $PHPIZE_DEPS && \
     echo "extension=grpc.so" > /usr/local/etc/php/conf.d/grpc.ini
 
-RUN install-php-extensions opentelemetry
+RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+    set -e
+    export PIE_WORKING_DIRECTORY=/tmp/pie
+    apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip
+    pie install --no-interaction --no-cache --skip-enable-extension open-telemetry/ext-opentelemetry
+    docker-php-ext-enable opentelemetry
+    rm -rf /tmp/pie
+    apk del --no-cache .pie-build-deps
+EOF
 
 USER www-data
