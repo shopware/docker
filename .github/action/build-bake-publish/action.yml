@@ -63,7 +63,7 @@ runs:
         imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
 
-    # These targets consume the base images published by the previous step.
+    # Derived targets reuse internal build stages, excluding the final OS upgrade.
     - name: Build and push OpenTelemetry and webserver images
       uses: docker/bake-action@v7.5.0
       with:

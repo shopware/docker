@@ -21,8 +21,31 @@ FPM targets include `fpm`, `fpm-otel`, `caddy`, `caddy-otel`, `nginx`,
 `nginx-otel`, `caddy-dev` and `nginx-dev`. FrankenPHP targets are `frankenphp`
 and `frankenphp-otel`. Add `--print` to inspect the build configuration.
 
-Derived images use published base images. When changing a base image, build and
-push it before building its dependents, as the CI workflows do.
+Derived images use internal Bake targets that select the Dockerfiles' `build`
+stages. Bake builds these dependencies automatically; publishing base images first
+is not required. Internal `*-build` targets are not published.
+
+Every published image ends with a `runtime` stage that upgrades installed OS
+packages using `apk upgrade` or `apt-get upgrade --with-new-pkgs`. Bake passes the
+current UTC date as `OS_PACKAGES_REFRESH`, refreshing this layer once per day while
+reusing the PHP, gRPC and other extension compilation layers. Derived images use
+the stages before this upgrade, so a daily refresh does not invalidate their
+compilation cache either. Changes to other build inputs can still rebuild these
+layers.
+
+To force another package refresh on the same day, override `osPackagesRefresh`:
+
+```sh
+osPackagesRefresh="$(date -u +%Y-%m-%d)-2" phpMinor=8.4 \
+    docker buildx bake -f docker-bake.hcl -f docker-bake.fpm.hcl fpm
+```
+
+When invoking `docker buildx build` directly, pass
+`--build-arg OS_PACKAGES_REFRESH="$(date -u +%Y-%m-%d)"` explicitly. OS upgrades
+add replacement files over the cached layers, increasing image size. They do not
+update source-built PHP/extensions or libraries statically linked into them;
+those still require rebuilding their compilation stages. Compiled extensions must
+remain compatible with upgraded runtime libraries.
 
 The FPM and FrankenPHP workflows build independently when their files change.
 Changes to shared Bake settings or the publishing action trigger both families.
@@ -42,8 +65,8 @@ phpMinor=8.4 docker buildx bake -f docker-bake.hcl -f docker-bake.frankenphp.hcl
 
 CI uses the shared `.github/action/build-bake-publish` composite action, rather than
 reusable workflows. Each PHP minor runs in a single job, setting up Namespace's
-remote builder once with layer caching enabled. Sequential Bake steps publish base
-images before their dependents, grouping independent targets together. Both CPU
+remote builder once with layer caching enabled. Sequential Bake steps publish each
+image group, reusing internal build stages across steps. Both CPU
 architectures and dev Node variants stay together in Bake. Tags and registry
 destinations come directly from the Bake files. The FPM job also runs the existing
 checks for the applicable PHP minor, sharing application smoke-test steps through

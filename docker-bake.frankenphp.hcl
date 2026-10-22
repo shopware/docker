@@ -41,6 +41,7 @@ target "frankenphp-upstream" {
 # Frankenphp
 
 target "frankenphp" {
+    inherits = [ "_package-refresh" ]
     name = "frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./frankenphp"
     matrix = {
@@ -63,13 +64,14 @@ target "frankenphp" {
 }
 
 target "frankenphp-otel" {
+    inherits = [ "_package-refresh" ]
     name = "frankenphp-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./frankenphp-otel"
     matrix = {
         "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-frankenphp"
+        base = "target:frankenphp-build-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -82,4 +84,19 @@ target "frankenphp-otel" {
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-frankenphp-otel",
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-frankenphp-otel"
     ]
+}
+
+# Internal stages exclude the daily upgrade and are never published.
+
+target "frankenphp-build" {
+    name = "frankenphp-build-${replace(substr(php, 0, 3), ".", "-")}"
+    matrix = {
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    inherits = [ "frankenphp-${replace(substr(php, 0, 3), ".", "-")}" ]
+    target = "build"
+    tags = []
+    args = {
+        OS_PACKAGES_REFRESH = ""
+    }
 }

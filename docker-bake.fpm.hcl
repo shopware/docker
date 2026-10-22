@@ -20,6 +20,7 @@ target "php-fpm-alpine" {
 # FPM
 
 target "fpm" {
+    inherits = [ "_package-refresh" ]
     name = "fpm-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./fpm"
     matrix = {
@@ -42,13 +43,14 @@ target "fpm" {
 }
 
 target "fpm-otel" {
+    inherits = [ "_package-refresh" ]
     name = "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./fpm-otel"
     matrix = {
         "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+        base = "target:fpm-build-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -66,13 +68,14 @@ target "fpm-otel" {
 # Caddy
 
 target "caddy" {
+    inherits = [ "_package-refresh" ]
     name = "caddy-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./caddy"
     matrix = {
         "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+        base = "target:fpm-build-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -88,13 +91,14 @@ target "caddy" {
 }
 
 target "caddy-otel" {
+    inherits = [ "_package-refresh" ]
     name = "caddy-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./caddy"
     matrix = {
         "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
+        base = "target:fpm-otel-build-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -110,6 +114,7 @@ target "caddy-otel" {
 }
 
 target "caddy-dev" {
+    inherits = [ "_package-refresh" ]
     name = "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
@@ -117,7 +122,7 @@ target "caddy-dev" {
         "node" = [ "22", "24" ]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy-otel"
+        base = "target:caddy-otel-build-${replace(substr(php, 0, 3), ".", "-")}"
     }
     args = {
         "NODE_VERSION" = node
@@ -132,13 +137,14 @@ target "caddy-dev" {
 # Nginx
 
 target "nginx" {
+    inherits = [ "_package-refresh" ]
     name = "nginx-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./nginx"
     matrix = {
         "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+        base = "target:fpm-build-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -154,13 +160,14 @@ target "nginx" {
 }
 
 target "nginx-otel" {
+    inherits = [ "_package-refresh" ]
     name = "nginx-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./nginx"
     matrix = {
         "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
+        base = "target:fpm-otel-build-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -176,6 +183,7 @@ target "nginx-otel" {
 }
 
 target "nginx-dev" {
+    inherits = [ "_package-refresh" ]
     name = "nginx-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
@@ -183,7 +191,7 @@ target "nginx-dev" {
         "node" = [ "22", "24" ]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx-otel"
+        base = "target:nginx-otel-build-${replace(substr(php, 0, 3), ".", "-")}"
     }
     args = {
         "NODE_VERSION" = node
@@ -193,4 +201,58 @@ target "nginx-dev" {
         "ghcr.io/shopware/docker-dev${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-node${node}-nginx",
         "ghcr.io/shopware/docker-dev${imageSuffix}:${tagPrefix}php${php}-node${node}-nginx"
     ]
+}
+
+# Internal stages exclude the daily upgrade and are never published.
+
+target "fpm-build" {
+    name = "fpm-build-${replace(substr(php, 0, 3), ".", "-")}"
+    matrix = {
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    inherits = [ "fpm-${replace(substr(php, 0, 3), ".", "-")}" ]
+    target = "build"
+    tags = []
+    args = {
+        OS_PACKAGES_REFRESH = ""
+    }
+}
+
+target "fpm-otel-build" {
+    name = "fpm-otel-build-${replace(substr(php, 0, 3), ".", "-")}"
+    matrix = {
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    inherits = [ "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}" ]
+    target = "build"
+    tags = []
+    args = {
+        OS_PACKAGES_REFRESH = ""
+    }
+}
+
+target "caddy-otel-build" {
+    name = "caddy-otel-build-${replace(substr(php, 0, 3), ".", "-")}"
+    matrix = {
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    inherits = [ "caddy-otel-${replace(substr(php, 0, 3), ".", "-")}" ]
+    target = "build"
+    tags = []
+    args = {
+        OS_PACKAGES_REFRESH = ""
+    }
+}
+
+target "nginx-otel-build" {
+    name = "nginx-otel-build-${replace(substr(php, 0, 3), ".", "-")}"
+    matrix = {
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    inherits = [ "nginx-otel-${replace(substr(php, 0, 3), ".", "-")}" ]
+    target = "build"
+    tags = []
+    args = {
+        OS_PACKAGES_REFRESH = ""
+    }
 }

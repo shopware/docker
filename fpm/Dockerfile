@@ -1,6 +1,6 @@
 #syntax=docker/dockerfile:1
 
-FROM base
+FROM base AS build
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
@@ -8,7 +8,6 @@ RUN <<EOF
     set -e
 
     apk add --no-cache icu-data-full curl jq trurl rabbitmq-c zstd-libs lz4-libs liblzf
-    apk upgrade --no-cache
     chmod +x /usr/local/bin/install-php-extensions
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
 EOF
@@ -81,3 +80,13 @@ USER www-data
 COPY --link rootfs /
 
 WORKDIR /var/www/html
+
+# Derived images use the build stage so this refresh cannot invalidate compilation.
+FROM build AS runtime
+
+USER root
+ARG OS_PACKAGES_REFRESH
+RUN echo "Refreshing OS packages: ${OS_PACKAGES_REFRESH}" \
+    && apk upgrade --no-cache
+
+USER www-data

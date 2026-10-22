@@ -1,12 +1,11 @@
 #syntax=docker/dockerfile:1
 #check=skip=SecretsUsedInArgOrEnv
 
-FROM base
+FROM base AS build
 
 RUN <<EOF
     set -e
     apt-get update
-    apt-get upgrade -y
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
 EOF
 
@@ -76,3 +75,15 @@ WORKDIR /var/www/html
 EXPOSE 8000
 
 CMD ["--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"]
+
+# Derived images use the build stage so this refresh cannot invalidate compilation.
+FROM build AS runtime
+
+USER root
+ARG OS_PACKAGES_REFRESH
+RUN echo "Refreshing OS packages: ${OS_PACKAGES_REFRESH}" \
+    && apt-get update \
+    && apt-get upgrade --with-new-pkgs -y \
+    && rm -rf /var/lib/apt/lists/*
+
+USER www-data
