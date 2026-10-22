@@ -8,52 +8,27 @@ on:
         required: true
         type: string
 
-env:
-  DOCKER_BUILDKIT: 1
-  COSIGN_EXPERIMENTAL: 1
-
 permissions:
-  contents: write
+  contents: read
   id-token: write
   packages: write
-  pull-requests: write
 
 jobs:
   frankenphp:
     name: FrankenPHP
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Build
-        uses: ./.github/action/build-bake-publish
-        with:
-          php-version: ${{ inputs.php-version }}
-          files: |
-            docker-bake.hcl
-            docker-bake.frankenphp.hcl
-          targets: frankenphp
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/build-image.yml
+    with:
+      family: frankenphp
+      php-version: ${{ inputs.php-version }}
+      target: frankenphp
+    secrets: inherit
 
   frankenphp-otel:
     name: FrankenPHP with OpenTelemetry
-    runs-on: namespace-profile-default
     needs: [frankenphp]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Build
-        uses: ./.github/action/build-bake-publish
-        with:
-          php-version: ${{ inputs.php-version }}
-          files: |
-            docker-bake.hcl
-            docker-bake.frankenphp.hcl
-          targets: frankenphp-otel
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    uses: ./.github/workflows/build-image.yml
+    with:
+      family: frankenphp
+      php-version: ${{ inputs.php-version }}
+      target: frankenphp-otel
+    secrets: inherit
