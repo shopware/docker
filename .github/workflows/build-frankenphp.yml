@@ -8,6 +8,7 @@ on:
       - 'docker-bake.hcl'
       - 'docker-bake.frankenphp.hcl'
       - '.github/workflows/build-frankenphp.yml'
+      - '.github/workflows/build-frankenphp-version.yml'
       - '.github/action/build-bake-publish/**'
       - 'frankenphp/**'
       - 'frankenphp-otel/**'
@@ -16,6 +17,7 @@ on:
       - 'docker-bake.hcl'
       - 'docker-bake.frankenphp.hcl'
       - '.github/workflows/build-frankenphp.yml'
+      - '.github/workflows/build-frankenphp-version.yml'
       - '.github/action/build-bake-publish/**'
       - 'frankenphp/**'
       - 'frankenphp-otel/**'
@@ -26,10 +28,6 @@ concurrency:
   group: "${{ github.workflow }}-${{ github.ref }}"
   cancel-in-progress: true
 
-env:
-  DOCKER_BUILDKIT: 1
-  COSIGN_EXPERIMENTAL: 1
-
 permissions:
   contents: write
   id-token: write
@@ -37,39 +35,32 @@ permissions:
   pull-requests: write
 
 jobs:
-  frankenphp:
-    name: FrankenPHP
+  prepare:
+    name: PHP versions
     runs-on: ubuntu-latest
+    outputs:
+      versions: ${{ steps.php-versions.outputs.versions }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Build
-        uses: ./.github/action/build-bake-publish
-        with:
-          files: |
-            docker-bake.hcl
-            docker-bake.frankenphp.hcl
-          targets: frankenphp
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
 
-  frankenphp-otel:
-    name: FrankenPHP with OpenTelemetry
-    runs-on: namespace-profile-default
-    needs: [frankenphp]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
+      - name: Read PHP versions from Bake
+        id: php-versions
+        run: |
+          versions=$(docker buildx bake -f docker-bake.hcl -f docker-bake.frankenphp.hcl --print frankenphp | jq -c '.group["frankenphp"].targets | map(ltrimstr("frankenphp-") | gsub("-"; "."))')
+          echo "versions=$versions" >> "$GITHUB_OUTPUT"
 
-      - name: Build
-        uses: ./.github/action/build-bake-publish
-        with:
-          files: |
-            docker-bake.hcl
-            docker-bake.frankenphp.hcl
-          targets: frankenphp-otel
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+  build:
+    name: PHP ${{ matrix.php-version }}
+    needs: [prepare]
+    strategy:
+      fail-fast: false
+      matrix:
+        php-version: ${{ fromJSON(needs.prepare.outputs.versions) }}
+    uses: ./.github/workflows/build-frankenphp-version.yml
+    with:
+      php-version: ${{ matrix.php-version }}
+    secrets: inherit

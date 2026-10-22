@@ -16,7 +16,7 @@ target "php-zts-trixie" {
     name = "php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}"
     context = "https://github.com/docker-library/php.git#${phpLibraryRef}:${substr(php, 0, 3)}/trixie/zts"
     matrix = {
-        "php" = frankenphpMatrix
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
 }
@@ -26,7 +26,7 @@ target "frankenphp-upstream" {
     context = "https://github.com/php/frankenphp.git#${frankenphpRef}"
     target = "runner"
     matrix = {
-        "php" = frankenphpMatrix
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         php-base = "target:php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}"
@@ -44,7 +44,7 @@ target "frankenphp" {
     name = "frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./frankenphp"
     matrix = {
-        "php" = frankenphpMatrix
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         base = "target:frankenphp-upstream-${replace(substr(php, 0, 3), ".", "-")}"
@@ -66,7 +66,7 @@ target "frankenphp-otel" {
     name = "frankenphp-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./frankenphp-otel"
     matrix = {
-        "php" = frankenphpMatrix
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-frankenphp"

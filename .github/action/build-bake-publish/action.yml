@@ -1,6 +1,9 @@
 name: 'Build and Publish'
 description: 'Builds Image and pushes'
 inputs:
+  php-version:
+    description: 'PHP minor version to build'
+    required: true
   files:
     description: 'Bake files to load'
     required: true
@@ -40,9 +43,9 @@ runs:
         push: true
         files: ${{ inputs.files }}
         targets: ${{ inputs.targets }}
-        no-cache: true
       env:
         DOCKER_BUILD_RECORD_UPLOAD: false
         DOCKER_BUILD_SUMMARY: false
+        phpMinor: ${{ inputs.php-version }}
         imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}

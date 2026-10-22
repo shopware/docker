@@ -12,7 +12,7 @@ target "php-fpm-alpine" {
     name = "php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
     context = "https://github.com/docker-library/php.git#${phpLibraryRef}:${substr(php, 0, 3)}/alpine${alpineVersion}/fpm"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
 }
@@ -23,7 +23,7 @@ target "fpm" {
     name = "fpm-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./fpm"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         base = "target:php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
@@ -45,7 +45,7 @@ target "fpm-otel" {
     name = "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./fpm-otel"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
@@ -69,7 +69,7 @@ target "caddy" {
     name = "caddy-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./caddy"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
@@ -91,7 +91,7 @@ target "caddy-otel" {
     name = "caddy-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./caddy"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
@@ -113,7 +113,7 @@ target "caddy-dev" {
     name = "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = phpMatrix
+        "php"  = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
         "node" = [ "22", "24" ]
     }
     contexts = {
@@ -135,7 +135,7 @@ target "nginx" {
     name = "nginx-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./nginx"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
@@ -157,7 +157,7 @@ target "nginx-otel" {
     name = "nginx-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./nginx"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
@@ -179,7 +179,7 @@ target "nginx-dev" {
     name = "nginx-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = phpMatrix
+        "php"  = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
         "node" = [ "22", "24" ]
     }
     contexts = {

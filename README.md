@@ -27,3 +27,15 @@ push it before building its dependents, as the CI workflows do.
 The FPM and FrankenPHP workflows build independently when their files change.
 Changes to shared Bake settings or the publishing action trigger both families.
 Both workflows also support manual runs and daily rebuilds.
+
+Each workflow derives its PHP minor-version matrix from Bake and runs an independent
+build chain per minor version. Failures in one PHP version do not block the others.
+Both CPU architectures remain in each build. The existing application smoke tests
+run on PHP 8.3, and the dev image check runs on PHP 8.4.
+
+To build only one PHP minor version locally:
+
+```sh
+phpMinor=8.4 docker buildx bake -f docker-bake.hcl -f docker-bake.fpm.hcl fpm
+phpMinor=8.4 docker buildx bake -f docker-bake.hcl -f docker-bake.frankenphp.hcl frankenphp
+```
