@@ -8,7 +8,6 @@ on:
       - 'docker-bake.hcl'
       - 'docker-bake.frankenphp.hcl'
       - '.github/workflows/build-frankenphp.yml'
-      - '.github/workflows/build-frankenphp-version.yml'
       - '.github/action/build-bake-publish/**'
       - 'frankenphp/**'
       - 'frankenphp-otel/**'
@@ -17,7 +16,6 @@ on:
       - 'docker-bake.hcl'
       - 'docker-bake.frankenphp.hcl'
       - '.github/workflows/build-frankenphp.yml'
-      - '.github/workflows/build-frankenphp-version.yml'
       - '.github/action/build-bake-publish/**'
       - 'frankenphp/**'
       - 'frankenphp-otel/**'
@@ -36,15 +34,15 @@ permissions:
 jobs:
   prepare:
     name: PHP versions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       versions: ${{ steps.php-versions.outputs.versions }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@v4.4.1
 
       - name: Read PHP versions from Bake
         id: php-versions
@@ -55,11 +53,20 @@ jobs:
   build:
     name: PHP ${{ matrix.php-version }}
     needs: [prepare]
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
         php-version: ${{ fromJSON(needs.prepare.outputs.versions) }}
-    uses: ./.github/workflows/build-frankenphp-version.yml
-    with:
-      php-version: ${{ matrix.php-version }}
-    secrets: inherit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Build and publish FrankenPHP images
+        uses: $/.github/action/build-bake-publish
+        with:
+          php-version: ${{ matrix.php-version }}
+          family: frankenphp
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}

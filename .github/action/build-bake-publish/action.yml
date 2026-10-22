@@ -1,16 +1,12 @@
 name: 'Build and Publish'
-description: 'Builds Image and pushes'
+description: 'Builds and publishes one PHP minor image family using Namespace'
 inputs:
   php-version:
     description: 'PHP minor version to build'
     required: true
-  files:
-    description: 'Bake files to load'
+  family:
+    description: 'Image family: fpm or frankenphp'
     required: true
-  targets:
-    description: 'Targets'
-    required: true
-    default: ''
   docker_hub_username:
     description: 'Docker Hub username'
     required: true
@@ -23,26 +19,91 @@ inputs:
 runs:
   using: "composite"
   steps:
+    - name: Validate image family
+      shell: bash
+      env:
+        FAMILY: ${{ inputs.family }}
+      run: |
+        case "$FAMILY" in
+          fpm|frankenphp) ;;
+          *) echo "Unsupported image family: $FAMILY" >&2; exit 1 ;;
+        esac
+
     - name: Install and configure Namespace CLI
-      uses: namespacelabs/nscloud-setup@v0
+      uses: namespacelabs/nscloud-setup@v0.0.12
 
     - name: Configure Namespace powered Buildx
-      uses: namespacelabs/nscloud-setup-buildx-action@v0
+      uses: namespacelabs/nscloud-setup-buildx-action@v0.0.23
 
     - name: Login into Docker Hub
       shell: bash
-      run: echo "${{ inputs.docker_hub_password }}" | docker login -u ${{ inputs.docker_hub_username }} --password-stdin
+      env:
+        DOCKER_HUB_USERNAME: ${{ inputs.docker_hub_username }}
+        DOCKER_HUB_PASSWORD: ${{ inputs.docker_hub_password }}
+      run: printf '%s' "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
 
     - name: Login into Github Docker Registry
       shell: bash
-      run: echo "${{ inputs.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
+      env:
+        GH_TOKEN: ${{ inputs.github_token }}
+      run: printf '%s' "$GH_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin
 
-    - name: Build and push
-      uses: docker/bake-action@v6
+    - name: Build and push base images
+      uses: docker/bake-action@v7.5.0
       with:
         push: true
-        files: ${{ inputs.files }}
-        targets: ${{ inputs.targets }}
+        files: |
+          docker-bake.hcl
+          docker-bake.${{ inputs.family }}.hcl
+        targets: ${{ inputs.family }}
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: false
+        DOCKER_BUILD_SUMMARY: false
+        phpMinor: ${{ inputs.php-version }}
+        imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
+
+    # These targets consume the base images published by the previous step.
+    - name: Build and push OpenTelemetry and webserver images
+      uses: docker/bake-action@v7.5.0
+      with:
+        push: true
+        files: |
+          docker-bake.hcl
+          docker-bake.${{ inputs.family }}.hcl
+        targets: ${{ inputs.family == 'fpm' && 'fpm-otel,caddy,nginx' || 'frankenphp-otel' }}
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: false
+        DOCKER_BUILD_SUMMARY: false
+        phpMinor: ${{ inputs.php-version }}
+        imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
+
+    - name: Build and push OpenTelemetry webserver images
+      if: inputs.family == 'fpm'
+      uses: docker/bake-action@v7.5.0
+      with:
+        push: true
+        files: |
+          docker-bake.hcl
+          docker-bake.fpm.hcl
+        targets: caddy-otel,nginx-otel
+      env:
+        DOCKER_BUILD_RECORD_UPLOAD: false
+        DOCKER_BUILD_SUMMARY: false
+        phpMinor: ${{ inputs.php-version }}
+        imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
+
+    - name: Build and push dev images
+      if: inputs.family == 'fpm'
+      uses: docker/bake-action@v7.5.0
+      with:
+        push: true
+        files: |
+          docker-bake.hcl
+          docker-bake.fpm.hcl
+        targets: caddy-dev,nginx-dev
       env:
         DOCKER_BUILD_RECORD_UPLOAD: false
         DOCKER_BUILD_SUMMARY: false

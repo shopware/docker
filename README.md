@@ -40,7 +40,11 @@ phpMinor=8.4 docker buildx bake -f docker-bake.hcl -f docker-bake.fpm.hcl fpm
 phpMinor=8.4 docker buildx bake -f docker-bake.hcl -f docker-bake.frankenphp.hcl frankenphp
 ```
 
-CI uses the shared `.github/action/build-bake-publish` action to submit each Bake
-build to Namespace's remote builder, with layer caching enabled. Both architectures
-are built in one job; dev targets also build their Node variants together using
-the Bake matrix. Tags and registry destinations come directly from the Bake files.
+CI uses the shared `.github/action/build-bake-publish` composite action, rather than
+reusable workflows. Each PHP minor runs in a single job, setting up Namespace's
+remote builder once with layer caching enabled. Sequential Bake steps publish base
+images before their dependents, grouping independent targets together. Both CPU
+architectures and dev Node variants stay together in Bake. Tags and registry
+destinations come directly from the Bake files. The FPM job also runs the existing
+checks for the applicable PHP minor, sharing application smoke-test steps through
+`.github/action/test-webserver`.

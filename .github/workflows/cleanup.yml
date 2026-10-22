@@ -9,10 +9,10 @@ permissions:
 jobs:
   cleanup:
     name: Cleanup GHCR
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Cleanup GHCR
-        uses: dataaxiom/ghcr-cleanup-action@d52806a0dc70b430571a37da1fde39733ffd640f # ratchet:dataaxiom/ghcr-cleanup-action@v1
+        uses: dataaxiom/ghcr-cleanup-action@v1.2.2
         with:
           packages: docker-base-ci-test,docker-dev-ci-test,demo-ci-test
           older-than: 1 day

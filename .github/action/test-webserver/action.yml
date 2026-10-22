@@ -1,0 +1,53 @@
+name: Test webserver image
+description: Run the example Shopware application against a published image
+inputs:
+  php-version:
+    description: PHP minor version to test
+    required: true
+  webserver:
+    description: Webserver to test
+    required: true
+runs:
+  using: composite
+  steps:
+    # Application containers run on this runner, not the remote Namespace builder.
+    - name: Set up local Docker Buildx
+      uses: docker/setup-buildx-action@v4.4.1
+
+    - name: Checkout example repository
+      uses: actions/checkout@v7.0.1
+      with:
+        repository: shopwareLabs/example-docker-repository
+        path: .smoke-test
+
+    - name: Build and test application
+      shell: bash
+      working-directory: .smoke-test
+      env:
+        BASE_IMAGE: ghcr.io/shopware/docker-base${{ github.event_name == 'pull_request' && '-ci-test' || '' }}:${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}${{ inputs.php-version }}-${{ inputs.webserver }}
+      run: |
+        # Always collect logs and remove test containers/volumes before the next server.
+        cleanup() {
+          set +e
+          docker compose -p image-smoke-test logs
+          docker compose -p image-smoke-test down --volumes
+        }
+        trap cleanup EXIT
+
+        docker compose -p image-smoke-test build --build-arg BASE_IMAGE="$BASE_IMAGE"
+        docker compose -p image-smoke-test up -d --wait
+
+        attempt_counter=0
+        max_attempts=5
+        until curl --output /dev/null --silent --head --fail localhost:8000/admin; do
+          if [ "$attempt_counter" -eq "$max_attempts" ]; then
+            echo "Max attempts reached"
+            exit 1
+          fi
+          printf '.'
+          attempt_counter=$((attempt_counter+1))
+          sleep 5
+        done
+
+        curl --fail localhost:8000/admin
+        curl --fail localhost:8000

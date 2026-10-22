@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   update-php-matrix:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Generate GitHub token via octo-sts
         id: generate-token
@@ -22,7 +22,7 @@ jobs:
           identity: update-php-matrix
 
       - name: Checkout repository
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
         with:
           token: ${{ steps.generate-token.outputs.token }}
 
@@ -43,7 +43,7 @@ jobs:
 
       - name: Create Pull Request
         if: steps.changes.outputs.changed == 'true'
-        uses: peter-evans/create-pull-request@v8
+        uses: peter-evans/create-pull-request@v8.1.1
         with:
           token: ${{ steps.generate-token.outputs.token }}
           commit-message: 'chore: update PHP matrix to latest patch versions'

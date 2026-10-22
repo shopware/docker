@@ -8,7 +8,7 @@ on:
       - 'docker-bake.hcl'
       - 'docker-bake.fpm.hcl'
       - '.github/workflows/build-fpm.yml'
-      - '.github/workflows/build-fpm-version.yml'
+      - '.github/action/test-webserver/**'
       - '.github/action/build-bake-publish/**'
       - 'fpm/**'
       - 'fpm-otel/**'
@@ -20,7 +20,7 @@ on:
       - 'docker-bake.hcl'
       - 'docker-bake.fpm.hcl'
       - '.github/workflows/build-fpm.yml'
-      - '.github/workflows/build-fpm-version.yml'
+      - '.github/action/test-webserver/**'
       - '.github/action/build-bake-publish/**'
       - 'fpm/**'
       - 'fpm-otel/**'
@@ -42,15 +42,15 @@ permissions:
 jobs:
   prepare:
     name: PHP versions
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       versions: ${{ steps.php-versions.outputs.versions }}
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v4
+        uses: docker/setup-buildx-action@v4.4.1
 
       - name: Read PHP versions from Bake
         id: php-versions
@@ -61,11 +61,51 @@ jobs:
   build:
     name: PHP ${{ matrix.php-version }}
     needs: [prepare]
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:
         php-version: ${{ fromJSON(needs.prepare.outputs.versions) }}
-    uses: ./.github/workflows/build-fpm-version.yml
-    with:
-      php-version: ${{ matrix.php-version }}
-    secrets: inherit
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7.0.1
+
+      - name: Build and publish FPM images
+        uses: $/.github/action/build-bake-publish
+        with:
+          php-version: ${{ matrix.php-version }}
+          family: fpm
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Test Caddy image
+        if: matrix.php-version == '8.3'
+        uses: $/.github/action/test-webserver
+        with:
+          php-version: ${{ matrix.php-version }}
+          webserver: caddy
+
+      - name: Test Nginx image
+        if: matrix.php-version == '8.3'
+        uses: $/.github/action/test-webserver
+        with:
+          php-version: ${{ matrix.php-version }}
+          webserver: nginx
+
+      - name: Install container structure test
+        if: matrix.php-version == '8.4'
+        uses: jaxxstorm/action-install-gh-release@v3.0.0
+        with:
+          repo: GoogleContainerTools/container-structure-test
+          extension-matching: disable
+          rename-to: container-structure-test
+          chmod: 0755
+
+      - name: Test dev image
+        if: matrix.php-version == '8.4'
+        env:
+          IMAGE_TAG: ghcr.io/shopware/docker-dev${{ github.event_name == 'pull_request' && '-ci-test' || '' }}:${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}php${{ matrix.php-version }}-node24-caddy
+        run: |
+          docker pull "$IMAGE_TAG"
+          container-structure-test test --config dev/config.yaml --image "$IMAGE_TAG"
