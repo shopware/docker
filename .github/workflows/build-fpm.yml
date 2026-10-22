@@ -9,8 +9,7 @@ on:
       - 'docker-bake.fpm.hcl'
       - '.github/workflows/build-fpm.yml'
       - '.github/workflows/build-fpm-version.yml'
-      - '.github/workflows/build-image.yml'
-      - '.github/scripts/bake-metadata*.mjs'
+      - '.github/action/build-bake-publish/**'
       - 'fpm/**'
       - 'fpm-otel/**'
       - 'caddy/**'
@@ -22,8 +21,7 @@ on:
       - 'docker-bake.fpm.hcl'
       - '.github/workflows/build-fpm.yml'
       - '.github/workflows/build-fpm-version.yml'
-      - '.github/workflows/build-image.yml'
-      - '.github/scripts/bake-metadata*.mjs'
+      - '.github/action/build-bake-publish/**'
       - 'fpm/**'
       - 'fpm-otel/**'
       - 'caddy/**'
@@ -53,9 +51,6 @@ jobs:
 
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
-
-      - name: Test Bake metadata conversion
-        run: node --test .github/scripts/bake-metadata.test.mjs
 
       - name: Read PHP versions from Bake
         id: php-versions

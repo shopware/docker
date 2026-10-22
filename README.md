@@ -25,14 +25,12 @@ Derived images use published base images. When changing a base image, build and
 push it before building its dependents, as the CI workflows do.
 
 The FPM and FrankenPHP workflows build independently when their files change.
-Changes to shared Bake settings, the publishing workflow or metadata script trigger both families.
+Changes to shared Bake settings or the publishing action trigger both families.
 Both workflows also support manual runs and daily rebuilds.
 
 Each workflow derives its PHP minor-version matrix from Bake and runs an independent
 build chain per minor version. Failures in one PHP version do not block the others.
-Each image is built natively on GitHub-hosted AMD64 and ARM64 runners, then published
-as a multi-platform image. Dev images are also split by Node version, with their
-targets derived from Bake. The existing application smoke tests
+Both CPU architectures remain in each build. The existing application smoke tests
 run on PHP 8.3, and the dev image check runs on PHP 8.4.
 
 To build only one PHP minor version locally:
@@ -42,20 +40,7 @@ phpMinor=8.4 docker buildx bake -f docker-bake.hcl -f docker-bake.fpm.hcl fpm
 phpMinor=8.4 docker buildx bake -f docker-bake.hcl -f docker-bake.frankenphp.hcl frankenphp
 ```
 
-CI delegates builds to a pinned revision of
-[Docker GitHub Builder](https://github.com/docker/github-builder), through
-`.github/workflows/build-image.yml`. It enables GitHub Actions layer caching in
-`max` mode, SBOM generation and signed provenance. Cache scopes include the concrete
-target name (variant, PHP minor and, for dev images, Node version); the builder adds
-the CPU platform.
-
-Publishing metadata is derived from the Bake tags, preserving both registries,
-minor/patch tags and PR image names without adding a `latest` tag. Each call builds
-one concrete target, including any `target:` base dependencies. The family workflows
-still order separately published base and dependent images.
-
-To check the publishing metadata conversion locally:
-
-```sh
-node --test .github/scripts/bake-metadata.test.mjs
-```
+CI uses the shared `.github/action/build-bake-publish` action to submit each Bake
+build to Namespace's remote builder, with layer caching enabled. Both architectures
+are built in one job; dev targets also build their Node variants together using
+the Bake matrix. Tags and registry destinations come directly from the Bake files.
