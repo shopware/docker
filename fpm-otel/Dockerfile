@@ -1,6 +1,6 @@
-#syntax=docker/dockerfile:1.4
+#syntax=docker/dockerfile:1
 
-FROM base
+FROM base AS build
 
 USER root
 
@@ -25,5 +25,15 @@ RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin
     rm -rf /tmp/pie
     apk del --no-cache .pie-build-deps
 EOF
+
+USER www-data
+
+# Derived images use the build stage so this refresh cannot invalidate compilation.
+FROM build AS runtime
+
+USER root
+ARG OS_PACKAGES_REFRESH
+RUN echo "Refreshing OS packages: ${OS_PACKAGES_REFRESH}" \
+    && apk upgrade --no-cache
 
 USER www-data

@@ -1,6 +1,6 @@
-#syntax=docker/dockerfile:1.4
+#syntax=docker/dockerfile:1
 
-FROM base
+FROM base AS build
 
 USER root
 
@@ -32,5 +32,17 @@ RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin
     rm -rf /var/cache/apt/archives /var/lib/apt/lists/*
     echo "extension=grpc.so" > /usr/local/etc/php/conf.d/grpc.ini
 EOF
+
+USER www-data
+
+# Derived images use the build stage so this refresh cannot invalidate compilation.
+FROM build AS runtime
+
+USER root
+ARG OS_PACKAGES_REFRESH
+RUN echo "Refreshing OS packages: ${OS_PACKAGES_REFRESH}" \
+    && apt-get update \
+    && apt-get upgrade --with-new-pkgs -y \
+    && rm -rf /var/lib/apt/lists/*
 
 USER www-data

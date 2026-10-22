@@ -2,7 +2,7 @@ ARG NODE_VERSION=22
 
 FROM node:${NODE_VERSION}-alpine AS node
 
-FROM base
+FROM base AS build
 
 ARG NODE_VERSION
 
@@ -68,3 +68,13 @@ ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
 
 ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/usr/bin/supervisord", "-c", "/etc/supervisord.conf" ]
+
+# Derived images use the build stage so this refresh cannot invalidate compilation.
+FROM build AS runtime
+
+USER root
+ARG OS_PACKAGES_REFRESH
+RUN echo "Refreshing OS packages: ${OS_PACKAGES_REFRESH}" \
+    && apk upgrade --no-cache
+
+USER www-data

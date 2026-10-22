@@ -11,19 +11,19 @@ on:
 jobs:
   lint:
     name: Lint Dockerfiles
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - name: Checkout
-        uses: actions/checkout@v7
+        uses: actions/checkout@v7.0.1
 
       - name: Lint FPM
-        uses: hadolint/hadolint-action@master
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: ./fpm/Dockerfile
           ignore: DL3018
 
       - name: Lint Caddy
-        uses: hadolint/hadolint-action@master
+        uses: hadolint/hadolint-action@v3.5.0
         with:
           dockerfile: ./caddy/Dockerfile
           ignore: DL3018

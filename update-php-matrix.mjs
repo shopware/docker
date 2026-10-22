@@ -54,24 +54,29 @@ function replaceVariable(hclContent, name, value) {
     const regex = new RegExp(`(variable "${name}" \\{\\s*default = )(\\[[^\\]]*\\]|"[^"]*")(\\s*\\})`, 's');
 
     if (!regex.test(hclContent)) {
-        throw new Error(`${name} variable not found in docker-bake.hcl`);
+        throw new Error(`${name} variable not found in Bake configuration`);
     }
 
     return hclContent.replace(regex, `$1${value}$3`);
 }
 
-async function updateBakeFile(phpVersions, phpLibraryRef, alpineVersion) {
-    const hclPath = 'docker-bake.hcl';
-    let hclContent = await fs.readFile(hclPath, 'utf8');
-
+async function updateBakeFiles(phpVersions, phpLibraryRef, alpineVersion) {
     const matrix = `[ ${phpVersions.map(v => `"${v}"`).join(', ')} ]`;
-    hclContent = replaceVariable(hclContent, 'phpMatrix', matrix);
-    hclContent = replaceVariable(hclContent, 'frankenphpMatrix', matrix);
-    hclContent = replaceVariable(hclContent, 'phpLibraryRef', `"${phpLibraryRef}"`);
-    hclContent = replaceVariable(hclContent, 'alpineVersion', `"${alpineVersion}"`);
+    const updates = {
+        'docker-bake.hcl': { phpLibraryRef: `"${phpLibraryRef}"` },
+        'docker-bake.fpm.hcl': { phpMatrix: matrix, alpineVersion: `"${alpineVersion}"` },
+        'docker-bake.frankenphp.hcl': { frankenphpMatrix: matrix },
+    };
 
-    await fs.writeFile(hclPath, hclContent);
-    console.log('Successfully updated docker-bake.hcl');
+    for (const [hclPath, variables] of Object.entries(updates)) {
+        let hclContent = await fs.readFile(hclPath, 'utf8');
+        for (const [name, value] of Object.entries(variables)) {
+            hclContent = replaceVariable(hclContent, name, value);
+        }
+
+        await fs.writeFile(hclPath, hclContent);
+        console.log(`Successfully updated ${hclPath}`);
+    }
     console.log('PHP versions:', phpVersions);
     console.log('docker-library/php ref:', phpLibraryRef);
     console.log('Alpine version:', alpineVersion);
@@ -80,4 +85,4 @@ async function updateBakeFile(phpVersions, phpLibraryRef, alpineVersion) {
 const phpLibraryRef = await fetchPhpLibraryRef();
 const versions = await fetchVersions(phpLibraryRef);
 
-await updateBakeFile(getPhpVersions(versions), phpLibraryRef, getLatestAlpineVersion(versions));
+await updateBakeFiles(getPhpVersions(versions), phpLibraryRef, getLatestAlpineVersion(versions));
