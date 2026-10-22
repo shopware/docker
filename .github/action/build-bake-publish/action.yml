@@ -31,9 +31,17 @@ runs:
       shell: bash
       run: echo "${{ inputs.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
+    - name: Prepare PHP sources
+      shell: bash
+      run: node scripts/prepare-php-sources.mjs
+
     - name: Build and push
       uses: docker/bake-action@v6
       with:
+        source: .
+        files: |
+          docker-bake.hcl
+          php-from-source.hcl
         push: true
         targets: ${{ inputs.targets }}
         no-cache: true

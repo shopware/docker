@@ -36,6 +36,8 @@ jobs:
         with:
           files: |
             docker-bake.hcl
+            php-versions.json
+            scripts/**
             frankenphp*/**
 
       - name: Build
@@ -61,6 +63,8 @@ jobs:
         with:
           files: |
             docker-bake.hcl
+            php-versions.json
+            scripts/**
             frankenphp*/**
 
       - name: Build
@@ -85,6 +89,8 @@ jobs:
         with:
           files: |
             docker-bake.hcl
+            php-versions.json
+            scripts/**
             fpm*/**
             nginx/**
             caddy/**
@@ -113,6 +119,8 @@ jobs:
         with:
           files: |
             docker-bake.hcl
+            php-versions.json
+            scripts/**
             fpm*/**
             nginx/**
             caddy/**

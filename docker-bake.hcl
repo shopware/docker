@@ -14,10 +14,6 @@ variable "frankenphpMatrix" {
     default = [ "8.2.35", "8.3.36", "8.4.27", "8.5.12" ]
 }
 
-variable "phpLibraryRef" {
-    default = "e3eaff845f7a9f7259c31da54dce0320b47a3bbd"
-}
-
 variable "alpineVersion" {
     default = "3.24"
 }
@@ -26,15 +22,28 @@ variable "frankenphpRef" {
     default = "v1.13.1"
 }
 
+variable "debianVersion" {
+    default = "trixie"
+}
+
+# Versions without a published official php image, written by scripts/prepare-php-sources.mjs
+variable "phpFromSourceFpm" {
+    default = []
+}
+
+variable "phpFromSourceZts" {
+    default = []
+}
+
 variable "goVersion" {
     default = "1.27"
 }
 
-# PHP built from source with the upstream docker-library/php Dockerfiles
+# PHP from the official images, built from the docker-library/php Dockerfiles (prepared locally) when not yet published
 
 target "php-fpm-alpine" {
     name = "php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "https://github.com/docker-library/php.git#${phpLibraryRef}:${substr(php, 0, 3)}/alpine${alpineVersion}/fpm"
+    context = "./.php-library/${substr(php, 0, 3)}/alpine${alpineVersion}/fpm"
     matrix = {
         "php" = phpMatrix
     }
@@ -43,7 +52,7 @@ target "php-fpm-alpine" {
 
 target "php-zts-trixie" {
     name = "php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "https://github.com/docker-library/php.git#${phpLibraryRef}:${substr(php, 0, 3)}/trixie/zts"
+    context = "./.php-library/${substr(php, 0, 3)}/${debianVersion}/zts"
     matrix = {
         "php" = frankenphpMatrix
     }
@@ -58,8 +67,8 @@ target "frankenphp-upstream" {
         "php" = frankenphpMatrix
     }
     contexts = {
-        php-base = "target:php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}"
-        golang-base = "docker-image://docker.io/library/golang:${goVersion}-trixie"
+        php-base = contains(phpFromSourceZts, php) ? "target:php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}" : "docker-image://docker.io/library/php:${php}-zts-${debianVersion}"
+        golang-base = "docker-image://docker.io/library/golang:${goVersion}-${debianVersion}"
     }
     args = {
         "FRANKENPHP_VERSION" = frankenphpRef
@@ -122,7 +131,7 @@ target "fpm" {
         "php" = phpMatrix
     }
     contexts = {
-        base = "target:php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
+        base = contains(phpFromSourceFpm, php) ? "target:php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}" : "docker-image://docker.io/library/php:${php}-fpm-alpine${alpineVersion}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [

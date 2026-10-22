@@ -1,3 +1,5 @@
 /.idea
 composer.lock
 vendor
+/.php-library
+/php-from-source.hcl
