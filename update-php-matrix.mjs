@@ -75,33 +75,26 @@ function getLatestFrankenphpPatchVersion(apiResponse) {
     return null;
 }
 
-// Function to update the phpMatrix and frankenphpMatrix in docker-bake.hcl
+// Function to update the PHP matrices in the family-specific Bake files
 async function updatePhpMatrixInHcl(phpVersions, frankenphpVersions) {
-    const hclPath = 'docker-bake.hcl';
-    let hclContent = await fs.readFile(hclPath, 'utf8');
+    const updates = [
+        ['docker-bake.fpm.hcl', 'phpMatrix', phpVersions],
+        ['docker-bake.frankenphp.hcl', 'frankenphpMatrix', frankenphpVersions],
+    ];
 
-    // Find the phpMatrix variable and replace its value
-    const phpMatrixRegex = /(variable "phpMatrix" \{\s*default = )(\[[^\]]*\])(\s*\})/s;
-    const newPhpMatrix = `[ ${phpVersions.map(v => `"${v}"`).join(', ')} ]`;
+    for (const [hclPath, name, versions] of updates) {
+        let hclContent = await fs.readFile(hclPath, 'utf8');
+        const regex = new RegExp(`(variable "${name}" \\{\\s*default = )(\\[[^\\]]*\\])(\\s*\\})`, 's');
+        const matrix = `[ ${versions.map(v => `"${v}"`).join(', ')} ]`;
 
-    if (!phpMatrixRegex.test(hclContent)) {
-        throw new Error('phpMatrix variable not found in docker-bake.hcl');
+        if (!regex.test(hclContent)) {
+            throw new Error(`${name} variable not found in ${hclPath}`);
+        }
+
+        hclContent = hclContent.replace(regex, `$1${matrix}$3`);
+        await fs.writeFile(hclPath, hclContent);
+        console.log(`Successfully updated ${name} in ${hclPath}`);
     }
-
-    hclContent = hclContent.replace(phpMatrixRegex, `$1${newPhpMatrix}$3`);
-
-    // Find the frankenphpMatrix variable and replace its value
-    const frankenphpMatrixRegex = /(variable "frankenphpMatrix" \{\s*default = )(\[[^\]]*\])(\s*\})/s;
-    const newFrankenphpMatrix = `[ ${frankenphpVersions.map(v => `"${v}"`).join(', ')} ]`;
-
-    if (!frankenphpMatrixRegex.test(hclContent)) {
-        throw new Error('frankenphpMatrix variable not found in docker-bake.hcl');
-    }
-
-    hclContent = hclContent.replace(frankenphpMatrixRegex, `$1${newFrankenphpMatrix}$3`);
-
-    await fs.writeFile(hclPath, hclContent);
-    console.log('Successfully updated phpMatrix and frankenphpMatrix in docker-bake.hcl');
     console.log('PHP versions:', phpVersions);
     console.log('FrankenPHP versions:', frankenphpVersions);
 }

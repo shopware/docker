@@ -1,0 +1,75 @@
+name: Build FrankenPHP Images
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'docker-bake.hcl'
+      - 'docker-bake.frankenphp.hcl'
+      - '.github/workflows/build-frankenphp.yml'
+      - '.github/action/build-bake-publish/**'
+      - 'frankenphp/**'
+      - 'frankenphp-otel/**'
+  pull_request:
+    paths:
+      - 'docker-bake.hcl'
+      - 'docker-bake.frankenphp.hcl'
+      - '.github/workflows/build-frankenphp.yml'
+      - '.github/action/build-bake-publish/**'
+      - 'frankenphp/**'
+      - 'frankenphp-otel/**'
+  schedule:
+    - cron: '10 4 * * *'
+
+concurrency:
+  group: "${{ github.workflow }}-${{ github.ref }}"
+  cancel-in-progress: true
+
+env:
+  DOCKER_BUILDKIT: 1
+  COSIGN_EXPERIMENTAL: 1
+
+permissions:
+  contents: write
+  id-token: write
+  packages: write
+  pull-requests: write
+
+jobs:
+  frankenphp:
+    name: FrankenPHP
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build
+        uses: ./.github/action/build-bake-publish
+        with:
+          files: |
+            docker-bake.hcl
+            docker-bake.frankenphp.hcl
+          targets: frankenphp
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+  frankenphp-otel:
+    name: FrankenPHP with OpenTelemetry
+    runs-on: namespace-profile-default
+    needs: [frankenphp]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build
+        uses: ./.github/action/build-bake-publish
+        with:
+          files: |
+            docker-bake.hcl
+            docker-bake.frankenphp.hcl
+          targets: frankenphp-otel
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
