@@ -23,7 +23,7 @@ variable "alpineVersion" {
 }
 
 variable "frankenphpRef" {
-    default = "v1.13.2"
+    default = "v1.13.1"
 }
 
 variable "goVersion" {
