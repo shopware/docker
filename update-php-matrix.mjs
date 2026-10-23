@@ -5,79 +5,132 @@ import fs from 'node:fs/promises';
 // Supported PHP major.minor versions
 const supportedVersions = ['8.2', '8.3', '8.4', '8.5'];
 
-const phpLibraryRepository = 'docker-library/php';
+// Function to fetch PHP tags from Docker Hub API
+async function fetchPhpTags(version) {
+    const url = `https://hub.docker.com/v2/repositories/library/php/tags/?page_size=50&page=1&name=${version}.`;
 
-async function fetchJson(url) {
     const response = await fetch(url);
     if (!response.ok) {
-        throw new Error(`Failed to fetch ${url}: ${response.status} ${response.statusText}`);
+        throw new Error(`Failed to fetch PHP tags for version ${version}: ${response.status} ${response.statusText}`);
     }
 
-    return response.json();
+    const jsonData = await response.json();
+    return jsonData;
 }
 
-async function fetchPhpLibraryRef() {
-    const commit = await fetchJson(`https://api.github.com/repos/${phpLibraryRepository}/commits/master`);
-    return commit.sha;
-}
+// Function to fetch FrankenPHP tags from Docker Hub API
+async function fetchFrankenPhpTags(version) {
+    const url = `https://hub.docker.com/v2/repositories/dunglas/frankenphp/tags/?page_size=50&page=1&name=php${version}.`;
 
-async function fetchVersions(ref) {
-    return fetchJson(`https://raw.githubusercontent.com/${phpLibraryRepository}/${ref}/versions.json`);
-}
-
-// The official php:*-fpm-alpine images follow the newest Alpine release
-function getLatestAlpineVersion(versions) {
-    const alpineVersions = supportedVersions.flatMap(version => versions[version].variants ?? [])
-        .map(variant => variant.match(/^alpine(\d+\.\d+)\/fpm$/)?.[1])
-        .filter(Boolean)
-        .sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
-
-    if (alpineVersions.length === 0) {
-        throw new Error('No Alpine variant found');
+    const response = await fetch(url);
+    if (!response.ok) {
+        throw new Error(`Failed to fetch FrankenPHP tags for version ${version}: ${response.status} ${response.statusText}`);
     }
 
-    return alpineVersions.at(-1);
+    const jsonData = await response.json();
+    return jsonData;
 }
 
-function getPhpVersions(versions) {
-    return supportedVersions.map(version => {
-        const entry = versions[version];
-        if (!entry || !/^\d+\.\d+\.\d+$/.test(entry.version)) {
-            throw new Error(`No valid version found for PHP ${version}`);
+// Function to extract the latest patch version from the API response
+function getLatestPatchVersion(apiResponse) {
+    if (!apiResponse || !Array.isArray(apiResponse.results)) {
+        throw new Error('Invalid API response');
+    }
+
+    for (const entry of apiResponse.results) {
+        // Skip RC versions
+        if (entry.name.includes('RC')) {
+            continue;
         }
 
-        return entry.version;
-    });
-}
-
-function replaceVariable(hclContent, name, value) {
-    const regex = new RegExp(`(variable "${name}" \\{\\s*default = )(\\[[^\\]]*\\]|"[^"]*")(\\s*\\})`, 's');
-
-    if (!regex.test(hclContent)) {
-        throw new Error(`${name} variable not found in docker-bake.hcl`);
+        // Extract version number (e.g., 8.1.33)
+        const versionMatch = entry.name.match(/^(\d+\.\d+\.\d+)/);
+        if (versionMatch) {
+            return versionMatch[1];
+        }
     }
 
-    return hclContent.replace(regex, `$1${value}$3`);
+    return null;
 }
 
-async function updateBakeFile(phpVersions, phpLibraryRef, alpineVersion) {
+// Function to extract the latest PHP patch version from FrankenPHP API response
+function getLatestFrankenphpPatchVersion(apiResponse) {
+    if (!apiResponse || !Array.isArray(apiResponse.results)) {
+        throw new Error('Invalid API response');
+    }
+
+    for (const entry of apiResponse.results) {
+        // Skip RC versions
+        if (entry.name.includes('RC')) {
+            continue;
+        }
+
+        // Extract PHP version number from FrankenPHP tag (e.g., 1.9.1-php8.2.29 -> 8.2.29)
+        const versionMatch = entry.name.match(/-php(\d+\.\d+\.\d+)$/);
+        if (versionMatch) {
+            return versionMatch[1];
+        }
+    }
+
+    return null;
+}
+
+// Function to update the phpMatrix and frankenphpMatrix in docker-bake.hcl
+async function updatePhpMatrixInHcl(phpVersions, frankenphpVersions) {
     const hclPath = 'docker-bake.hcl';
     let hclContent = await fs.readFile(hclPath, 'utf8');
 
-    const matrix = `[ ${phpVersions.map(v => `"${v}"`).join(', ')} ]`;
-    hclContent = replaceVariable(hclContent, 'phpMatrix', matrix);
-    hclContent = replaceVariable(hclContent, 'frankenphpMatrix', matrix);
-    hclContent = replaceVariable(hclContent, 'phpLibraryRef', `"${phpLibraryRef}"`);
-    hclContent = replaceVariable(hclContent, 'alpineVersion', `"${alpineVersion}"`);
+    // Find the phpMatrix variable and replace its value
+    const phpMatrixRegex = /(variable "phpMatrix" \{\s*default = )(\[[^\]]*\])(\s*\})/s;
+    const newPhpMatrix = `[ ${phpVersions.map(v => `"${v}"`).join(', ')} ]`;
+
+    if (!phpMatrixRegex.test(hclContent)) {
+        throw new Error('phpMatrix variable not found in docker-bake.hcl');
+    }
+
+    hclContent = hclContent.replace(phpMatrixRegex, `$1${newPhpMatrix}$3`);
+
+    // Find the frankenphpMatrix variable and replace its value
+    const frankenphpMatrixRegex = /(variable "frankenphpMatrix" \{\s*default = )(\[[^\]]*\])(\s*\})/s;
+    const newFrankenphpMatrix = `[ ${frankenphpVersions.map(v => `"${v}"`).join(', ')} ]`;
+
+    if (!frankenphpMatrixRegex.test(hclContent)) {
+        throw new Error('frankenphpMatrix variable not found in docker-bake.hcl');
+    }
+
+    hclContent = hclContent.replace(frankenphpMatrixRegex, `$1${newFrankenphpMatrix}$3`);
 
     await fs.writeFile(hclPath, hclContent);
-    console.log('Successfully updated docker-bake.hcl');
+    console.log('Successfully updated phpMatrix and frankenphpMatrix in docker-bake.hcl');
     console.log('PHP versions:', phpVersions);
-    console.log('docker-library/php ref:', phpLibraryRef);
-    console.log('Alpine version:', alpineVersion);
+    console.log('FrankenPHP versions:', frankenphpVersions);
 }
 
-const phpLibraryRef = await fetchPhpLibraryRef();
-const versions = await fetchVersions(phpLibraryRef);
+const phpVersions = [];
+const frankenphpVersions = [];
 
-await updateBakeFile(getPhpVersions(versions), phpLibraryRef, getLatestAlpineVersion(versions));
+for (const version of supportedVersions) {
+    console.log(`Fetching latest patch version for PHP ${version}...`);
+    const apiResponse = await fetchPhpTags(version);
+    const latestVersion = getLatestPatchVersion(apiResponse);
+
+    if (latestVersion) {
+        phpVersions.push(latestVersion);
+        console.log(`Found latest version for PHP ${version}: ${latestVersion}`);
+    } else {
+        throw new Error(`No valid version found for PHP ${version}`);
+    }
+
+    console.log(`Fetching FrankenPHP version for PHP ${version}...`);
+    const frankenphpApiResponse = await fetchFrankenPhpTags(version);
+    const frankenphpLatestVersion = getLatestFrankenphpPatchVersion(frankenphpApiResponse);
+    
+    if (frankenphpLatestVersion) {
+        frankenphpVersions.push(frankenphpLatestVersion);
+        console.log(`Found FrankenPHP version for PHP ${version}: ${frankenphpLatestVersion}`);
+    } else {
+        console.log(`No FrankenPHP version found for PHP ${version}, skipping...`);
+    }
+}
+
+await updatePhpMatrixInHcl(phpVersions, frankenphpVersions);
