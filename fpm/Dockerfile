@@ -1,35 +1,41 @@
-#syntax=docker/dockerfile:1.4
+#syntax=docker/dockerfile:1
+ARG ALPINE_VERSION=3.24
+FROM alpine:${ALPINE_VERSION}
 
-FROM base
+ARG PHP_VERSION
+ENV PHP_INI_DIR=/usr/local/etc/php \
+    PHP_VERSION=${PHP_VERSION} \
+    PHPIZE_DEPS="autoconf dpkg-dev dpkg file g++ gcc libc-dev make pkgconf re2c" \
+    PHP_CFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64" \
+    PHP_CPPFLAGS="-fstack-protector-strong -fpic -fpie -O2 -D_LARGEFILE_SOURCE -D_FILE_OFFSET_BITS=64" \
+    PHP_LDFLAGS="-Wl,-O1 -pie"
 
-ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
-
-RUN <<EOF
-    set -e
-
-    apk add --no-cache icu-data-full curl jq trurl rabbitmq-c zstd-libs lz4-libs liblzf
+ARG OS_PACKAGES_REFRESH
+RUN --mount=type=bind,from=artifacts,source=/,target=/compiled <<'EOF'
+    set -eu
+    sh /compiled/validate-runtime.sh
+    echo "Refreshing OS packages: ${OS_PACKAGES_REFRESH}"
+    apk add --no-cache ca-certificates curl jq trurl icu-data-full
+    xargs apk add --no-cache < /compiled/runtime-dependencies.txt
     apk upgrade --no-cache
-    chmod +x /usr/local/bin/install-php-extensions
-    install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
+    adduser -u 82 -D -S -G www-data www-data
+    mkdir -p /var/www/html
+    chmod 1777 /var/www/html
 EOF
 
-RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
-    set -e
-    export PIE_WORKING_DIRECTORY=/tmp/pie
-    apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip rabbitmq-c-dev zstd-dev lz4-dev liblzf-dev
-    pie install --no-interaction --no-cache --skip-enable-extension phpredis/phpredis --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
-    pie install --no-interaction --no-cache --skip-enable-extension apcu/apcu:5.1.27
-    pie install --no-interaction --no-cache --skip-enable-extension kjdev/zstd:0.15.2
-    pie install --no-interaction --no-cache --skip-enable-extension php-amqp/php-amqp:2.2.0
-    docker-php-ext-enable redis apcu zstd amqp
-    rm -rf /tmp/pie
-    apk del --no-cache .pie-build-deps
-    mkdir -p /var/www/html
-    mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini"
-    rm -f /usr/local/etc/php-fpm.d/zz-docker.conf
-    rm -f /usr/local/etc/php-fpm.d/www.conf
-    rm -f /usr/local/etc/php-fpm.d/www.conf.default
-EOF
+COPY --link --from=artifacts /usr/local/ /usr/local/
+COPY --link --from=artifacts /usr/src/php.tar.xz /usr/src/php.tar.xz
+
+ARG ENABLE_OTEL=0
+RUN if [ "$ENABLE_OTEL" = 1 ]; then \
+        mv "$PHP_INI_DIR/conf.d/grpc.disabled" "$PHP_INI_DIR/conf.d/grpc.ini" && \
+        mv "$PHP_INI_DIR/conf.d/docker-php-ext-opentelemetry.disabled" "$PHP_INI_DIR/conf.d/docker-php-ext-opentelemetry.ini"; \
+    fi
+
+ENTRYPOINT ["docker-php-entrypoint"]
+STOPSIGNAL SIGQUIT
+EXPOSE 9000
+CMD ["php-fpm"]
 
 ENV APP_ENV=prod \
     APP_URL_CHECK_DISABLED=1 \
