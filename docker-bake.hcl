@@ -15,7 +15,7 @@ variable "frankenphpMatrix" {
 }
 
 variable "phpLibraryRef" {
-    default = "e3eaff845f7a9f7259c31da54dce0320b47a3bbd"
+    default = "5ec2a6a0dad498e89a91a39454dbb52e98ce2bdb"
 }
 
 variable "alpineVersion" {
