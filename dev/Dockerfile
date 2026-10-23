@@ -1,6 +1,8 @@
+#syntax=docker/dockerfile:1
 ARG NODE_VERSION=22
+ARG ALPINE_VERSION=3.24
 
-FROM node:${NODE_VERSION}-alpine AS node
+FROM node:${NODE_VERSION}-alpine${ALPINE_VERSION} AS node
 
 FROM base
 
@@ -11,9 +13,11 @@ USER root
 COPY --link --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --link --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 
-RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+ARG OS_PACKAGES_REFRESH
+RUN <<EOF
     set -e
-    export PIE_WORKING_DIRECTORY=/tmp/pie
+    echo "Refreshing OS packages: ${OS_PACKAGES_REFRESH}"
+    apk upgrade --no-cache
 
     ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm
     ln -s /usr/local/lib/node_modules/npm/bin/npx-cli.js /usr/local/bin/npx
@@ -30,20 +34,8 @@ RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin
 
     apk add --no-cache bash git shadow patch coreutils
     
-    install-php-extensions tideways blackfire
-    apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip linux-headers zlib-dev
-    pie install --no-interaction --no-cache --skip-enable-extension xdebug/xdebug:3.5.0
-    pie install --no-interaction --no-cache --skip-enable-extension noisebynorthwest/php-spx
-    docker-php-ext-enable xdebug spx
-    rm -rf /tmp/pie
-    apk del --no-cache .pie-build-deps
-
-    cd /usr/local/etc/php/conf.d
-    mv docker-php-ext-opentelemetry.ini docker-php-ext-opentelemetry.disabled
-    mv docker-php-ext-xdebug.ini docker-php-ext-xdebug.disabled
-    mv docker-php-ext-tideways.ini docker-php-ext-tideways.disabled
-    mv docker-php-ext-blackfire.ini docker-php-ext-blackfire.disabled
-    mv docker-php-ext-spx.ini docker-php-ext-spx.disabled
+    # Dev enables a selected profiler through PHP_PROFILER at startup.
+    mv /usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.ini /usr/local/etc/php/conf.d/docker-php-ext-opentelemetry.disabled
 
     usermod -u 1000 www-data
     groupmod -g 1000 www-data

@@ -1,3 +1,17 @@
+# Empty phpMinor builds the complete supported matrix.
+variable "phpMinor" { default = "" }
+variable "compiledRegistry" { default = "ghcr.io/shopware/docker-php-artifacts" }
+variable "compiledKey" { default = "local" }
+# Local builds follow the compilation graph; CI consumes published artifact images.
+variable "compiledSource" { default = "local" }
+variable "compiledRevision" { default = "1" }
+variable "osPackagesRefresh" { default = formattimestamp("YYYY-MM-DD", timestamp()) }
+
+function "artifactContext" {
+    params = [variant, php]
+    result = compiledSource == "local" ? "target:artifacts-${variant}-${replace(substr(php, 0, 3), ".", "-")}" : "docker-image://${compiledRegistry}:${compiledKey}-${variant}-${php}"
+}
+
 variable "imageSuffix" {
     default = ""
 }
@@ -36,7 +50,7 @@ target "php-fpm-alpine" {
     name = "php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
     context = "https://github.com/docker-library/php.git#${phpLibraryRef}:${substr(php, 0, 3)}/alpine${alpineVersion}/fpm"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
 }
@@ -45,7 +59,7 @@ target "php-zts-trixie" {
     name = "php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}"
     context = "https://github.com/docker-library/php.git#${phpLibraryRef}:${substr(php, 0, 3)}/trixie/zts"
     matrix = {
-        "php" = frankenphpMatrix
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
 }
@@ -55,7 +69,7 @@ target "frankenphp-upstream" {
     context = "https://github.com/php/frankenphp.git#${frankenphpRef}"
     target = "runner"
     matrix = {
-        "php" = frankenphpMatrix
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
         php-base = "target:php-zts-trixie-${replace(substr(php, 0, 3), ".", "-")}"
@@ -73,10 +87,10 @@ target "frankenphp" {
     name = "frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./frankenphp"
     matrix = {
-        "php" = frankenphpMatrix
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "target:frankenphp-upstream-${replace(substr(php, 0, 3), ".", "-")}"
+        artifacts = artifactContext("frankenphp", php)
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -89,16 +103,21 @@ target "frankenphp" {
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-frankenphp",
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-frankenphp"
     ]
+    args = {
+        PHP_VERSION = php
+        ALPINE_VERSION = alpineVersion
+        OS_PACKAGES_REFRESH = osPackagesRefresh
+    }
 }
 
 target "frankenphp-otel" {
     name = "frankenphp-otel-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./frankenphp-otel"
+    context = "./frankenphp"
     matrix = {
-        "php" = frankenphpMatrix
+        "php" = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-frankenphp"
+        artifacts = artifactContext("frankenphp", php)
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -111,6 +130,12 @@ target "frankenphp-otel" {
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-frankenphp-otel",
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-frankenphp-otel"
     ]
+    args = {
+        ENABLE_OTEL = "1"
+        PHP_VERSION = php
+        ALPINE_VERSION = alpineVersion
+        OS_PACKAGES_REFRESH = osPackagesRefresh
+    }
 }
 
 # FPM
@@ -119,10 +144,10 @@ target "fpm" {
     name = "fpm-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./fpm"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "target:php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
+        artifacts = artifactContext("fpm", php)
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -135,16 +160,21 @@ target "fpm" {
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-fpm",
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
     ]
+    args = {
+        PHP_VERSION = php
+        ALPINE_VERSION = alpineVersion
+        OS_PACKAGES_REFRESH = osPackagesRefresh
+    }
 }
 
 target "fpm-otel" {
     name = "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./fpm-otel"
+    context = "./fpm"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+        artifacts = artifactContext("fpm", php)
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -157,6 +187,12 @@ target "fpm-otel" {
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${substr(php, 0, 3)}-fpm-otel",
         "ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
     ]
+    args = {
+        ENABLE_OTEL = "1"
+        PHP_VERSION = php
+        ALPINE_VERSION = alpineVersion
+        OS_PACKAGES_REFRESH = osPackagesRefresh
+    }
 }
 
 # Caddy
@@ -165,10 +201,10 @@ target "caddy" {
     name = "caddy-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./caddy"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+        base = "target:fpm-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -187,10 +223,10 @@ target "caddy-otel" {
     name = "caddy-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./caddy"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
+        base = "target:fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -209,14 +245,16 @@ target "caddy-dev" {
     name = "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = phpMatrix
+        "php"  = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
         "node" = [ "22", "24" ]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-caddy-otel"
+        base = "target:caddy-otel-${replace(substr(php, 0, 3), ".", "-")}"
     }
     args = {
         "NODE_VERSION" = node
+        ALPINE_VERSION = alpineVersion
+        OS_PACKAGES_REFRESH = osPackagesRefresh
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [
@@ -231,10 +269,10 @@ target "nginx" {
     name = "nginx-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./nginx"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm"
+        base = "target:fpm-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -253,10 +291,10 @@ target "nginx-otel" {
     name = "nginx-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./nginx"
     matrix = {
-        "php" = phpMatrix
+        "php" = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-fpm-otel"
+        base = "target:fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
@@ -275,18 +313,86 @@ target "nginx-dev" {
     name = "nginx-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./dev"
     matrix = {
-        "php"  = phpMatrix
+        "php"  = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
         "node" = [ "22", "24" ]
     }
     contexts = {
-        base = "docker-image://ghcr.io/shopware/docker-base${imageSuffix}:${tagPrefix}${php}-nginx-otel"
+        base = "target:nginx-otel-${replace(substr(php, 0, 3), ".", "-")}"
     }
     args = {
         "NODE_VERSION" = node
+        ALPINE_VERSION = alpineVersion
+        OS_PACKAGES_REFRESH = osPackagesRefresh
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = [
         "ghcr.io/shopware/docker-dev${imageSuffix}:${tagPrefix}php${substr(php, 0, 3)}-node${node}-nginx",
         "ghcr.io/shopware/docker-dev${imageSuffix}:${tagPrefix}php${php}-node${node}-nginx"
     ]
+}
+
+# Heavy compilation is published separately from the daily runtime images.
+
+target "compiled-fpm" {
+    name = "compiled-fpm-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "./compiled"
+    dockerfile = "fpm.Dockerfile"
+    matrix = {
+        php = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    contexts = {
+        base = "target:php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
+}
+
+target "artifacts-fpm" {
+    name = "artifacts-fpm-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "./compiled"
+    matrix = {
+        php = [for php in phpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    contexts = {
+        base = "target:compiled-fpm-${replace(substr(php, 0, 3), ".", "-")}"
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
+    tags = [ "${compiledRegistry}:${compiledKey}-fpm-${php}" ]
+}
+
+target "compiled-frankenphp" {
+    name = "compiled-frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "./compiled"
+    dockerfile = "frankenphp.Dockerfile"
+    matrix = {
+        php = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    contexts = {
+        base = "target:frankenphp-upstream-${replace(substr(php, 0, 3), ".", "-")}"
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
+}
+
+target "artifacts-frankenphp" {
+    name = "artifacts-frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
+    context = "./compiled"
+    matrix = {
+        php = [for php in frankenphpMatrix : php if phpMinor == "" || substr(php, 0, 3) == phpMinor]
+    }
+    contexts = {
+        base = "target:compiled-frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
+    }
+    platforms = [ "linux/amd64", "linux/arm64" ]
+    tags = [ "${compiledRegistry}:${compiledKey}-frankenphp-${php}" ]
+}
+
+group "compiled" {
+    targets = [ "artifacts-fpm", "artifacts-frankenphp" ]
+}
+
+target "_compiled-inputs" {
+    args = { COMPILED_REVISION = compiledRevision }
+}
+
+group "daily" {
+    targets = [ "fpm", "fpm-otel", "frankenphp", "frankenphp-otel", "caddy", "caddy-otel", "nginx", "nginx-otel", "caddy-dev", "nginx-dev" ]
 }

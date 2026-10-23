@@ -31,13 +31,14 @@ runs:
       shell: bash
       run: echo "${{ inputs.github_token }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
 
-    - name: Build and push
-      uses: docker/bake-action@v6
-      with:
-        push: true
-        targets: ${{ inputs.targets }}
-        no-cache: true
+    - name: Build missing compiled artifacts and publish daily images
+      shell: bash
+      run: |
+        node tests/build-plan.mjs
+        read -ra targets <<< "${TARGETS//,/ }"
+        node scripts/build-images.mjs --publish "${targets[@]}"
       env:
+        TARGETS: ${{ inputs.targets }}
         DOCKER_BUILD_RECORD_UPLOAD: false
         DOCKER_BUILD_SUMMARY: false
         imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
