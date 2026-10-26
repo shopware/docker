@@ -16,8 +16,12 @@ RUN apk add --no-cache git grpc-cpp grpc-dev $PHPIZE_DEPS && \
     apk del --no-cache git grpc-dev $PHPIZE_DEPS && \
     echo "extension=grpc.so" > /usr/local/etc/php/conf.d/grpc.ini
 
-RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+RUN --mount=type=secret,id=composer_auth \
+    --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
     set -e
+    if [ -f /run/secrets/composer_auth ]; then
+        export COMPOSER_AUTH="$(cat /run/secrets/composer_auth)"
+    fi
     export PIE_WORKING_DIRECTORY=/tmp/pie
     apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip
     pie install --no-interaction --no-cache --skip-enable-extension open-telemetry/ext-opentelemetry

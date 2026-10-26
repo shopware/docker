@@ -11,8 +11,12 @@ USER root
 COPY --link --from=node /usr/local/bin/node /usr/local/bin/node
 COPY --link --from=node /usr/local/lib/node_modules /usr/local/lib/node_modules
 
-RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+RUN --mount=type=secret,id=composer_auth \
+    --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
     set -e
+    if [ -f /run/secrets/composer_auth ]; then
+        export COMPOSER_AUTH="$(cat /run/secrets/composer_auth)"
+    fi
     export PIE_WORKING_DIRECTORY=/tmp/pie
 
     ln -s /usr/local/lib/node_modules/npm/bin/npm-cli.js /usr/local/bin/npm

@@ -1,6 +1,9 @@
 name: 'Build and Publish'
 description: 'Builds Image and pushes'
 inputs:
+  files:
+    description: 'Bake files to load'
+    required: true
   targets:
     description: 'Targets'
     required: true
@@ -35,9 +38,13 @@ runs:
       uses: docker/bake-action@v6
       with:
         push: true
+        files: ${{ inputs.files }}
         targets: ${{ inputs.targets }}
+        set: |
+          *.secrets=id=composer_auth,env=COMPOSER_AUTH
         no-cache: true
       env:
+        COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ inputs.github_token }}"}}'
         DOCKER_BUILD_RECORD_UPLOAD: false
         DOCKER_BUILD_SUMMARY: false
         imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}

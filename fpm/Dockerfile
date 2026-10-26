@@ -13,8 +13,12 @@ RUN <<EOF
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
 EOF
 
-RUN --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+RUN --mount=type=secret,id=composer_auth \
+    --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
     set -e
+    if [ -f /run/secrets/composer_auth ]; then
+        export COMPOSER_AUTH="$(cat /run/secrets/composer_auth)"
+    fi
     export PIE_WORKING_DIRECTORY=/tmp/pie
     apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip rabbitmq-c-dev zstd-dev lz4-dev liblzf-dev
     pie install --no-interaction --no-cache --skip-enable-extension phpredis/phpredis --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
