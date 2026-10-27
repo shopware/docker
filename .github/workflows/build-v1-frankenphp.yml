@@ -1,26 +1,22 @@
-name: Build FrankenPHP Images
+name: Build v1 FrankenPHP Images
 on:
   workflow_dispatch:
   push:
     branches:
       - main
     paths:
-      - 'docker-bake.hcl'
-      - 'docker-bake.frankenphp.hcl'
-      - '.github/workflows/build-frankenphp.yml'
+      - 'v1/docker-bake.hcl'
+      - '.github/workflows/build-v1-frankenphp.yml'
       - '.github/action/build-bake-publish/**'
       - '.github/action/setup-builder/**'
-      - 'frankenphp/**'
-      - 'frankenphp-otel/**'
+      - 'v1/frankenphp/**'
   pull_request:
     paths:
-      - 'docker-bake.hcl'
-      - 'docker-bake.frankenphp.hcl'
-      - '.github/workflows/build-frankenphp.yml'
+      - 'v1/docker-bake.hcl'
+      - '.github/workflows/build-v1-frankenphp.yml'
       - '.github/action/build-bake-publish/**'
       - '.github/action/setup-builder/**'
-      - 'frankenphp/**'
-      - 'frankenphp-otel/**'
+      - 'v1/frankenphp/**'
   schedule:
     - cron: '10 4 * * *'
 
@@ -54,7 +50,7 @@ jobs:
       - name: Read PHP versions from Bake
         id: matrix
         run: |
-          matrix=$(docker buildx bake -f docker-bake.hcl -f docker-bake.frankenphp.hcl --print frankenphp | jq -c '{include: [.group.frankenphp.targets[] | ltrimstr("frankenphp-") | {php: gsub("-"; "."), suffix: .}]}')
+          matrix=$(docker buildx bake -f v1/docker-bake.hcl -f v1/frankenphp/docker-bake.hcl --print frankenphp | jq -c '{include: [.group.frankenphp.targets[] | ltrimstr("frankenphp-") | {php: gsub("-"; "."), suffix: .}]}')
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   frankenphp:
@@ -79,8 +75,8 @@ jobs:
         uses: ./.github/action/build-bake-publish
         with:
           files: |
-            docker-bake.hcl
-            docker-bake.frankenphp.hcl
+            v1/docker-bake.hcl
+            v1/frankenphp/docker-bake.hcl
           targets: frankenphp-${{ matrix.suffix }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
@@ -88,7 +84,7 @@ jobs:
         uses: ./.github/action/build-bake-publish
         with:
           files: |
-            docker-bake.hcl
-            docker-bake.frankenphp.hcl
+            v1/docker-bake.hcl
+            v1/frankenphp/docker-bake.hcl
           targets: frankenphp-otel-${{ matrix.suffix }}
           github_token: ${{ secrets.GITHUB_TOKEN }}

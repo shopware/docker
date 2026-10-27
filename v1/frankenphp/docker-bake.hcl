@@ -6,7 +6,7 @@ variable "frankenphpMatrix" {
 
 target "frankenphp" {
     name = "frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./frankenphp"
+    context = "./v1/frankenphp"
     matrix = {
         "php" = frankenphpMatrix
     }
@@ -28,7 +28,7 @@ target "frankenphp" {
 
 target "frankenphp-otel" {
     name = "frankenphp-otel-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./frankenphp-otel"
+    context = "./v1/frankenphp/otel"
     matrix = {
         "php" = frankenphpMatrix
     }

@@ -6,7 +6,7 @@ variable "phpMatrix" {
 
 target "fpm" {
     name = "fpm-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./fpm"
+    context = "./v1/fpm"
     matrix = {
         "php" = phpMatrix
     }
@@ -28,7 +28,7 @@ target "fpm" {
 
 target "fpm-otel" {
     name = "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./fpm-otel"
+    context = "./v1/fpm/otel"
     matrix = {
         "php" = phpMatrix
     }
@@ -52,7 +52,7 @@ target "fpm-otel" {
 
 target "caddy" {
     name = "caddy-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./caddy"
+    context = "./v1/fpm/caddy"
     matrix = {
         "php" = phpMatrix
     }
@@ -74,7 +74,7 @@ target "caddy" {
 
 target "caddy-otel" {
     name = "caddy-otel-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./caddy"
+    context = "./v1/fpm/caddy"
     matrix = {
         "php" = phpMatrix
     }
@@ -96,7 +96,7 @@ target "caddy-otel" {
 
 target "caddy-dev" {
     name = "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
-    context = "./dev"
+    context = "./v1/fpm/dev"
     matrix = {
         "php"  = phpMatrix
         "node" = [ "22", "24" ]
@@ -118,7 +118,7 @@ target "caddy-dev" {
 
 target "nginx" {
     name = "nginx-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./nginx"
+    context = "./v1/fpm/nginx"
     matrix = {
         "php" = phpMatrix
     }
@@ -140,7 +140,7 @@ target "nginx" {
 
 target "nginx-otel" {
     name = "nginx-otel-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "./nginx"
+    context = "./v1/fpm/nginx"
     matrix = {
         "php" = phpMatrix
     }
@@ -162,7 +162,7 @@ target "nginx-otel" {
 
 target "nginx-dev" {
     name = "nginx-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
-    context = "./dev"
+    context = "./v1/fpm/dev"
     matrix = {
         "php"  = phpMatrix
         "node" = [ "22", "24" ]

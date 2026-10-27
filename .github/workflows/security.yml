@@ -22,21 +22,21 @@ jobs:
           - '8.5'
         variant:
           - name: fpm
-            dockerfile: fpm/Dockerfile
+            dockerfile: v1/fpm/Dockerfile
           - name: fpm-otel
-            dockerfile: fpm-otel/Dockerfile
+            dockerfile: v1/fpm/otel/Dockerfile
           - name: caddy
-            dockerfile: caddy/Dockerfile
+            dockerfile: v1/fpm/caddy/Dockerfile
           - name: caddy-otel
-            dockerfile: caddy/Dockerfile
+            dockerfile: v1/fpm/caddy/Dockerfile
           - name: nginx
-            dockerfile: nginx/Dockerfile
+            dockerfile: v1/fpm/nginx/Dockerfile
           - name: nginx-otel
-            dockerfile: nginx/Dockerfile
+            dockerfile: v1/fpm/nginx/Dockerfile
           - name: frankenphp
-            dockerfile: frankenphp/Dockerfile
+            dockerfile: v1/frankenphp/Dockerfile
           - name: frankenphp-otel
-            dockerfile: frankenphp-otel/Dockerfile
+            dockerfile: v1/frankenphp/otel/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v7

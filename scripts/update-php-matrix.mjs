@@ -78,8 +78,8 @@ function getLatestFrankenphpPatchVersion(apiResponse) {
 // Function to update the PHP matrices in the family-specific Bake files
 async function updatePhpMatrixInHcl(phpVersions, frankenphpVersions) {
     const updates = [
-        ['docker-bake.fpm.hcl', 'phpMatrix', phpVersions],
-        ['docker-bake.frankenphp.hcl', 'frankenphpMatrix', frankenphpVersions],
+        ['v1/fpm/docker-bake.hcl', 'phpMatrix', phpVersions],
+        ['v1/frankenphp/docker-bake.hcl', 'frankenphpMatrix', frankenphpVersions],
     ];
 
     for (const [hclPath, name, versions] of updates) {

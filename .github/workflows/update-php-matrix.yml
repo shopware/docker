@@ -27,7 +27,7 @@ jobs:
           token: ${{ steps.generate-token.outputs.token }}
 
       - name: Run PHP matrix update script
-        run: node update-php-matrix.mjs
+        run: node scripts/update-php-matrix.mjs
 
       - name: Check for changes
         id: changes
@@ -52,8 +52,8 @@ jobs:
             This PR automatically updates the PHP matrix versions to the latest patch releases.
             
             The family-specific Bake files have been updated:
-            - `docker-bake.fpm.hcl`: Supported PHP patch versions
-            - `docker-bake.frankenphp.hcl`: Supported FrankenPHP patch versions
+            - `v1/fpm/docker-bake.hcl`: Supported PHP patch versions
+            - `v1/frankenphp/docker-bake.hcl`: Supported FrankenPHP patch versions
             
             Changes were detected by the automated PHP matrix update workflow.
             
