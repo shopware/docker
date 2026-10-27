@@ -1,4 +1,4 @@
-# Shared settings; load with docker-bake.fpm.hcl or docker-bake.frankenphp.hcl.
+# Shared settings; load with v1/fpm/docker-bake.hcl or v1/frankenphp/docker-bake.hcl.
 
 variable "imageSuffix" {
     default = ""
