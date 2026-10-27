@@ -7,7 +7,7 @@ ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/do
 RUN <<EOF
     set -e
 
-    apk add --no-cache icu-data-full curl jq trurl rabbitmq-c zstd-libs lz4-libs liblzf
+    apk add --no-cache icu-data-full curl jq trurl rabbitmq-c zstd-libs lz4-libs liblzf grpc-cpp
     apk upgrade --no-cache
     chmod +x /usr/local/bin/install-php-extensions
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
@@ -20,12 +20,23 @@ RUN --mount=type=secret,id=composer_auth \
         export COMPOSER_AUTH="$(cat /run/secrets/composer_auth)"
     fi
     export PIE_WORKING_DIRECTORY=/tmp/pie
-    apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip rabbitmq-c-dev zstd-dev lz4-dev liblzf-dev
+    apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip git grpc-dev rabbitmq-c-dev zstd-dev lz4-dev liblzf-dev
     pie install --no-interaction --no-cache --skip-enable-extension phpredis/phpredis --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
     pie install --no-interaction --no-cache --skip-enable-extension apcu/apcu:5.1.27
     pie install --no-interaction --no-cache --skip-enable-extension kjdev/zstd:0.15.2
     pie install --no-interaction --no-cache --skip-enable-extension php-amqp/php-amqp:2.2.0
     docker-php-ext-enable redis apcu zstd amqp
+    # Keep telemetry extensions disabled; the -otel image enables them.
+    GRPC_VERSION=$(apk info grpc -d | grep grpc | cut -d- -f2)
+    git clone --depth 1 -b v${GRPC_VERSION} https://github.com/grpc/grpc /tmp/grpc
+    cd /tmp/grpc/src/php/ext/grpc
+    phpize
+    ./configure
+    make
+    make install
+    cd /root
+    rm -rf /tmp/grpc
+    pie install --no-interaction --no-cache --skip-enable-extension open-telemetry/ext-opentelemetry
     rm -rf /tmp/pie
     apk del --no-cache .pie-build-deps
     mkdir -p /var/www/html
