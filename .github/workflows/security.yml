@@ -10,7 +10,7 @@ permissions:
 
 jobs:
   scan:
-    name: 'Image Scan (PHP: ${{ matrix.php-version }}, Variant: ${{ matrix.variant.name }})'
+    name: 'Image Scan (PHP: ${{ matrix.php-version }}, Variant: ${{ matrix.variant }})'
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
@@ -21,42 +21,30 @@ jobs:
           - '8.4'
           - '8.5'
         variant:
-          - name: fpm
-            dockerfile: fpm/Dockerfile
-          - name: fpm-otel
-            dockerfile: fpm-otel/Dockerfile
-          - name: caddy
-            dockerfile: caddy/Dockerfile
-          - name: caddy-otel
-            dockerfile: caddy/Dockerfile
-          - name: nginx
-            dockerfile: nginx/Dockerfile
-          - name: nginx-otel
-            dockerfile: nginx/Dockerfile
-          - name: frankenphp
-            dockerfile: frankenphp/Dockerfile
-          - name: frankenphp-otel
-            dockerfile: frankenphp-otel/Dockerfile
+          - fpm
+          - fpm-otel
+          - caddy
+          - caddy-otel
+          - nginx
+          - nginx-otel
+          - frankenphp
+          - frankenphp-otel
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Pull image
-        run: docker pull shopware/docker-base:${{ matrix.php-version }}-${{ matrix.variant.name }}
-
-      - name: Login into Github Docker Registery
-        run: echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u ${{ github.actor }} --password-stdin
-
       - name: Scan for vulnerabilities
-        id: scan
-        uses: crazy-max/ghaction-container-scan@v4
+        uses: docker/scout-action@v1
         with:
-          image: shopware/docker-base:${{ matrix.php-version }}-${{ matrix.variant.name }}
-          dockerfile: ./${{ matrix.variant.dockerfile }}
+          command: cves
+          image: registry://shopware/docker-base:${{ matrix.php-version }}-${{ matrix.variant }}
+          dockerhub-user: ${{ secrets.DOCKER_HUB_USERNAME }}
+          dockerhub-password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          sarif-file: scout.sarif.json
+          write-comment: false
 
       - name: Upload SARIF file
-        if: ${{ steps.scan.outputs.sarif != '' }}
         uses: github/codeql-action/upload-sarif@v4.39.1
         with:
-          sarif_file: ${{ steps.scan.outputs.sarif }}
-          category: ${{ matrix.php-version }}-${{ matrix.variant.name }}
+          sarif_file: scout.sarif.json
+          category: ${{ matrix.php-version }}-${{ matrix.variant }}
