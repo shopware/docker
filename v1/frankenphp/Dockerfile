@@ -40,11 +40,9 @@ RUN --mount=type=secret,id=composer_auth \
     pie install --no-interaction --no-cache --skip-enable-extension open-telemetry/ext-opentelemetry
     rm -rf /tmp/pie
     apt-mark auto '.*' > /dev/null
+    # Preserve the base image's toolchain for downstream install-php-extensions calls.
     apt-mark manual $savedAptMark librabbitmq4 libzstd1 liblz4-1 liblzf1 libgrpc29t64
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
-    # The base image marks its compiler toolchain and headers as manually installed.
-    compilerPackages=$(dpkg-query -W -f='${binary:Package}\n' 'gcc-*' | sed '/-base/d')
-    apt-get purge -y --auto-remove $PHPIZE_DEPS $compilerPackages 'g++-*' 'cpp-*' 'binutils*' '*-dev' patch
     mkdir -p /var/www/html
     usermod -u 82 www-data
     groupmod -g 82 www-data
