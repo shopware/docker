@@ -1,0 +1,33 @@
+name: 'Set up builder'
+description: 'Configures the Namespace builder and registry authentication once per job'
+inputs:
+  docker_hub_username:
+    description: 'Docker Hub username'
+    required: true
+  docker_hub_password:
+    description: 'Docker Hub password'
+    required: true
+  github_token:
+    description: 'GitHub token'
+    required: true
+runs:
+  using: "composite"
+  steps:
+    - name: Install and configure Namespace CLI
+      uses: namespacelabs/nscloud-setup@v0
+
+    - name: Configure Namespace powered Buildx
+      uses: namespacelabs/nscloud-setup-buildx-action@v0
+
+    - name: Login into Docker Hub
+      shell: bash
+      env:
+        DOCKER_HUB_USERNAME: ${{ inputs.docker_hub_username }}
+        DOCKER_HUB_PASSWORD: ${{ inputs.docker_hub_password }}
+      run: printf '%s' "$DOCKER_HUB_PASSWORD" | docker login -u "$DOCKER_HUB_USERNAME" --password-stdin
+
+    - name: Login into GitHub Container Registry
+      shell: bash
+      env:
+        GITHUB_TOKEN: ${{ inputs.github_token }}
+      run: printf '%s' "$GITHUB_TOKEN" | docker login ghcr.io -u "$GITHUB_ACTOR" --password-stdin

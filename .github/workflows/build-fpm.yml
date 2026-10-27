@@ -9,6 +9,7 @@ on:
       - 'docker-bake.fpm.hcl'
       - '.github/workflows/build-fpm.yml'
       - '.github/action/build-bake-publish/**'
+      - '.github/action/setup-builder/**'
       - 'fpm/**'
       - 'fpm-otel/**'
       - 'caddy/**'
@@ -20,6 +21,7 @@ on:
       - 'docker-bake.fpm.hcl'
       - '.github/workflows/build-fpm.yml'
       - '.github/action/build-bake-publish/**'
+      - '.github/action/setup-builder/**'
       - 'fpm/**'
       - 'fpm-otel/**'
       - 'caddy/**'
@@ -43,93 +45,86 @@ permissions:
   pull-requests: write
 
 jobs:
+  matrix:
+    name: Determine PHP versions
+    runs-on: ubuntu-latest
+    outputs:
+      matrix: ${{ steps.matrix.outputs.matrix }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Read PHP versions from Bake
+        id: matrix
+        run: |
+          matrix=$(docker buildx bake -f docker-bake.hcl -f docker-bake.fpm.hcl --print fpm | jq -c '{include: [.group.fpm.targets[] | ltrimstr("fpm-") | {php: gsub("-"; "."), suffix: .}]}')
+          echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   fpm:
-    name: FPM
+    name: FPM PHP ${{ matrix.php }}
     runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Build
-        uses: ./.github/action/build-bake-publish
-        with:
-          files: |
-            docker-bake.hcl
-            docker-bake.fpm.hcl
-          targets: fpm
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-  fpm-otel:
-    name: FPM with OpenTelemetry
-    runs-on: ubuntu-latest
-    needs: [fpm]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Build
-        uses: ./.github/action/build-bake-publish
-        with:
-          files: |
-            docker-bake.hcl
-            docker-bake.fpm.hcl
-          targets: fpm-otel
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-  webserver:
-    name: ${{ matrix.webserver }}
-    runs-on: ubuntu-latest
-    needs: [fpm]
+    needs: [matrix]
     strategy:
       fail-fast: false
-      matrix:
-        webserver: [ caddy, nginx ]
+      matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Build
-        uses: ./.github/action/build-bake-publish
+      - name: Set up builder
+        uses: ./.github/action/setup-builder
         with:
-          files: |
-            docker-bake.hcl
-            docker-bake.fpm.hcl
-          targets: ${{ matrix.webserver}}
           docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
           docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
-  webserver-otel:
-    name: ${{ matrix.webserver }} with OpenTelemetry
-    runs-on: ubuntu-latest
-    needs: [fpm-otel]
-    strategy:
-      fail-fast: false
-      matrix:
-        webserver: [ caddy, nginx ]
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v7
-
-      - name: Build
+      - name: Build FPM
         uses: ./.github/action/build-bake-publish
         with:
           files: |
             docker-bake.hcl
             docker-bake.fpm.hcl
-          targets: ${{ matrix.webserver}}-otel
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          targets: fpm-${{ matrix.suffix }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build FPM with OpenTelemetry
+        uses: ./.github/action/build-bake-publish
+        with:
+          files: |
+            docker-bake.hcl
+            docker-bake.fpm.hcl
+          targets: fpm-otel-${{ matrix.suffix }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build webserver images
+        uses: ./.github/action/build-bake-publish
+        with:
+          files: |
+            docker-bake.hcl
+            docker-bake.fpm.hcl
+          targets: |
+            caddy-${{ matrix.suffix }}
+            nginx-${{ matrix.suffix }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build webserver images with OpenTelemetry
+        uses: ./.github/action/build-bake-publish
+        with:
+          files: |
+            docker-bake.hcl
+            docker-bake.fpm.hcl
+          targets: |
+            caddy-otel-${{ matrix.suffix }}
+            nginx-otel-${{ matrix.suffix }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   dev:
     name: Dev ${{ matrix.webserver }}
     runs-on: ubuntu-latest
-    needs: [webserver-otel]
+    needs: [fpm]
     strategy:
       fail-fast: false
       matrix:
@@ -137,6 +132,13 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v7
+
+      - name: Set up builder
+        uses: ./.github/action/setup-builder
+        with:
+          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
+          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
+          github_token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build
         uses: ./.github/action/build-bake-publish
@@ -145,8 +147,6 @@ jobs:
             docker-bake.hcl
             docker-bake.fpm.hcl
           targets: ${{ matrix.webserver }}-dev
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
           github_token: ${{ secrets.GITHUB_TOKEN }}
 
   dev-check:
@@ -183,7 +183,7 @@ jobs:
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
     runs-on: ubuntu-latest
-    needs: [webserver]
+    needs: [fpm]
     strategy:
       matrix:
         webserver:
