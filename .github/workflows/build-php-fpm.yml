@@ -3,9 +3,9 @@ on:
   workflow_dispatch:
   push:
     branches: [main]
-    paths: ['php-fpm/**']
+    paths: ['php-fpm/**', '.github/workflows/build-php-fpm.yml']
   pull_request:
-    paths: ['php-fpm/**']
+    paths: ['php-fpm/**', '.github/workflows/build-php-fpm.yml']
 
 concurrency:
   group: '${{ github.workflow }}-${{ github.ref }}'
@@ -25,24 +25,36 @@ jobs:
       - uses: docker/setup-buildx-action@v4
       - id: matrix
         run: |
-          matrix=$(docker buildx bake -f php-fpm/docker-bake.hcl --print fpm | jq -c '{include: [.group.fpm.targets[] | ltrimstr("fpm-") | {php: gsub("-"; "."), suffix: .}]}')
+          matrix=$(docker buildx bake -f php-fpm/docker-bake.hcl --print fpm | jq -c '{include: [.group.fpm.targets[] as $target | {php: (.target[$target].args.PHP_VERSION | split(".")[:2] | join(".")), version: .target[$target].args.PHP_VERSION, suffix: ($target | ltrimstr("fpm-"))}]}')
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
   fpm:
     needs: matrix
-    runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.matrix.outputs.matrix) }}
-    steps:
-      - uses: actions/checkout@v7
-      - uses: ./.github/action/setup-builder
-        with:
-          docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
-          docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-      - name: Build and publish PHP FPM
-        uses: ./.github/action/build-bake-publish
-        with:
-          files: php-fpm/docker-bake.hcl
-          targets: fpm-${{ matrix.suffix }}
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    with:
+      files: php-fpm/docker-bake.hcl
+      target: fpm-${{ matrix.suffix }}
+      output: image
+      push: true
+      cache: true
+      # Retain compilation stages, not just the final scratch image's COPY layers.
+      cache-mode: max
+      cache-scope: php-fpm-${{ matrix.php }}
+      meta-images: ghcr.io/shopware/docker-php-fpm${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+      meta-tags: |
+        type=raw,value=${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}${{ matrix.php }}
+        type=raw,value=${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}${{ matrix.version }}
+      meta-flavor: latest=false
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ toJSON(secrets.DOCKER_HUB_USERNAME) }}
+          password: ${{ toJSON(secrets.DOCKER_HUB_PASSWORD) }}
+        - registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ toJSON(secrets.GITHUB_TOKEN) }}
+      build-secrets: |
+        composer_auth: |
+          {"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}

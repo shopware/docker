@@ -32,6 +32,7 @@ target "fpm" {
     target = "artifacts"
     name = "fpm-${replace(substr(php.version, 0, 3), ".", "-")}"
     context = "./php-fpm"
+    secret = [ "id=composer_auth,env=COMPOSER_AUTH" ]
     matrix = { php = [for php in phpMatrix : php if phpMinor == "" || substr(php.version, 0, 3) == phpMinor] }
     args = {
         ALPINE_VERSION = alpineVersion

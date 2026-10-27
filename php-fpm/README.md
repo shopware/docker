@@ -154,6 +154,10 @@ compiler tools are not installed in the final image.
 
 The compiled image builds when its PHP release inputs or build recipe change, or
 through a manual workflow run. PHP and extension compilation happens here.
+CI uses [docker/github-builder](https://github.com/docker/github-builder) with
+GitHub Actions layer caching in `max` mode, retaining the intermediate compilation
+layers as well as the final files. Each PHP minor has its own cache scope; the
+builder separates platform caches and builds AMD64 and ARM64 on native runners.
 
 Consuming images can rebuild daily from Alpine and the published compiled image.
 Use `docker build --pull --no-cache` in that workflow to fetch the current Alpine
