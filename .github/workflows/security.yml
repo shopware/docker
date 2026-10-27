@@ -1,6 +1,14 @@
 name: Security Check
 on:
   workflow_dispatch:
+  pull_request:
+    paths:
+      - '.github/workflows/security.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - '.github/workflows/security.yml'
   schedule:
     - cron: '0 1 * * *'
 
