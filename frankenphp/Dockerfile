@@ -20,16 +20,31 @@ RUN --mount=type=secret,id=composer_auth \
     export PIE_WORKING_DIRECTORY=/tmp/pie
     apt-get update
     savedAptMark=$(apt-mark showmanual)
-    apt-get install -y --no-install-recommends $PHPIZE_DEPS libtool unzip librabbitmq-dev libzstd-dev liblz4-dev liblzf-dev
+    apt-get install -y --no-install-recommends $PHPIZE_DEPS libtool unzip patch libgrpc-dev git librabbitmq-dev libzstd-dev liblz4-dev liblzf-dev
     pie install --no-interaction --no-cache --skip-enable-extension phpredis/phpredis --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
     pie install --no-interaction --no-cache --skip-enable-extension apcu/apcu
     pie install --no-interaction --no-cache --skip-enable-extension kjdev/zstd
     pie install --no-interaction --no-cache --skip-enable-extension php-amqp/php-amqp:2.2.0
     docker-php-ext-enable redis apcu zstd amqp
+    # Keep telemetry extensions disabled; the -otel image enables them.
+    GRPC_VERSION=$(dpkg -s libgrpc-dev | grep '^Version:' | cut -d' ' -f2 | cut -d'-' -f1)
+    git clone --depth 1 -b v${GRPC_VERSION} https://github.com/grpc/grpc /tmp/grpc
+    cd /tmp/grpc && curl -sSL https://patch-diff.githubusercontent.com/raw/grpc/grpc/pull/40337.patch | git apply - && \
+    cd /tmp/grpc/src/php/ext/grpc
+    phpize
+    ./configure
+    make
+    make install
+    cd /root
+    rm -rf /tmp/grpc
+    pie install --no-interaction --no-cache --skip-enable-extension open-telemetry/ext-opentelemetry
     rm -rf /tmp/pie
     apt-mark auto '.*' > /dev/null
-    apt-mark manual $savedAptMark librabbitmq4 libzstd1 liblz4-1 liblzf1
+    apt-mark manual $savedAptMark librabbitmq4 libzstd1 liblz4-1 liblzf1 libgrpc29t64
     apt-get purge -y --auto-remove -o APT::AutoRemove::RecommendsImportant=false
+    # The base image marks its compiler toolchain and headers as manually installed.
+    compilerPackages=$(dpkg-query -W -f='${binary:Package}\n' 'gcc-*' | sed '/-base/d')
+    apt-get purge -y --auto-remove $PHPIZE_DEPS $compilerPackages 'g++-*' 'cpp-*' 'binutils*' '*-dev' patch
     mkdir -p /var/www/html
     usermod -u 82 www-data
     groupmod -g 82 www-data
