@@ -1,4 +1,4 @@
-#syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1
 #check=skip=SecretsUsedInArgOrEnv
 
 ARG PHP_VERSION=8.4
