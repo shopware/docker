@@ -11,7 +11,7 @@ permissions:
 jobs:
   scan:
     name: 'Image Scan (PHP: ${{ matrix.php-version }}, Variant: ${{ matrix.variant.name }})'
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     strategy:
       fail-fast: false
       matrix:

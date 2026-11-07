@@ -53,8 +53,26 @@ Derived images use published base images. When changing a base image, build and
 push it before building its dependents, as the CI workflows do.
 
 The FPM and FrankenPHP workflows build independently when their files change.
-Changes to shared Bake settings or the publishing action trigger both families.
+Changes to shared Bake settings, the publishing workflow or matrix script trigger both families.
 Both workflows also support manual runs and daily rebuilds.
+
+CI uses [docker/github-builder](https://github.com/docker/github-builder)'s Bake
+workflow with native GitHub-hosted `ubuntu-26.04` (AMD64) and `ubuntu-26.04-arm`
+(ARM64) runners. Each concrete Bake target gets its own build, and the reusable
+workflow combines both architectures into the published image. Namespace is no
+longer required. Builds retain the existing no-cache behavior for fresh daily
+dependency installation.
+
+`scripts/bake-matrix.mjs` derives the publication images and tags from Bake for
+the reusable workflow. Normal builds publish the existing Docker Hub and GHCR
+tags; pull requests publish the existing numbered `-ci-test` images to GHCR.
+Publishing still requires a token with package write access, and normal builds
+use `DOCKER_HUB_USERNAME` and `DOCKER_HUB_PASSWORD`. Fork pull requests do not
+receive those publishing credentials. Composer authentication is passed as a
+BuildKit secret through the reusable workflow.
+
+Validate the matrices locally with `node --test scripts/bake-matrix.test.mjs`
+(requires Docker Buildx; no images are built or pushed).
 
 Run `node scripts/update-php-matrix.mjs` from the repository root to update the
 PHP patch versions in the family-specific Bake files.

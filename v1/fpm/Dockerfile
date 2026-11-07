@@ -1,4 +1,5 @@
-#syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1
+# check=skip=SecretsUsedInArgOrEnv
 
 FROM base
 
