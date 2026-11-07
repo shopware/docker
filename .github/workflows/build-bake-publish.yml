@@ -1,0 +1,61 @@
+name: Build and publish Bake target
+
+on:
+  workflow_call:
+    inputs:
+      family:
+        type: string
+        required: true
+      target:
+        type: string
+        required: true
+      meta-images:
+        type: string
+        required: true
+      meta-tags:
+        type: string
+        required: true
+    secrets:
+      docker_hub_username:
+        required: false
+      docker_hub_password:
+        required: false
+
+permissions:
+  contents: read
+  id-token: write
+  packages: write
+
+jobs:
+  build:
+    uses: docker/github-builder/.github/workflows/bake.yml@v1
+    with:
+      job-name-prefix: ${{ inputs.target }}
+      runner: |
+        default=ubuntu-24.04
+        linux/arm64=ubuntu-24.04-arm
+      distribute: true
+      output: image
+      push: true
+      files: |
+        v1/docker-bake.hcl
+        v1/${{ inputs.family }}/docker-bake.hcl
+      target: ${{ inputs.target }}
+      vars: |
+        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
+      # Retain fresh dependency installation for daily rebuilds.
+      set: '*.no-cache=true'
+      meta-images: ${{ inputs.meta-images }}
+      meta-tags: ${{ inputs.meta-tags }}
+      meta-flavor: latest=false
+    secrets:
+      registry-auths: |
+        - registry: docker.io
+          username: ${{ toJSON(secrets.docker_hub_username) }}
+          password: ${{ toJSON(secrets.docker_hub_password) }}
+        - registry: ghcr.io
+          username: ${{ toJSON(github.actor) }}
+          password: ${{ toJSON(secrets.GITHUB_TOKEN) }}
+      build-secrets: |
+        composer_auth: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'

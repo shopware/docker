@@ -7,3 +7,9 @@ variable "imageSuffix" {
 variable "tagPrefix" {
     default = ""
 }
+
+# github-builder supplies the value through its build-secrets input.
+# Local builds can provide the same optional secret via COMPOSER_AUTH.
+target "_build-secrets" {
+    secret = ["id=composer_auth,env=COMPOSER_AUTH"]
+}

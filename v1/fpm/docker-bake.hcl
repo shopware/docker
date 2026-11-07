@@ -5,6 +5,7 @@ variable "phpMatrix" {
 # FPM
 
 target "fpm" {
+    inherits = ["_build-secrets"]
     name = "fpm-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./v1/fpm"
     matrix = {
@@ -27,6 +28,7 @@ target "fpm" {
 }
 
 target "fpm-otel" {
+    inherits = ["_build-secrets"]
     name = "fpm-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./v1/fpm/otel"
     matrix = {
@@ -51,6 +53,7 @@ target "fpm-otel" {
 # Caddy
 
 target "caddy" {
+    inherits = ["_build-secrets"]
     name = "caddy-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./v1/fpm/caddy"
     matrix = {
@@ -73,6 +76,7 @@ target "caddy" {
 }
 
 target "caddy-otel" {
+    inherits = ["_build-secrets"]
     name = "caddy-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./v1/fpm/caddy"
     matrix = {
@@ -95,6 +99,7 @@ target "caddy-otel" {
 }
 
 target "caddy-dev" {
+    inherits = ["_build-secrets"]
     name = "caddy-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./v1/fpm/dev"
     matrix = {
@@ -117,6 +122,7 @@ target "caddy-dev" {
 # Nginx
 
 target "nginx" {
+    inherits = ["_build-secrets"]
     name = "nginx-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./v1/fpm/nginx"
     matrix = {
@@ -139,6 +145,7 @@ target "nginx" {
 }
 
 target "nginx-otel" {
+    inherits = ["_build-secrets"]
     name = "nginx-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./v1/fpm/nginx"
     matrix = {
@@ -161,6 +168,7 @@ target "nginx-otel" {
 }
 
 target "nginx-dev" {
+    inherits = ["_build-secrets"]
     name = "nginx-dev-${replace(substr(php, 0, 3), ".", "-")}-${node}"
     context = "./v1/fpm/dev"
     matrix = {
