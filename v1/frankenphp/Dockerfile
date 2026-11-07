@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1
-#check=skip=SecretsUsedInArgOrEnv
+# check=skip=SecretsUsedInArgOrEnv
 
 ARG PHP_VERSION=8.4
 FROM dunglas/frankenphp:php${PHP_VERSION}
