@@ -57,7 +57,7 @@ Changes to shared Bake settings, the publishing workflow or matrix script trigge
 Both workflows also support manual runs and daily rebuilds.
 
 CI uses [docker/github-builder](https://github.com/docker/github-builder)'s Bake
-workflow with native GitHub-hosted `ubuntu-24.04` (AMD64) and `ubuntu-24.04-arm`
+workflow with native GitHub-hosted `ubuntu-26.04` (AMD64) and `ubuntu-26.04-arm`
 (ARM64) runners. Each concrete Bake target gets its own build, and the reusable
 workflow combines both architectures into the published image. Namespace is no
 longer required. Builds retain the existing no-cache behavior for fresh daily

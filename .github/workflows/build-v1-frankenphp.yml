@@ -32,7 +32,7 @@ permissions:
 jobs:
   matrix:
     name: Determine Bake targets and tags
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       frankenphp: ${{ steps.matrix.outputs.frankenphp }}
       frankenphp-otel: ${{ steps.matrix.outputs.frankenphp-otel }}

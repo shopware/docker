@@ -32,7 +32,7 @@ permissions:
 jobs:
   matrix:
     name: Determine Bake targets and tags
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     outputs:
       fpm: ${{ steps.matrix.outputs.fpm }}
       fpm-otel: ${{ steps.matrix.outputs.fpm-otel }}
@@ -129,7 +129,7 @@ jobs:
 
   dev-check:
     name: Check Dev Image
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [dev]
     steps:
       - name: Checkout
@@ -160,7 +160,7 @@ jobs:
 
   check:
     name: Test Image with Webserver ${{ matrix.webserver }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     needs: [webserver]
     strategy:
       matrix:

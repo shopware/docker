@@ -32,8 +32,8 @@ jobs:
     with:
       job-name-prefix: ${{ inputs.target }}
       runner: |
-        default=ubuntu-24.04
-        linux/arm64=ubuntu-24.04-arm
+        default=ubuntu-26.04
+        linux/arm64=ubuntu-26.04-arm
       distribute: true
       output: image
       push: true
