@@ -136,7 +136,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Install a binary from GitHub releases
-        uses: jaxxstorm/action-install-gh-release@v3.0.0
+        uses: jaxxstorm/action-install-gh-release@v4.0.0
         with:
           repo: GoogleContainerTools/container-structure-test
           extension-matching: disable
