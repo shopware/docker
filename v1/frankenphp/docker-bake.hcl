@@ -2,8 +2,14 @@ variable "frankenphpMatrix" {
     default = [ "8.2.35", "8.3.36", "8.4.27", "8.5.12" ]
 }
 
-variable "frankenphpRef" {
+variable "frankenphpVersion" {
     default = "v1.13.5"
+}
+
+# Commit of https://github.com/php/frankenphp that frankenphpVersion points to;
+# pinned so a moved tag cannot change what is built.
+variable "frankenphpRef" {
+    default = "a3663e9e2cc4c258018a28ee068e50cc12f3ed2d"
 }
 
 variable "goVersion" {
@@ -33,7 +39,7 @@ target "frankenphp-upstream" {
         golang-base = "docker-image://docker.io/library/golang:${goVersion}-trixie"
     }
     args = {
-        "FRANKENPHP_VERSION" = frankenphpRef
+        "FRANKENPHP_VERSION" = frankenphpVersion
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
 }

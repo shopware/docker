@@ -22,12 +22,9 @@ runs:
         targets: ${{ inputs.targets }}
         set: |
           *.secrets=id=composer_auth,env=COMPOSER_AUTH
-          *.secrets=id=github-token,env=GITHUB_TOKEN
         no-cache: true
       env:
         COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ inputs.github_token }}"}}'
-        # Used by the upstream FrankenPHP Dockerfile to query the GitHub API
-        GITHUB_TOKEN: ${{ inputs.github_token }}
         DOCKER_BUILD_RECORD_UPLOAD: false
         DOCKER_BUILD_SUMMARY: false
         imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}

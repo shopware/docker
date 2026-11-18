@@ -65,4 +65,4 @@ Both workflows also support manual runs and daily rebuilds.
 
 Run `node scripts/update-php-matrix.mjs` from the repository root to update the
 PHP patch versions and the pinned upstream sources (docker-php-library commit,
-Alpine release, FrankenPHP release and Go version) in the Bake files.
+Alpine release, FrankenPHP release and commit, and Go version) in the Bake files.

@@ -47,9 +47,15 @@ async function fetchVersions(ref) {
     return (await request(`https://raw.githubusercontent.com/${phpLibraryRepository}/${ref}/versions.json`)).json();
 }
 
-async function fetchFrankenphpRef() {
+async function fetchFrankenphpVersion() {
     const release = await (await request(`https://api.github.com/repos/${frankenphpRepository}/releases/latest`)).json();
     return release.tag_name;
+}
+
+// Resolve the release tag to its commit, so a moved tag cannot change what is built
+async function fetchFrankenphpRef(version) {
+    const commit = await (await request(`https://api.github.com/repos/${frankenphpRepository}/commits/${version}`)).json();
+    return commit.sha;
 }
 
 // FrankenPHP pins the Go version it is built with in its own Bake file
@@ -119,7 +125,8 @@ async function updateVariables(hclPath, variables) {
 const phpLibraryRef = await fetchPhpLibraryRef(await readVariable('v1/docker-bake.hcl', 'phpLibraryRef'));
 const versions = await fetchVersions(phpLibraryRef);
 const phpVersions = getPhpVersions(versions);
-const frankenphpRef = await fetchFrankenphpRef();
+const frankenphpVersion = await fetchFrankenphpVersion();
+const frankenphpRef = await fetchFrankenphpRef(frankenphpVersion);
 
 await updateVariables('v1/docker-bake.hcl', { phpLibraryRef });
 await updateVariables('v1/fpm/docker-bake.hcl', {
@@ -128,6 +135,7 @@ await updateVariables('v1/fpm/docker-bake.hcl', {
 });
 await updateVariables('v1/frankenphp/docker-bake.hcl', {
     frankenphpMatrix: phpVersions,
+    frankenphpVersion,
     frankenphpRef,
     goVersion: await fetchGoVersion(frankenphpRef),
 });
