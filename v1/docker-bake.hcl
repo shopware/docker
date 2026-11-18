@@ -14,3 +14,9 @@ variable "tagPrefix" {
 variable "phpLibraryRef" {
     default = "b2d8ba085a7b04175b33e23c0e3603dd6b6e34a9"
 }
+
+# github-builder supplies the value through its build-secrets input.
+# Local builds can provide the same optional secret via COMPOSER_AUTH.
+target "_build-secrets" {
+    secret = ["id=composer_auth,env=COMPOSER_AUTH"]
+}

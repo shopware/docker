@@ -47,6 +47,7 @@ target "frankenphp-upstream" {
 # Frankenphp
 
 target "frankenphp" {
+    inherits = ["_build-secrets"]
     name = "frankenphp-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./v1/frankenphp"
     matrix = {
@@ -69,6 +70,7 @@ target "frankenphp" {
 }
 
 target "frankenphp-otel" {
+    inherits = ["_build-secrets"]
     name = "frankenphp-otel-${replace(substr(php, 0, 3), ".", "-")}"
     context = "./v1/frankenphp/otel"
     matrix = {

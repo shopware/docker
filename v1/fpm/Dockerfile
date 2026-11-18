@@ -1,4 +1,5 @@
-#syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1
+# check=skip=SecretsUsedInArgOrEnv
 
 FROM base
 
@@ -69,6 +70,7 @@ ENV APP_ENV=prod \
     FPM_PM_MIN_SPARE_SERVERS=1 \
     FPM_PM_MAX_SPARE_SERVERS=3 \
     FPM_PM_MAX_REQUESTS=0 \
+    FPM_REQUEST_TERMINATE_TIMEOUT=0 \
     FPM_PM_STATUS_PATH=/-/fpm/status \
     FPM_PING_PATH=/-/fpm/ping \
     PHP_SESSION_COOKIE_LIFETIME=0 \
