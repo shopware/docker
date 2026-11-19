@@ -15,6 +15,10 @@ on:
       meta-tags:
         type: string
         required: true
+      source-date-epoch:
+        description: Unix timestamp used for image timestamps (SOURCE_DATE_EPOCH)
+        type: string
+        required: true
     secrets:
       docker_hub_username:
         required: false
@@ -44,8 +48,11 @@ jobs:
       vars: |
         imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
         tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
-      # Retain fresh dependency installation for daily rebuilds.
-      set: '*.no-cache=true'
+      # Retain fresh dependency installation for daily rebuilds, and set
+      # SOURCE_DATE_EPOCH so image timestamps reflect the commit.
+      set: |
+        *.no-cache=true
+        *.args.SOURCE_DATE_EPOCH=${{ inputs.source-date-epoch }}
       meta-images: ${{ inputs.meta-images }}
       meta-tags: ${{ inputs.meta-tags }}
       meta-flavor: latest=false

@@ -70,6 +70,12 @@ workflow combines both architectures into the published image. Namespace is no
 longer required. Builds retain the existing no-cache behavior for fresh daily
 dependency installation.
 
+Builds set [`SOURCE_DATE_EPOCH`](https://docs.docker.com/build/ci/github-actions/reproducible-builds/)
+to the timestamp of the commit being built, so the image creation date and
+history reflect the commit instead of the build time. Daily rebuilds of the same
+commit therefore keep the same creation date even when they pick up newer
+packages.
+
 `scripts/bake-matrix.mjs` derives the publication images and tags from Bake for
 the reusable workflow. Normal builds publish the existing Docker Hub and GHCR
 tags; pull requests publish the existing numbered `-ci-test` images to GHCR.

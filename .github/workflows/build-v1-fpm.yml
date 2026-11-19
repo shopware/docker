@@ -34,6 +34,7 @@ jobs:
     name: Determine Bake targets and tags
     runs-on: ubuntu-26.04
     outputs:
+      source-date-epoch: ${{ steps.epoch.outputs.source-date-epoch }}
       fpm: ${{ steps.matrix.outputs.fpm }}
       fpm-otel: ${{ steps.matrix.outputs.fpm-otel }}
       webserver: ${{ steps.matrix.outputs.webserver }}
@@ -47,6 +48,11 @@ jobs:
 
       - name: Validate Bake matrices
         run: node --test scripts/bake-matrix.test.mjs
+
+      # Reproducible builds: image timestamps reflect the commit, not the build time.
+      - name: Get Git commit timestamp
+        id: epoch
+        run: echo "source-date-epoch=$(git log -1 --pretty=%ct)" >> "$GITHUB_OUTPUT"
 
       - name: Read build matrices from Bake
         id: matrix
@@ -75,6 +81,7 @@ jobs:
       target: ${{ matrix.target }}
       meta-images: ${{ matrix.images }}
       meta-tags: ${{ matrix.tags }}
+      source-date-epoch: ${{ needs.matrix.outputs.source-date-epoch }}
     secrets:
       docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -91,6 +98,7 @@ jobs:
       target: ${{ matrix.target }}
       meta-images: ${{ matrix.images }}
       meta-tags: ${{ matrix.tags }}
+      source-date-epoch: ${{ needs.matrix.outputs.source-date-epoch }}
     secrets:
       docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -107,6 +115,7 @@ jobs:
       target: ${{ matrix.target }}
       meta-images: ${{ matrix.images }}
       meta-tags: ${{ matrix.tags }}
+      source-date-epoch: ${{ needs.matrix.outputs.source-date-epoch }}
     secrets:
       docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
@@ -123,6 +132,7 @@ jobs:
       target: ${{ matrix.target }}
       meta-images: ${{ matrix.images }}
       meta-tags: ${{ matrix.tags }}
+      source-date-epoch: ${{ needs.matrix.outputs.source-date-epoch }}
     secrets:
       docker_hub_username: ${{ secrets.DOCKER_HUB_USERNAME }}
       docker_hub_password: ${{ secrets.DOCKER_HUB_PASSWORD }}
