@@ -27,7 +27,10 @@ for (const pullRequest of [false, true]) {
                 'scripts/bake-matrix.mjs', family, ...targets,
             ], options));
 
-            assert.deepEqual(matrix.include.map(entry => entry.target).sort(), Object.keys(definition.target).sort());
+            // Source builds are linked as build contexts and must not be published on their own.
+            const publishable = Object.keys(definition.target).filter(name => definition.target[name].tags?.length);
+            assert.deepEqual(matrix.include.map(entry => entry.target).sort(), publishable.sort());
+            assert.ok(Object.keys(definition.target).some(name => !publishable.includes(name)));
             for (const entry of matrix.include) {
                 const target = definition.target[entry.target];
                 const published = entry.images.split('\n').flatMap(image => entry.tags.split('\n').map(line => {
