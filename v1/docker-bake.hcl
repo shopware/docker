@@ -12,7 +12,7 @@ variable "tagPrefix" {
 # docker-library/php) whose Dockerfiles are used to build PHP from source, so
 # new PHP releases do not have to wait for Docker Hub.
 variable "phpLibraryRef" {
-    default = "427a0345cba2b98113ab7e6993099c1c823e2a69"
+    default = "b2d8ba085a7b04175b33e23c0e3603dd6b6e34a9"
 }
 
 # github-builder supplies the value through its build-secrets input.
