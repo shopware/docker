@@ -14,11 +14,7 @@ const definition = JSON.parse(execFileSync('docker', [
 
 // github-builder publishes one concrete target per call and replaces Bake's tags
 // with metadata-action output. Derive both inputs from Bake to keep one source.
-// Bake also prints targets that are only linked as a build context (the PHP and
-// FrankenPHP source builds); those are built as part of the image that uses them.
-const requested = new Set(targets.flatMap(name => definition.group[name]?.targets ?? [name]));
-
-const include = [...requested].map(target => [target, definition.target[target]]).map(([target, config]) => {
+const include = Object.entries(definition.target).map(([target, config]) => {
     if (!config.tags?.length) {
         throw new Error(`Bake target ${target} has no publication tags`);
     }

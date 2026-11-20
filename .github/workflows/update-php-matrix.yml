@@ -28,8 +28,6 @@ jobs:
 
       - name: Run PHP matrix update script
         run: node scripts/update-php-matrix.mjs
-        env:
-          GITHUB_TOKEN: ${{ steps.generate-token.outputs.token }}
 
       - name: Check for changes
         id: changes
@@ -54,9 +52,8 @@ jobs:
             This PR automatically updates the PHP matrix versions to the latest patch releases.
             
             The family-specific Bake files have been updated:
-            - `v1/docker-bake.hcl`: shopwareLabs/docker-php-library commit PHP is built from
-            - `v1/fpm/docker-bake.hcl`: PHP patch versions and Alpine release
-            - `v1/frankenphp/docker-bake.hcl`: PHP patch versions, FrankenPHP release and Go version
+            - `v1/fpm/docker-bake.hcl`: Supported PHP patch versions
+            - `v1/frankenphp/docker-bake.hcl`: Supported FrankenPHP patch versions
             
             Changes were detected by the automated PHP matrix update workflow.
             

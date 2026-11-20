@@ -2,21 +2,6 @@ variable "phpMatrix" {
     default = [ "8.2.36", "8.3.37", "8.4.28", "8.5.13" ]
 }
 
-variable "alpineVersion" {
-    default = "3.24"
-}
-
-# PHP built from source with the upstream docker-library/php Dockerfile
-
-target "php-fpm-alpine" {
-    name = "php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
-    context = "https://github.com/shopwareLabs/docker-php-library.git#${phpLibraryRef}:${substr(php, 0, 3)}/alpine${alpineVersion}/fpm"
-    matrix = {
-        "php" = phpMatrix
-    }
-    platforms = [ "linux/amd64", "linux/arm64" ]
-}
-
 # FPM
 
 target "fpm" {
@@ -27,7 +12,7 @@ target "fpm" {
         "php" = phpMatrix
     }
     contexts = {
-        base = "target:php-fpm-alpine-${replace(substr(php, 0, 3), ".", "-")}"
+        base = "docker-image://docker.io/library/php:${php}-fpm-alpine"
     }
     platforms = [ "linux/amd64", "linux/arm64" ]
     tags = imageSuffix != "" ? [
