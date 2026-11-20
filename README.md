@@ -49,13 +49,6 @@ FPM targets include `fpm`, `fpm-otel`, `caddy`, `caddy-otel`, `nginx`,
 `nginx-otel`, `caddy-dev` and `nginx-dev`. FrankenPHP targets are `frankenphp`
 and `frankenphp-otel`. Add `--print` to inspect the build configuration.
 
-PHP itself is compiled from source using the Dockerfiles from
-[shopwareLabs/docker-php-library](https://github.com/shopwareLabs/docker-php-library),
-our fork of [docker-library/php](https://github.com/docker-library/php) (pinned
-by `phpLibraryRef`), and FrankenPHP is built from its upstream Dockerfile on top
-of that (pinned by `frankenphpRef`). New PHP releases therefore do not have to
-wait for the official images to be published on Docker Hub.
-
 Derived images use published base images. When changing a base image, build and
 push it before building its dependents, as the CI workflows do.
 
@@ -88,5 +81,4 @@ Validate the matrices locally with `node --test scripts/bake-matrix.test.mjs`
 (requires Docker Buildx; no images are built or pushed).
 
 Run `node scripts/update-php-matrix.mjs` from the repository root to update the
-PHP patch versions and the pinned upstream sources (docker-php-library commit,
-Alpine release, FrankenPHP release and commit, and Go version) in the Bake files.
+PHP patch versions in the family-specific Bake files.
