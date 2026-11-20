@@ -3,13 +3,13 @@ variable "frankenphpMatrix" {
 }
 
 variable "frankenphpVersion" {
-    default = "v1.13.5"
+    default = "v1.13.6"
 }
 
 # Commit of https://github.com/php/frankenphp that frankenphpVersion points to;
 # pinned so a moved tag cannot change what is built.
 variable "frankenphpRef" {
-    default = "a3663e9e2cc4c258018a28ee068e50cc12f3ed2d"
+    default = "6775138789d2d0b834b6447cdc3e56b383fd651d"
 }
 
 variable "goVersion" {
