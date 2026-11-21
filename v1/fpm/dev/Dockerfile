@@ -1,4 +1,4 @@
-# syntax=docker/dockerfile:1
+# syntax=docker/dockerfile:1-labs
 # check=skip=SecretsUsedInArgOrEnv
 
 ARG NODE_VERSION=22
@@ -67,11 +67,11 @@ COPY --link rootfs /
 
 ENV PHP_OPCACHE_VALIDATE_TIMESTAMPS=1 \
     PHP_OPCACHE_FILE_OVERRIDE=0 \
-    APP_URL_CHECK_DISABLED=0 \
-    SHOPWARE_SKIP_WEBINSTALLER=0 \
     APP_SECRET=def00000bb5acb32b54ff8ee130270586eec0e878f7337dc7a837acc31d3ff00f93a56b595448b4b29664847dd51991b3314ff65aeeeb761a133b0ec0e070433bff08e48 \
-    LOCK_DSN=flock \
-    APP_ENV=xxxxxxx
+    LOCK_DSN=flock
+
+# Drop production defaults inherited from the base image so the project's .env decides
+ENV --unset APP_ENV APP_URL_CHECK_DISABLED SHOPWARE_SKIP_WEBINSTALLER
 
 ENTRYPOINT [ "/entrypoint" ]
 CMD [ "/usr/bin/supervisord", "-c", "/etc/supervisord.conf" ]
