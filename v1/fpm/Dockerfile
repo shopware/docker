@@ -5,18 +5,42 @@ FROM base
 
 ADD https://github.com/mlocati/docker-php-extension-installer/releases/latest/download/install-php-extensions /usr/local/bin/
 
-RUN <<EOF
+ARG TARGETARCH
+
+# Extensions are compiled through ccache, whose cache lives in a cache mount.
+# It is reused across builds on the same builder, and across CI runs when the
+# cache mount is exported (--cache-to type=gha,mounts=only).
+# Build args are set in the RUN environment without ending up in the image.
+# compiler_check=content and base_dir=/ keep hits across fresh builders and
+# per-build temporary source directories.
+ARG CCACHE_DIR=/ccache \
+    CCACHE_COMPILERCHECK=content \
+    CCACHE_BASEDIR=/ \
+    CCACHE_NOHASHDIR=true \
+    CCACHE_SLOPPINESS=time_macros,include_file_mtime,include_file_ctime,locale \
+    CCACHE_MAXSIZE=2G
+
+RUN --mount=type=cache,target=/ccache,id=ccache-fpm-${TARGETARCH} <<EOF
     set -e
 
     apk add --no-cache icu-data-full curl jq trurl rabbitmq-c zstd-libs lz4-libs liblzf grpc-cpp
     apk upgrade --no-cache
+    apk add --no-cache --virtual .ccache ccache
+    export PATH="/usr/lib/ccache/bin:$PATH"
+    ccache -z
     chmod +x /usr/local/bin/install-php-extensions
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
+    ccache --print-stats | awk '/^(direct|preprocessed)_cache_hit\t/{h+=$2} /^cache_miss\t/{m+=$2} END{printf "CCACHE_STATS hits=%d misses=%d\n",h,m}'
+    apk del --no-cache .ccache
 EOF
 
 RUN --mount=type=secret,id=composer_auth \
-    --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+    --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie \
+    --mount=type=cache,target=/ccache,id=ccache-fpm-${TARGETARCH} <<EOF
     set -e
+    apk add --no-cache --virtual .ccache ccache
+    export PATH="/usr/lib/ccache/bin:$PATH"
+    ccache -z
     if [ -f /run/secrets/composer_auth ]; then
         export COMPOSER_AUTH="$(cat /run/secrets/composer_auth)"
     fi
@@ -33,13 +57,14 @@ RUN --mount=type=secret,id=composer_auth \
     cd /tmp/grpc/src/php/ext/grpc
     phpize
     ./configure
-    make
+    make -j"$(nproc)"
     make install
     cd /root
     rm -rf /tmp/grpc
     pie install --no-interaction --no-cache --skip-enable-extension open-telemetry/ext-opentelemetry
+    ccache --print-stats | awk '/^(direct|preprocessed)_cache_hit\t/{h+=$2} /^cache_miss\t/{m+=$2} END{printf "CCACHE_STATS hits=%d misses=%d\n",h,m}'
     rm -rf /tmp/pie
-    apk del --no-cache .pie-build-deps
+    apk del --no-cache .pie-build-deps .ccache
     mkdir -p /var/www/html
     mv "${PHP_INI_DIR}/php.ini-production" "${PHP_INI_DIR}/php.ini"
     rm -f /usr/local/etc/php-fpm.d/zz-docker.conf

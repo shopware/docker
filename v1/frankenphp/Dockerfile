@@ -4,15 +4,36 @@
 ARG PHP_VERSION=8.4
 FROM dunglas/frankenphp:php${PHP_VERSION}
 
-RUN <<EOF
+ARG TARGETARCH
+
+# Extensions are compiled through ccache, whose cache lives in a cache mount.
+# It is reused across builds on the same builder, and across CI runs when the
+# cache mount is exported (--cache-to type=gha,mounts=only).
+# Build args are set in the RUN environment without ending up in the image.
+# compiler_check=content and base_dir=/ keep hits across fresh builders and
+# per-build temporary source directories.
+ARG CCACHE_DIR=/ccache \
+    CCACHE_COMPILERCHECK=content \
+    CCACHE_BASEDIR=/ \
+    CCACHE_NOHASHDIR=true \
+    CCACHE_SLOPPINESS=time_macros,include_file_mtime,include_file_ctime,locale \
+    CCACHE_MAXSIZE=2G
+
+RUN --mount=type=cache,target=/ccache,id=ccache-frankenphp-${TARGETARCH} <<EOF
     set -e
     apt-get update
     apt-get upgrade -y
+    apt-get install -y --no-install-recommends ccache
+    export PATH="/usr/lib/ccache:$PATH"
+    ccache -z
     install-php-extensions bcmath gd intl mysqli pdo_mysql pcntl sockets bz2 gmp soap zip ftp ffi opcache xsl
+    ccache --print-stats | awk '/^(direct|preprocessed)_cache_hit\t/{h+=$2} /^cache_miss\t/{m+=$2} END{printf "CCACHE_STATS hits=%d misses=%d\n",h,m}'
+    apt-get purge -y --auto-remove ccache
 EOF
 
 RUN --mount=type=secret,id=composer_auth \
-    --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie <<EOF
+    --mount=type=bind,from=ghcr.io/php/pie:bin,source=/pie,target=/usr/local/bin/pie \
+    --mount=type=cache,target=/ccache,id=ccache-frankenphp-${TARGETARCH} <<EOF
     set -e
     if [ -f /run/secrets/composer_auth ]; then
         export COMPOSER_AUTH="$(cat /run/secrets/composer_auth)"
@@ -20,7 +41,9 @@ RUN --mount=type=secret,id=composer_auth \
     export PIE_WORKING_DIRECTORY=/tmp/pie
     apt-get update
     savedAptMark=$(apt-mark showmanual)
-    apt-get install -y --no-install-recommends $PHPIZE_DEPS libtool unzip patch libgrpc-dev git librabbitmq-dev libzstd-dev liblz4-dev liblzf-dev
+    apt-get install -y --no-install-recommends $PHPIZE_DEPS libtool unzip patch libgrpc-dev git librabbitmq-dev libzstd-dev liblz4-dev liblzf-dev ccache
+    export PATH="/usr/lib/ccache:$PATH"
+    ccache -z
     pie install --no-interaction --no-cache --skip-enable-extension phpredis/phpredis --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
     pie install --no-interaction --no-cache --skip-enable-extension apcu/apcu
     pie install --no-interaction --no-cache --skip-enable-extension kjdev/zstd
@@ -33,11 +56,12 @@ RUN --mount=type=secret,id=composer_auth \
     cd /tmp/grpc/src/php/ext/grpc
     phpize
     ./configure
-    make
+    make -j"$(nproc)"
     make install
     cd /root
     rm -rf /tmp/grpc
     pie install --no-interaction --no-cache --skip-enable-extension open-telemetry/ext-opentelemetry
+    ccache --print-stats | awk '/^(direct|preprocessed)_cache_hit\t/{h+=$2} /^cache_miss\t/{m+=$2} END{printf "CCACHE_STATS hits=%d misses=%d\n",h,m}'
     rm -rf /tmp/pie
     apt-mark auto '.*' > /dev/null
     # Preserve the base image's toolchain for downstream install-php-extensions calls.

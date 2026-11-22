@@ -1,5 +1,14 @@
 name: Build and publish Bake target
 
+# Builds one Bake target natively per platform, pushes each platform by digest,
+# then merges them into a multi-platform image per registry and signs it.
+#
+# Extensions compile through ccache kept in a cache mount. Layers are never
+# cached (no-cache keeps packages up to date), but the cache mounts are carried
+# between runs in the GitHub Actions cache (mounts=only). Exporting cache
+# mounts needs a BuildKit with that feature, from
+# https://github.com/shyim/buildkit/tree/gha-cache-mounts.
+
 on:
   workflow_call:
     inputs:
@@ -30,39 +39,155 @@ permissions:
   id-token: write
   packages: write
 
+env:
+  BUILDKIT_IMAGE: ghcr.io/shyim/buildkit:cache-mount@sha256:c79d202925d0a4803377045b6ebb968a1f8fd9fd6321afd3c12582db78807684
+
 jobs:
   build:
-    uses: docker/github-builder/.github/workflows/bake.yml@v1
-    with:
-      job-name-prefix: ${{ inputs.target }}
-      runner: |
-        default=ubuntu-26.04
-        linux/arm64=ubuntu-26.04-arm
-      distribute: true
-      output: image
-      push: true
-      files: |
-        v1/docker-bake.hcl
-        v1/${{ inputs.family }}/docker-bake.hcl
-      target: ${{ inputs.target }}
-      vars: |
-        imageSuffix=${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
-        tagPrefix=${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
-      # Retain fresh dependency installation for daily rebuilds, and set
-      # SOURCE_DATE_EPOCH so image timestamps reflect the commit.
-      set: |
-        *.no-cache=true
-        *.args.SOURCE_DATE_EPOCH=${{ inputs.source-date-epoch }}
-      meta-images: ${{ inputs.meta-images }}
-      meta-tags: ${{ inputs.meta-tags }}
-      meta-flavor: latest=false
-    secrets:
-      registry-auths: |
-        - registry: docker.io
-          username: ${{ toJSON(secrets.docker_hub_username) }}
-          password: ${{ toJSON(secrets.docker_hub_password) }}
-        - registry: ghcr.io
-          username: ${{ toJSON(github.actor) }}
-          password: ${{ toJSON(secrets.GITHUB_TOKEN) }}
-      build-secrets: |
-        composer_auth: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
+    name: ${{ inputs.target }} (${{ matrix.arch }})
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - arch: amd64
+            runner: ubuntu-26.04
+          - arch: arm64
+            runner: ubuntu-26.04-arm
+    env:
+      DOCKER_HUB_USERNAME: ${{ secrets.docker_hub_username }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Login to Docker Hub
+        if: env.DOCKER_HUB_USERNAME != ''
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.docker_hub_username }}
+          password: ${{ secrets.docker_hub_password }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+        with:
+          driver-opts: image=${{ env.BUILDKIT_IMAGE }}
+
+      - name: Image names
+        id: names
+        env:
+          META_IMAGES: ${{ inputs.meta-images }}
+        run: echo "names=$(echo "$META_IMAGES" | sed '/^$/d' | paste -sd, -)" >> "$GITHUB_OUTPUT"
+
+      - name: Build and push by digest
+        id: bake
+        uses: docker/bake-action@v7
+        env:
+          imageSuffix: ${{ github.event_name == 'pull_request' && '-ci-test' || '' }}
+          tagPrefix: ${{ github.event_name == 'pull_request' && format('{0}-', github.event.number) || '' }}
+          COMPOSER_AUTH: '{"github-oauth":{"github.com":"${{ secrets.GITHUB_TOKEN }}"}}'
+        with:
+          files: |
+            v1/docker-bake.hcl
+            v1/${{ inputs.family }}/docker-bake.hcl
+          targets: ${{ inputs.target }}
+          provenance: mode=max
+          # no-cache keeps dependency installation fresh on daily rebuilds; it
+          # resets the cache mounts, which are then re-seeded from the GHA
+          # cache. SOURCE_DATE_EPOCH makes image timestamps reflect the commit.
+          set: |
+            *.platform=linux/${{ matrix.arch }}
+            *.tags=
+            *.output=type=image,"name=${{ steps.names.outputs.names }}",push-by-digest=true,name-canonical=true,push=true
+            *.no-cache=true
+            *.args.SOURCE_DATE_EPOCH=${{ inputs.source-date-epoch }}
+            *.cache-from=type=gha,mounts=only,scope=ccache-${{ inputs.target }}-${{ matrix.arch }}
+            *.cache-to=type=gha,mounts=only,ignore-error=true,scope=ccache-${{ inputs.target }}-${{ matrix.arch }}
+
+      - name: Export digest
+        env:
+          METADATA: ${{ steps.bake.outputs.metadata }}
+          TARGET: ${{ inputs.target }}
+        run: |
+          digest=$(echo "$METADATA" | jq -er --arg t "$TARGET" '.[$t]["containerimage.digest"]')
+          mkdir -p "${RUNNER_TEMP}/digests"
+          touch "${RUNNER_TEMP}/digests/${digest#sha256:}"
+
+      - name: Upload digest
+        uses: actions/upload-artifact@v7
+        with:
+          name: digests-${{ inputs.target }}-${{ matrix.arch }}
+          path: ${{ runner.temp }}/digests/*
+          if-no-files-found: error
+          retention-days: 1
+
+  merge:
+    name: ${{ inputs.target }} (merge)
+    runs-on: ubuntu-26.04
+    needs: [build]
+    env:
+      DOCKER_HUB_USERNAME: ${{ secrets.docker_hub_username }}
+    steps:
+      - name: Download digests
+        uses: actions/download-artifact@v8
+        with:
+          path: ${{ runner.temp }}/digests
+          pattern: digests-${{ inputs.target }}-*
+          merge-multiple: true
+
+      - name: Login to Docker Hub
+        if: env.DOCKER_HUB_USERNAME != ''
+        uses: docker/login-action@v4
+        with:
+          username: ${{ secrets.docker_hub_username }}
+          password: ${{ secrets.docker_hub_password }}
+
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ inputs.meta-images }}
+          tags: ${{ inputs.meta-tags }}
+          flavor: latest=false
+
+      - name: Install cosign
+        uses: sigstore/cosign-installer@v4.1.3
+
+      - name: Create manifest lists and sign them
+        working-directory: ${{ runner.temp }}/digests
+        env:
+          META_IMAGES: ${{ inputs.meta-images }}
+          META_JSON: ${{ steps.meta.outputs.json }}
+        run: |
+          set -euo pipefail
+          for image in $(echo "$META_IMAGES" | sed '/^$/d'); do
+            tags=()
+            while read -r tag; do
+              tags+=(-t "$tag")
+            done < <(echo "$META_JSON" | jq -r --arg i "$image" '.tags[] | select(startswith($i + ":"))')
+            sources=()
+            for digest in *; do
+              sources+=("${image}@sha256:${digest}")
+            done
+            docker buildx imagetools create "${tags[@]}" "${sources[@]}"
+            index=$(docker buildx imagetools inspect "${tags[1]}" --format '{{json .Manifest}}' | jq -r .digest)
+            echo "Manifest created: ${image}@${index}"
+            # Keyless signature of the index and every manifest it references.
+            cosign sign --yes --recursive "${image}@${index}"
+          done
