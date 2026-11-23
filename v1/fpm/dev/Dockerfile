@@ -39,8 +39,17 @@ RUN --mount=type=secret,id=composer_auth \
     
     install-php-extensions tideways blackfire
     apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip linux-headers zlib-dev
-    pie install --no-interaction --no-cache --skip-enable-extension xdebug/xdebug:3.5.0
-    pie install --no-interaction --no-cache --skip-enable-extension noisebynorthwest/php-spx
+    XDEBUG_VERSION=3.5.0
+    SPX_PACKAGE=noisebynorthwest/php-spx
+    case "$PHP_VERSION" in
+        8.6.*)
+            # PHP 8.6 support is available in prerelease versions of these profilers.
+            XDEBUG_VERSION=3.6.0alpha1
+            SPX_PACKAGE=noisebynorthwest/php-spx:0.5.x-dev#30258ebcd3d17a9add209e0078c30260d1333a5a
+            ;;
+    esac
+    pie install --no-interaction --no-cache --skip-enable-extension "xdebug/xdebug:$XDEBUG_VERSION"
+    pie install --no-interaction --no-cache --skip-enable-extension "$SPX_PACKAGE"
     docker-php-ext-enable xdebug spx
     rm -rf /tmp/pie
     apk del --no-cache .pie-build-deps

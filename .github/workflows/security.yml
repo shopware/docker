@@ -20,6 +20,7 @@ jobs:
           - '8.3'
           - '8.4'
           - '8.5'
+          - '8.6'
         variant:
           - name: fpm
             dockerfile: v1/fpm/Dockerfile
@@ -37,6 +38,16 @@ jobs:
             dockerfile: v1/frankenphp/Dockerfile
           - name: frankenphp-otel
             dockerfile: v1/frankenphp/otel/Dockerfile
+        # Remove these exclusions once the PHP 8.6 FrankenPHP images are published.
+        exclude:
+          - php-version: '8.6'
+            variant:
+              name: frankenphp
+              dockerfile: v1/frankenphp/Dockerfile
+          - php-version: '8.6'
+            variant:
+              name: frankenphp-otel
+              dockerfile: v1/frankenphp/otel/Dockerfile
     steps:
       - name: Checkout
         uses: actions/checkout@v7

@@ -22,8 +22,19 @@ RUN --mount=type=secret,id=composer_auth \
     fi
     export PIE_WORKING_DIRECTORY=/tmp/pie
     apk add --no-cache --virtual .pie-build-deps $PHPIZE_DEPS libtool unzip git grpc-dev rabbitmq-c-dev zstd-dev lz4-dev liblzf-dev
-    pie install --no-interaction --no-cache --skip-enable-extension phpredis/phpredis --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
-    pie install --no-interaction --no-cache --skip-enable-extension apcu/apcu:5.1.27
+    REDIS_PACKAGE=phpredis/phpredis
+    APCU_PACKAGE=apcu/apcu:5.1.27
+    case "$PHP_VERSION" in
+        8.6.*)
+            # Pin the upstream PHP 8.6 fixes until PhpRedis and APCu release them.
+            REDIS_PACKAGE=phpredis/phpredis:dev-develop#a6ce1e60b3e81ce3b25174aa5aaefd5590dc64fd
+            APCU_PACKAGE=apcu/apcu:dev-master#fb2c942552a3f5dab7f4dea4afb5cf0831222c57
+            # Map macros removed in PHP 8.6 for Zstd, AMQP, and gRPC builds.
+            export CPPFLAGS="${CPPFLAGS:-} -DXtOffsetOf=offsetof -DINI_INT=zend_ini_long_literal -DINI_FLT=zend_ini_double_literal -DINI_STR=zend_ini_string_literal"
+            ;;
+    esac
+    pie install --no-interaction --no-cache --skip-enable-extension "$REDIS_PACKAGE" --enable-redis-lzf --with-liblzf=yes --enable-redis-zstd --enable-redis-lz4 --with-liblz4=yes
+    pie install --no-interaction --no-cache --skip-enable-extension "$APCU_PACKAGE"
     pie install --no-interaction --no-cache --skip-enable-extension kjdev/zstd:0.15.2
     pie install --no-interaction --no-cache --skip-enable-extension php-amqp/php-amqp:2.2.0
     docker-php-ext-enable redis apcu zstd amqp
